@@ -1,4 +1,3 @@
-
 ```
 <div class="foglio"> 
 <style>
@@ -643,6 +642,49 @@
   overflow-wrap:anywhere !important;
 }
 
+
+/* ---------- Fatica / consapevolezza del calderone ---------- */
+
+.foglio .fatigue-box{
+  margin:20px 0 6px !important;
+  padding:14px 16px !important;
+  background:linear-gradient(90deg,rgba(53,22,63,.48),rgba(16,18,19,.58)) !important;
+  border:1px solid var(--line) !important;
+  border-left:4px solid var(--purple-soft) !important;
+  border-radius:7px !important;
+  color:var(--text-soft) !important;
+  font-family:var(--serif) !important;
+  font-size:14.5px !important;
+  line-height:1.55 !important;
+}
+
+.foglio .fatigue-box b{
+  color:var(--acid-soft) !important;
+  font-size:16px !important;
+}
+
+.foglio .fatigue-box.zero{
+  background:rgba(159,190,40,.08) !important;
+  border-left-color:var(--acid) !important;
+}
+
+.foglio .awareness-box{
+  margin:16px 0 8px !important;
+  padding:15px 17px !important;
+  background:rgba(53,22,63,.24) !important;
+  border:1px solid var(--line) !important;
+  border-left:4px solid var(--purple-soft) !important;
+  border-radius:8px !important;
+}
+
+.foglio .awareness-box .awareness-title{
+  margin:0 0 8px !important;
+  color:var(--acid-soft) !important;
+  font-family:var(--serif) !important;
+  font-size:16px !important;
+}
+
+
 /* ---------- post finali Step 6 ---------- */
 
 .foglio .final-posts-box{
@@ -850,6 +892,7 @@
  tipo: "studente", 
  tecnica: 10, 
  voto: "A", 
+ sapienzaPozionistica: 0, 
  sapienzaAdulto: false, 
  speziale: "0", 
  chimico: "0", 
@@ -1002,7 +1045,88 @@
  function pgDataGet(pg, key, def){ 
  if(pg.data[key] === undefined){ return def; } 
  return pg.data[key]; 
- } 
+ }
+
+function sapienzaPozionisticaValue(pg){
+ var fallback = pg.sapienzaAdulto ? 1 : 0;
+ var v = num(pg.sapienzaPozionistica, fallback);
+ if(v < 0){ v = 0; }
+ if(v > 25){ v = 25; }
+ return v;
+ }
+
+function haSapienzaPozionistica(pg){
+ return pg.tipo === "adulto" && sapienzaPozionisticaValue(pg) > 0;
+ }
+
+function haSapienzaPozionistica25(pg){
+ return pg.tipo === "adulto" && sapienzaPozionisticaValue(pg) >= 25;
+ }
+
+function faticaFaseNumero(pg, fase){
+ if(fase === "prep"){ return 0.5; }
+ if(haSapienzaPozionistica25(pg)){
+   if(fase === "prod" || fase === "bacchetta" || fase === "imbott"){ return 0; }
+ }
+ if(fase === "prod"){ return 1; }
+ if(fase === "bacchetta"){ return 0.5; }
+ if(fase === "imbott"){ return 2; }
+ return 0;
+ }
+
+function fmtFatica(n){
+ var s = String(n);
+ if(s.indexOf(".5") !== -1){ s = s.replace(".5", ",5"); }
+ return s;
+ }
+
+function faticaFaseTesto(pg, fase){
+ if(fase === "distill"){
+   var eff = pgDataGet(pg, "distill_eff", "skip");
+   if(eff === "skip"){ return "0 Fatica — Distillazione non svolta."; }
+   if(haSapienzaPozionistica25(pg)){ return "0 Fatica — Sapienza Pozionistica 25."; }
+   return "-1 Fatica per ogni dose distillata.";
+ }
+ var n = faticaFaseNumero(pg, fase);
+ if(n === 0){ return "0 Fatica — Sapienza Pozionistica 25."; }
+ return "-" + fmtFatica(n) + " Fatica.";
+ }
+
+function buildFaticaBox(pg, fase){
+ var box = el("div", "fatigue-box" + ((fase !== "prep" && haSapienzaPozionistica25(pg)) ? " zero" : ""));
+ box.id = "fatigue-" + fase + "-" + pg.id;
+ var labels = {
+   prep:"Preparazione degli Ingredienti",
+   prod:"Produzione",
+   bacchetta:"Uso della Bacchetta",
+   imbott:"Imbottigliamento e Pulizia",
+   distill:"Distillazione"
+ };
+ box.innerHTML = "<b>Fatica — " + labels[fase] + ":</b> " + faticaFaseTesto(pg, fase);
+ return box;
+ }
+
+function updateFaticaBox(pg, fase){
+ var box = document.getElementById("fatigue-" + fase + "-" + pg.id);
+ if(!box){ return; }
+ box.className = "fatigue-box" + ((fase !== "prep" && haSapienzaPozionistica25(pg)) ? " zero" : "");
+ var labels = {
+   prep:"Preparazione degli Ingredienti",
+   prod:"Produzione",
+   bacchetta:"Uso della Bacchetta",
+   imbott:"Imbottigliamento e Pulizia",
+   distill:"Distillazione"
+ };
+ box.innerHTML = "<b>Fatica — " + labels[fase] + ":</b> " + faticaFaseTesto(pg, fase);
+ }
+
+function faticaObbligatoriaTotale(pg){
+ return faticaFaseNumero(pg,"prep") +
+        faticaFaseNumero(pg,"prod") +
+        faticaFaseNumero(pg,"bacchetta") +
+        faticaFaseNumero(pg,"imbott");
+ }
+ 
  
  /* ---------- NAV ---------- */ 
  /* ---------- NAV ---------- */ 
@@ -1200,13 +1324,21 @@ function renderNav(){
  row2.appendChild(dVoto); 
  } else { 
  var dSap = el("div"); 
- dSap.appendChild(el("label", null, "Possiede Sapienza Pozionistica?")); 
- var chkLine = el("div", "chk-line"); 
- var chkSap = el("input"); chkSap.type="checkbox"; chkSap.checked = pg.sapienzaAdulto; 
- chkSap.addEventListener("change", function(){ pg.sapienzaAdulto = chkSap.checked; }); 
- chkLine.appendChild(chkSap); 
- chkLine.appendChild(el("span", null, "Sì (1+)")); 
- dSap.appendChild(chkLine); 
+ dSap.appendChild(el("label", null, "Sapienza Pozionistica (0-25)")); 
+ var inpSap = el("input"); 
+ inpSap.type = "number"; 
+ inpSap.min = "0"; 
+ inpSap.max = "25"; 
+ inpSap.value = sapienzaPozionisticaValue(pg); 
+ inpSap.addEventListener("input", function(){ 
+   var sv = num(inpSap.value, 0); 
+   if(sv < 0){ sv = 0; } 
+   if(sv > 25){ sv = 25; } 
+   pg.sapienzaPozionistica = sv; 
+   pg.sapienzaAdulto = sv > 0; 
+ }); 
+ dSap.appendChild(inpSap); 
+ dSap.appendChild(el("p", "small-note", "A 25: 0 Fatica in Produzione, Uso della Bacchetta, Imbottigliamento/Pulizia e Distillazione. La Preparazione degli Ingredienti resta a -0,5 Fatica.")); 
  row2.appendChild(dSap); 
  } 
  card.appendChild(row2); 
@@ -1443,28 +1575,30 @@ function renderNav(){
  "Per ogni fascia di Ingredienti presente nella ricetta si lancia un d14 separato. " + 
  "La preparazione di quella fascia riesce se il risultato rientra nel numero di possibilità calcolato. " + 
  "Se una preparazione fallisce, oltre al PG che prepara può intervenire anche un altro PG per accorgersi dell'errore e permettere di sostituire l'ingrediente. " + 
- "L'aiutante viene inserito soltanto qui e non partecipa automaticamente alle altre fasi. Costo base della fase: -0,5 Fatica.")); 
- 
+ "L'aiutante viene inserito soltanto qui e non partecipa automaticamente alle altre fasi. Costo della fase: -0,5 Fatica.")); 
+
  var tiers = []; 
  if(POZ.tierBase){ tiers.push({ key:"base", label:"Ingredienti X, XX e XXX" }); } 
  if(POZ.tierIV){ tiers.push({ key:"iv", label:"Ingredienti XXXX" }); } 
  if(POZ.tierV){ tiers.push({ key:"v", label:"Ingredienti XXXXX" }); } 
- 
+
  if(tiers.length === 0){ 
  p.appendChild(el("div", "guide-text", "Non hai selezionato nessuna fascia di Ingredienti nello Step 1. Torna indietro e seleziona almeno una fascia.")); 
  container.appendChild(p); 
  return; 
  } 
- 
+
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildPrepCard(pgs[i], tiers)); 
  } 
- 
+
+ if(pgs.length > 0){ p.appendChild(buildFaticaBox(pgs[0], "prep")); }
+
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Produzione &#8594;"); 
  nextBtn.addEventListener(EV, function(){ currentStep = "prod"; renderAll(); }); 
  p.appendChild(nextBtn); 
- 
+
  container.appendChild(p); 
  } 
  
@@ -1477,7 +1611,7 @@ function renderNav(){
  if(eff === "66"){ return { fixed:0, diceFaces:2 }; } 
  if(eff === "33"){ return { fixed:1, diceFaces:0 }; } 
  } else { 
- var haSapienza = pg.sapienzaAdulto; 
+ var haSapienza = haSapienzaPozionistica(pg); 
  if(haSapienza){ 
  if(eff === "100"){ return { fixed:3, diceFaces:0 }; } 
  return { fixed:0, diceFaces:0 }; 
@@ -2004,17 +2138,19 @@ function renderNav(){
  p.appendChild(el("h2", null, "Fase 2: Produzione")); 
  p.appendChild(el("div", "guide-text", 
  "Si lancia un solo d30. Questa fase è la più cruciale: sbagliarla comporta malus pesanti e irrimediabili di Forza. " + 
- "Costo: -1 Fatica per PG.")); 
- 
+ "Costo: -1 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
+
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildProdCard(pgs[i])); 
  } 
- 
+
+ if(pgs.length > 0){ p.appendChild(buildFaticaBox(pgs[0], "prod")); }
+
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Uso della Bacchetta &#8594;"); 
  nextBtn.addEventListener(EV, function(){ currentStep = "bacchetta"; renderAll(); }); 
  p.appendChild(nextBtn); 
- 
+
  container.appendChild(p); 
  } 
  
@@ -2200,17 +2336,20 @@ function renderNav(){
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Fase 3: Uso della Bacchetta")); 
  p.appendChild(el("div", "guide-text", 
- "Si lancia un d15. Senza questo passaggio la Pozione non ha alcun effetto. Costo: -0,5 Fatica per PG.")); 
- 
+ "Si lancia un d15. Senza questo passaggio la Pozione non ha alcun effetto. " + 
+ "Costo: -0,5 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
+
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildBacchettaCard(pgs[i])); 
  } 
- 
+
+ if(pgs.length > 0){ p.appendChild(buildFaticaBox(pgs[0], "bacchetta")); }
+
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Imbottigliamento e Pulizia del Calderone &#8594;"); 
  nextBtn.addEventListener(EV, function(){ currentStep = "imbott"; renderAll(); }); 
  p.appendChild(nextBtn); 
- 
+
  container.appendChild(p); 
  } 
  
@@ -2439,23 +2578,113 @@ function renderNav(){
  return "Adulto senza Calderaio";
  }
 
- function renderImbottStep(container){ 
+ function calderaioAwarenessSoglia(pg){
+ if(pg.calderaio === "V"){ return 10; }
+ var bonus = levelNum(pg.calderaio);
+ var soglia = 5 + bonus;
+ if(soglia > 9){ soglia = 9; }
+ return soglia;
+ }
+
+function renderImbottAwareness(pg, esito, imbPosts){
+ var wrap = document.getElementById("imb-awareness-wrap-" + pg.id);
+ if(!wrap){ return; }
+ wrap.innerHTML = "";
+
+ if(esito !== "33%" && esito !== "66%"){
+   wrap.style.display = "none";
+   pg.data["imb_awareness"] = "not_applicable";
+   return;
+ }
+
+ wrap.style.display = "block";
+ var box = el("div", "awareness-box");
+ box.appendChild(el("div", "awareness-title", "Il PG si accorge che calderone e postazione impiegheranno più tempo?"));
+ box.appendChild(el("p", "small-note",
+   "Con esito " + esito + " la Pozione è pronta all'uso, ma la postazione richiede " + imbPosts +
+   " post finali. Accorgersene non riduce automaticamente i post: non si può porvi rimedio se non tramite eventuali Oggetti previsti dal regolamento."));
+
+ if(pg.calderaio === "V"){
+   pg.data["imb_awareness"] = "noticed";
+   box.appendChild(el("div", "result-line",
+     "<span>Calderaio V: il PG se ne accorge autoconclusivamente.</span><span class=\"out-tag out-ok\">Se ne accorge</span>"));
+   wrap.appendChild(box);
+   return;
+ }
+
+ var soglia = calderaioAwarenessSoglia(pg);
+ var lvlTxt = pg.calderaio === "0" ? "nessun Calderaio" : "Calderaio " + pg.calderaio;
+ var line = el("div", "result-line");
+ line.appendChild(el("span", null, "Tira 1d10: se ne accorge con 1-" + soglia + " (" + lvlTxt + ")."));
+
+ var codeId = "imb-awareness-code-" + pg.id;
+ var code = el("div", "dice-code");
+ code.id = codeId;
+ code.textContent = "[dice=1d10]Consapevolezza Imbottigliamento e Pulizia - " + pg.nome +
+   " (se ne accorge se 1-" + soglia + "; " + lvlTxt + ")[/dice]";
+ line.appendChild(code);
+
+ var copy = el("button", "copy-btn", "Copia");
+ copy.id = "imb-awareness-copy-" + pg.id;
+ line.appendChild(copy);
+
+ var inp = el("input");
+ inp.type = "number";
+ inp.min = "1";
+ inp.max = "10";
+ inp.placeholder = "1-10";
+ inp.value = pgDataGet(pg, "imb_awareness_result", "");
+ line.appendChild(inp);
+
+ var tag = el("span", "out-tag out-neutral", "in attesa");
+ line.appendChild(tag);
+
+ function aggiorna(){
+   pg.data["imb_awareness_result"] = inp.value;
+   if(inp.value === ""){
+     pg.data["imb_awareness"] = "pending";
+     tag.textContent = "in attesa";
+     tag.className = "out-tag out-neutral";
+     return;
+   }
+   var rv = num(inp.value, 0);
+   if(rv >= 1 && rv <= soglia){
+     pg.data["imb_awareness"] = "noticed";
+     tag.textContent = "Se ne accorge";
+     tag.className = "out-tag out-ok";
+   } else {
+     pg.data["imb_awareness"] = "not_noticed";
+     tag.textContent = "Non se ne accorge";
+     tag.className = "out-tag out-fail";
+   }
+ }
+
+ inp.addEventListener("input", aggiorna);
+ box.appendChild(line);
+ wrap.appendChild(box);
+ setTimeout(function(){ attachCopy("imb-awareness-copy-" + pg.id, codeId); }, 0);
+ aggiorna();
+ }
+
+function renderImbottStep(container){ 
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Fase 4: Imbottigliamento e Pulizia del Calderone")); 
  p.appendChild(el("div", "guide-text", 
- "Si lancia un d10. L'esito (0%, 33%, 66%, 100%) determina il numero di post finali necessari a ciascun Personaggio, " +
- "in base al suo profilo (Studente / Adulto senza Calderaio / Adulto con Calderaio) e alla Classificazione della Pozione. " +
- "Con 0% la Pozione è persa e il calderone esplode. Costo: -2 Fatica per PG.")); 
- 
+ "Si lancia un d10. L'esito (0%, 33%, 66%, 100%) determina il numero di post finali necessari in base al profilo del PG e alla Classificazione della Pozione. " +
+ "Con 0% la Pozione è persa e il calderone esplode. Con 33% o 66% la Pozione è pronta, ma il PG deve anche verificare se si accorge che la postazione resterà occupata più a lungo. " +
+ "Costo: -2 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
+
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildImbottCard(pgs[i])); 
  } 
- 
+
+ if(pgs.length > 0){ p.appendChild(buildFaticaBox(pgs[0], "imbott")); }
+
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Distillazione (facoltativa) &#8594;"); 
  nextBtn.addEventListener(EV, function(){ currentStep = "distill"; renderAll(); }); 
  p.appendChild(nextBtn); 
- 
+
  container.appendChild(p); 
  } 
  
@@ -2531,6 +2760,11 @@ function renderNav(){
  postsEl.id = "imb-posts-" + pg.id;
  postsEl.innerHTML = "Post finali: <b>in attesa dell'esito</b>";
  card.appendChild(postsEl);
+
+ var awarenessWrap = el("div");
+ awarenessWrap.id = "imb-awareness-wrap-" + pg.id;
+ awarenessWrap.style.display = "none";
+ card.appendChild(awarenessWrap);
 
  setTimeout(function(){ recomputeImbott(pg); }, 0); 
  return card; 
@@ -2632,6 +2866,8 @@ function renderNav(){
    } 
  } 
 
+ renderImbottAwareness(pg, imbEsito, imbPosts);
+
  pg.data["imb_status"] = imbStatus; 
  pg.data["imb_esito"] = imbEsito;
  pg.data["imb_posts"] = imbPosts; 
@@ -2660,27 +2896,29 @@ function renderNav(){
  p.appendChild(el("h2", null, "Fase Facoltativa: Distillazione")); 
  p.appendChild(el("div", "guide-text", 
  "Disponibile solo a chi possiede la Conoscenza Avanzata Distillatore. Va eseguita dopo l'Uso della Bacchetta, " + 
- "una volta per ogni dose che si vuole distillare. Costo: -1 Fatica per dose.")); 
- 
+ "una volta per ogni dose che si vuole distillare. Costo: -1 Fatica per dose. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
+
  for(var i=0;i<pgs.length;i++){ 
  if(levelNum(pgs[i].distillatore) > 0){ 
  p.appendChild(buildDistillCard(pgs[i])); 
  } 
  } 
- 
+
  var anyDistill = false; 
  for(var j=0;j<pgs.length;j++){ 
  if(levelNum(pgs[j].distillatore) > 0){ anyDistill = true; } 
  } 
  if(!anyDistill){ 
- p.appendChild(el("div", "guide-text", "Nessun Personaggio possiede la Conoscenza Distillatore: questa fase non è disponibile per il gruppo attuale.")); 
+ p.appendChild(el("div", "guide-text", "Nessun Personaggio possiede la Conoscenza Distillatore: questa fase non è disponibile per il Personaggio attuale.")); 
  } 
- 
+
+ if(pgs.length > 0){ p.appendChild(buildFaticaBox(pgs[0], "distill")); }
+
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Riepilogo Finale &#8594;"); 
  nextBtn.addEventListener(EV, function(){ currentStep = "riepilogo"; renderAll(); }); 
  p.appendChild(nextBtn); 
- 
+
  container.appendChild(p); 
  } 
  
@@ -2719,7 +2957,7 @@ function renderNav(){
  function distillSpaceFrom(pg, eff, roll){
  if(eff === "skip" || eff === "0"){ return "standard"; }
  var isStudente = (pg.tipo === "studente");
- var haSapienza = (pg.tipo === "adulto" && pg.sapienzaAdulto);
+ var haSapienza = haSapienzaPozionistica(pg);
  if(isStudente){
    if(eff === "33"){ return "1/2"; }
    if(eff === "66"){ if(roll === 1){ return "1/2"; } if(roll === 2){ return "1/3"; } }
@@ -2745,14 +2983,16 @@ function renderNav(){
 
  if(eff === "skip"){ 
    out.appendChild(el("p", "small-note", "Nessuna Distillazione: la dose mantiene lo spazio standard."));
+   updateFaticaBox(pg, "distill");
    return; 
  } 
  if(eff === "0"){ 
    out.appendChild(el("p", "small-note", "Distillazione fallita. La dose mantiene per ora lo spazio standard; puoi ritentare secondo regolamento."));
+   updateFaticaBox(pg, "distill");
    return; 
  } 
 
- var haSapienza = (pg.tipo === "adulto" && pg.sapienzaAdulto);
+ var haSapienza = haSapienzaPozionistica(pg);
  var isStudente = (pg.tipo === "studente"); 
  var faces = 0; 
  var esitoDesc = ""; 
@@ -2760,15 +3000,15 @@ function renderNav(){
  if(isStudente){ 
    if(eff === "100"){ faces = 3; esitoDesc = "1-2: dose = 1/2 spazio, 3: dose = 1/3 spazio"; } 
    if(eff === "66"){ faces = 2; esitoDesc = "1: dose = 1/2 spazio, 2: dose = 1/3 spazio"; } 
-   if(eff === "33"){ pg.data["distill_space"] = "1/2"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/2 spazio</b>.")); return; } 
+   if(eff === "33"){ pg.data["distill_space"] = "1/2"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/2 spazio</b>.")); updateFaticaBox(pg, "distill"); return; } 
  } else if(haSapienza){ 
-   if(eff === "100"){ pg.data["distill_space"] = "1/5"; out.appendChild(el("p", null, "Con Efficacia 100% la dose occupa direttamente <b>1/5 spazio</b>.")); return; } 
+   if(eff === "100"){ pg.data["distill_space"] = "1/5"; out.appendChild(el("p", null, "Con Efficacia 100% la dose occupa direttamente <b>1/5 spazio</b>.")); updateFaticaBox(pg, "distill"); return; } 
    if(eff === "66"){ faces = 2; esitoDesc = "1: dose = 1/4 spazio, 2: dose = 1/5 spazio"; } 
-   if(eff === "33"){ pg.data["distill_space"] = "1/4"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/4 spazio</b>.")); return; } 
+   if(eff === "33"){ pg.data["distill_space"] = "1/4"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/4 spazio</b>.")); updateFaticaBox(pg, "distill"); return; } 
  } else { 
    if(eff === "100"){ faces = 3; esitoDesc = "1-2: dose = 1/3 spazio, 3: dose = 1/4 spazio"; } 
    if(eff === "66"){ faces = 2; esitoDesc = "1: dose = 1/3 spazio, 2: dose = 1/4 spazio"; } 
-   if(eff === "33"){ pg.data["distill_space"] = "1/3"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/3 spazio</b>.")); return; } 
+   if(eff === "33"){ pg.data["distill_space"] = "1/3"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/3 spazio</b>.")); updateFaticaBox(pg, "distill"); return; } 
  } 
 
  if(faces > 0){ 
@@ -2800,6 +3040,8 @@ function renderNav(){
    rollInp.addEventListener("input", aggiornaSpazio);
    aggiornaSpazio();
  } 
+ 
+ updateFaticaBox(pg, "distill");
  } 
 
  /* ==================================================== */ 
@@ -2906,10 +3148,30 @@ function renderNav(){
  var narrazione = pgDataGet(pg, "riep_narrazione", false); 
  var ongDosi = num(pgDataGet(pg, "riep_ingredienti_ong", 0), 0); 
  var roleLink = String(pgDataGet(pg, "riep_role_link", "") || "").replace(/^\s+|\s+$/g, "");
- var spazioDose = pgDataGet(pg, "distill_space", "standard"); 
+ var spazioDose = pgDataGet(pg, "distill_space", "standard");
+ var faticaPrep = faticaFaseNumero(pg, "prep");
+ var faticaProd = faticaFaseNumero(pg, "prod");
+ var faticaBac = faticaFaseNumero(pg, "bacchetta");
+ var faticaImb = faticaFaseNumero(pg, "imbott");
+ var faticaObbl = faticaObbligatoriaTotale(pg);
+ var distEffRiep = pgDataGet(pg, "distill_eff", "skip");
+ var faticaDistTesto = "0 Fatica (Distillazione non svolta)";
+ if(distEffRiep !== "skip"){
+   if(haSapienzaPozionistica25(pg)){ faticaDistTesto = "0 Fatica (Sapienza Pozionistica 25)"; }
+   else { faticaDistTesto = "-1 Fatica per dose distillata"; }
+ }
+ var faticaFinaleVisual = "-" + fmtFatica(faticaObbl) + " Fatica obbligatoria";
+ if(distEffRiep !== "skip" && !haSapienzaPozionistica25(pg)){
+   faticaFinaleVisual += " + 1/dose distillata";
+ } 
  
  var incompleto = false; 
- var noteRighe = []; 
+ var noteRighe = [];
+ noteRighe.push("Fatica Preparazione Ingredienti: -" + fmtFatica(faticaPrep) + ".");
+ noteRighe.push("Fatica Produzione: " + (faticaProd === 0 ? "0 (Sapienza Pozionistica 25)." : "-" + fmtFatica(faticaProd) + "."));
+ noteRighe.push("Fatica Uso della Bacchetta: " + (faticaBac === 0 ? "0 (Sapienza Pozionistica 25)." : "-" + fmtFatica(faticaBac) + "."));
+ noteRighe.push("Fatica Imbottigliamento e Pulizia: " + (faticaImb === 0 ? "0 (Sapienza Pozionistica 25)." : "-" + fmtFatica(faticaImb) + "."));
+ noteRighe.push("Fatica Distillazione: " + faticaDistTesto + "."); 
  
  var prepAcc = computePrepAccumulo(pg, tiersPresent); 
  var prodAcc = computeProdAccumulo(pg); 
@@ -2968,6 +3230,12 @@ function renderNav(){
  var imbEsito = pgDataGet(pg, "imb_esito", "");
  var imbPosts = pgDataGet(pg, "imb_posts", null);
  if(imbStatus === "pending"){ incompleto = true; }
+ var imbAwareness = pgDataGet(pg, "imb_awareness", "not_applicable");
+ if(imbEsito === "33%" || imbEsito === "66%"){
+   if(imbAwareness === "noticed"){ noteRighe.push("Imbottigliamento/Pulizia: il PG si accorge che postazione e calderone richiederanno più tempo."); }
+   else if(imbAwareness === "not_noticed"){ noteRighe.push("Imbottigliamento/Pulizia: il PG non si accorge del maggior tempo necessario alla postazione."); }
+   else { noteRighe.push("Imbottigliamento/Pulizia: controllo sul maggior tempo della postazione non ancora risolto."); }
+ }
  if(spazioDose === null){ incompleto = true; } 
  
  var forzaBaseRaw = pgDataGet(pg, "riep_forza_base", ""); 
@@ -3025,6 +3293,7 @@ function renderNav(){
  if(spazioDose === null){ spazioFinaleVisual = "Da determinare"; }
  addSummaryStat("Spazio / dose", spazioFinaleVisual, false);
  addSummaryStat("Post finali", postsFinaliVisual, false);
+ addSummaryStat("Fatica", faticaFinaleVisual, true);
 
  summaryBox.appendChild(summaryGrid);
  out.appendChild(summaryBox);
@@ -3093,7 +3362,9 @@ function renderNav(){
  var r4 = el("tr", null, "<th>Dosi ottenute</th><td>" + (dosiInfo.finale === null ? "da calcolare (vedi Step 5)" : dosiInfo.finale) + "</td>"); 
  var r5 = el("tr", null, "<th>Post finali richiesti</th><td>" + (imbEsito === "" ? "da calcolare (vedi Step 6)" : (imbEsito === "0%" ? "non applicabili: processo fallito" : ((imbPosts === null || imbPosts === undefined) ? "da calcolare" : imbPosts))) + "</td>");
  var r6 = el("tr", null, "<th>Imbottigliamento/Calderone</th><td>" + (imbEsito === "" ? "da calcolare (vedi Step 6)" : (imbEsito === "0%" ? "Esploso" : "Pronta, esito " + imbEsito)) + "</td>"); 
- tbl.appendChild(r1); tbl.appendChild(r2); tbl.appendChild(r3); tbl.appendChild(r4); tbl.appendChild(r5); tbl.appendChild(r6); 
+ var r7 = el("tr", null, "<th>Fatica fasi obbligatorie</th><td>-" + fmtFatica(faticaObbl) + " Fatica</td>");
+ var r8 = el("tr", null, "<th>Fatica Distillazione</th><td>" + faticaDistTesto + "</td>");
+ tbl.appendChild(r1); tbl.appendChild(r2); tbl.appendChild(r3); tbl.appendChild(r4); tbl.appendChild(r5); tbl.appendChild(r6); tbl.appendChild(r7); tbl.appendChild(r8); 
  out.appendChild(tbl); 
  
  var detTitle = el("p", null, "<b>Dettaglio conseguenze</b>"); 
