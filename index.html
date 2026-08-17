@@ -1,14 +1,22 @@
-```
-<div class="foglio"> 
+<!-- Revisione regolamento v3: audit casi limite -->
+<div id="creazione-pozione" class="foglio"> 
 <style>
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css');
+@font-face {
+  font-family:'magic';
+  src:url('https://dl.dropboxusercontent.com/scl/fi/nbzmrri4qyvc3tzx96911/HarryBeastDisplay-Regular.woff2?rlkey=he290voe32k33gowug23c1osc&st=nj9fgly1') format('woff2');
+  font-weight:normal;
+  font-style:normal;
+  font-display:swap;
+}
 /* ==========================================================
-   CREAZIONE DI UNA POZIONE
+   CREAZIONE DI UNA POZIONE — Extra+ integrate
    Peltro + verde acido + viola scuro
    Stile più ricco e leggibile, ispirato alla Ricerca Pazienti.
-   Tutto circoscritto a .foglio per non toccare il resto del forum.
+   Tutto circoscritto a #creazione-pozione per non toccare il resto del forum.
    ========================================================== */
 
-.foglio{
+#creazione-pozione{
   --bg:#171a1b;
   --bg2:#101213;
   --panel:#252a2b;
@@ -60,29 +68,48 @@
   line-height:1.55 !important;
 }
 
-.foglio,
-.foglio *{
+#creazione-pozione,
+#creazione-pozione *{
   box-sizing:border-box !important;
 }
 
 /* ---------- contenitore ---------- */
 
-.foglio .wrap{
+#creazione-pozione .wrap{
   width:96% !important;
   max-width:1180px !important;
   margin:0 auto !important;
   padding:42px 26px 72px !important;
 }
 
+/* ---------- sigillo ---------- */
+
+#creazione-pozione .seal{
+  width:64px !important;
+  height:64px !important;
+  margin:0 auto 15px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1px solid var(--acid) !important;
+  border-radius:50% !important;
+  background:radial-gradient(circle,rgba(159,190,40,.13),rgba(53,22,63,.20) 68%,rgba(16,18,19,.78)) !important;
+  color:var(--acid) !important;
+  font-size:30px !important;
+  line-height:1 !important;
+  box-shadow:0 0 0 4px rgba(159,190,40,.035),0 8px 24px rgba(0,0,0,.26),inset 0 0 18px rgba(159,190,40,.08) !important;
+}
+#creazione-pozione .seal i{color:var(--acid) !important;}
+
 /* ---------- testata ---------- */
 
-.foglio .main-title{
+#creazione-pozione .main-title{
   position:relative !important;
   margin:0 auto 8px !important;
   padding:0 20px !important;
   text-align:center !important;
   color:var(--text) !important;
-  font-family:var(--serif) !important;
+  font-family:'magic',var(--serif) !important;
   font-size:42px !important;
   line-height:1.15 !important;
   font-weight:400 !important;
@@ -90,7 +117,7 @@
   text-shadow:0 2px 8px rgba(0,0,0,.45) !important;
 }
 
-.foglio .main-title:after{
+#creazione-pozione .main-title:after{
   content:"" !important;
   display:block !important;
   width:110px !important;
@@ -99,7 +126,7 @@
   background:linear-gradient(90deg,transparent,var(--acid),transparent) !important;
 }
 
-.foglio .title-flask{
+#creazione-pozione .title-flask{
   display:inline-block !important;
   margin:0 10px !important;
   color:var(--acid-soft) !important;
@@ -111,7 +138,7 @@
 /* NON ridefiniamo :before di Font Awesome:
    il forum può già caricare correttamente l'icona fa-flask. */
 
-.foglio .subtitle{
+#creazione-pozione .subtitle{
   max-width:720px !important;
   margin:0 auto 34px !important;
   text-align:center !important;
@@ -125,7 +152,7 @@
 
 /* ---------- navigazione ---------- */
 
-.foglio .steps-nav{
+#creazione-pozione .steps-nav{
   display:flex !important;
   flex-wrap:wrap !important;
   justify-content:center !important;
@@ -142,7 +169,7 @@
   box-shadow:0 8px 22px rgba(0,0,0,.22) !important;
 }
 
-.foglio button.step-btn{
+#creazione-pozione button.step-btn{
   flex:1 1 135px !important;
   min-width:120px !important;
   min-height:51px !important;
@@ -167,12 +194,12 @@
   cursor:pointer !important;
 }
 
-.foglio button.step-btn:hover{
+#creazione-pozione button.step-btn:hover{
   background:rgba(255,255,255,.035) !important;
   color:var(--text) !important;
 }
 
-.foglio button.step-btn.active{
+#creazione-pozione button.step-btn.active{
   background:linear-gradient(180deg,rgba(159,190,40,.16),rgba(159,190,40,.05)) !important;
   border-bottom-color:var(--acid) !important;
   color:var(--acid-soft) !important;
@@ -180,7 +207,7 @@
 
 /* ---------- pannello di ogni fase ---------- */
 
-.foglio .panel{
+#creazione-pozione .panel{
   position:relative !important;
   width:100% !important;
   margin:0 0 24px !important;
@@ -197,7 +224,7 @@
   color:var(--text) !important;
 }
 
-.foglio .panel:before{
+#creazione-pozione .panel:before{
   content:"" !important;
   position:absolute !important;
   top:-1px !important;
@@ -208,14 +235,14 @@
   opacity:.75 !important;
 }
 
-.foglio .panel h2{
+#creazione-pozione .panel h2{
   margin:0 0 9px !important;
   padding:0 0 0 15px !important;
   border:0 !important;
   border-left:3px solid var(--acid) !important;
 
   color:var(--text) !important;
-  font-family:var(--serif) !important;
+  font-family:'magic',var(--serif) !important;
   font-size:26px !important;
   line-height:1.25 !important;
   font-weight:400 !important;
@@ -223,29 +250,29 @@
   text-shadow:none !important;
 }
 
-.foglio .panel h3{
+#creazione-pozione .panel h3{
   color:var(--text) !important;
-  font-family:var(--serif) !important;
+  font-family:'magic',var(--serif) !important;
   font-size:19px !important;
   font-weight:400 !important;
 }
 
-.foglio .panel p{
+#creazione-pozione .panel p{
   color:var(--text-soft) !important;
   font-family:var(--serif) !important;
   font-size:15px !important;
   line-height:1.6 !important;
 }
 
-.foglio .panel b,
-.foglio .panel strong{
+#creazione-pozione .panel b,
+#creazione-pozione .panel strong{
   color:var(--acid-soft) !important;
   font-weight:600 !important;
 }
 
 /* ---------- testo introduttivo / note ---------- */
 
-.foglio .guide-text{
+#creazione-pozione .guide-text{
   margin:16px 0 28px !important;
   padding:15px 18px !important;
 
@@ -263,7 +290,7 @@
 
 /* ---------- righe / campi ---------- */
 
-.foglio .row{
+#creazione-pozione .row{
   display:flex !important;
   flex-wrap:wrap !important;
   align-items:flex-start !important;
@@ -273,12 +300,12 @@
   margin:0 0 20px !important;
 }
 
-.foglio .row > div{
+#creazione-pozione .row > div{
   flex:1 1 220px !important;
   min-width:190px !important;
 }
 
-.foglio label{
+#creazione-pozione label{
   display:block !important;
   margin:0 0 6px !important;
 
@@ -291,10 +318,10 @@
   text-transform:uppercase !important;
 }
 
-.foglio input[type="text"],
-.foglio input[type="number"],
-.foglio select,
-.foglio textarea{
+#creazione-pozione input[type="text"],
+#creazione-pozione input[type="number"],
+#creazione-pozione select,
+#creazione-pozione textarea{
   width:100% !important;
   max-width:none !important;
   min-height:39px !important;
@@ -314,10 +341,10 @@
   font-weight:400 !important;
 }
 
-.foglio input[type="text"]:focus,
-.foglio input[type="number"]:focus,
-.foglio select:focus,
-.foglio textarea:focus{
+#creazione-pozione input[type="text"]:focus,
+#creazione-pozione input[type="number"]:focus,
+#creazione-pozione select:focus,
+#creazione-pozione textarea:focus{
   outline:none !important;
   border-color:var(--acid) !important;
   box-shadow:
@@ -325,12 +352,12 @@
     inset 0 1px 2px rgba(0,0,0,.35) !important;
 }
 
-.foglio select option{
+#creazione-pozione select option{
   background:var(--bg2) !important;
   color:var(--text) !important;
 }
 
-.foglio input[type="checkbox"]{
+#creazione-pozione input[type="checkbox"]{
   width:16px !important;
   height:16px !important;
   min-height:0 !important;
@@ -339,7 +366,7 @@
   accent-color:var(--acid) !important;
 }
 
-.foglio .chk-line{
+#creazione-pozione .chk-line{
   display:flex !important;
   align-items:center !important;
   gap:9px !important;
@@ -352,13 +379,13 @@
   line-height:1.45 !important;
 }
 
-.foglio .chk-line span{
+#creazione-pozione .chk-line span{
   color:var(--text) !important;
 }
 
 /* ---------- divisori ---------- */
 
-.foglio .divider{
+#creazione-pozione .divider{
   height:1px !important;
   margin:26px 0 22px !important;
   padding:0 !important;
@@ -368,7 +395,7 @@
 
 /* ---------- schede personaggio ---------- */
 
-.foglio .pg-card{
+#creazione-pozione .pg-card{
   position:relative !important;
   margin:0 0 20px !important;
   padding:22px 24px !important;
@@ -382,7 +409,7 @@
   color:var(--text) !important;
 }
 
-.foglio .pg-card:before{
+#creazione-pozione .pg-card:before{
   content:"" !important;
   position:absolute !important;
   left:-1px !important;
@@ -394,7 +421,7 @@
   opacity:.65 !important;
 }
 
-.foglio .pg-card h3{
+#creazione-pozione .pg-card h3{
   display:flex !important;
   align-items:center !important;
   justify-content:space-between !important;
@@ -410,13 +437,13 @@
   font-weight:400 !important;
 }
 
-.foglio .pg-card > p{
+#creazione-pozione .pg-card > p{
   margin:18px 0 16px !important;
   color:var(--text-soft) !important;
   font-size:14.5px !important;
 }
 
-.foglio .pg-card > p b{
+#creazione-pozione .pg-card > p b{
   color:var(--acid-soft) !important;
   font-size:16px !important;
   font-weight:400 !important;
@@ -424,7 +451,7 @@
 
 /* ---------- pulsanti ---------- */
 
-.foglio button.action{
+#creazione-pozione button.action{
   display:inline-flex !important;
   align-items:center !important;
   justify-content:center !important;
@@ -450,28 +477,28 @@
   cursor:pointer !important;
 }
 
-.foglio button.action:hover{
+#creazione-pozione button.action:hover{
   background:
     linear-gradient(180deg,#52265e,#3c1b47) !important;
   border-color:var(--acid) !important;
   color:#fff !important;
 }
 
-.foglio button.action.danger{
+#creazione-pozione button.action.danger{
   background:transparent !important;
   border-color:var(--danger) !important;
   color:#e7a9b6 !important;
 }
 
-.foglio button.action.danger:hover{
+#creazione-pozione button.action.danger:hover{
   background:var(--danger-bg) !important;
   color:#ffd0da !important;
 }
 
 /* ---------- dadi / copia ---------- */
 
-.foglio .dice-box,
-.foglio .result-line{
+#creazione-pozione .dice-box,
+#creazione-pozione .result-line{
   display:flex !important;
   align-items:center !important;
   flex-wrap:wrap !important;
@@ -479,7 +506,7 @@
   margin:12px 0 !important;
 }
 
-.foglio .dice-code{
+#creazione-pozione .dice-code{
   flex:1 1 420px !important;
   min-height:43px !important;
   padding:10px 12px !important;
@@ -495,7 +522,7 @@
   overflow-wrap:anywhere !important;
 }
 
-.foglio button.copy-btn{
+#creazione-pozione button.copy-btn{
   flex:0 0 auto !important;
   min-width:76px !important;
   min-height:41px !important;
@@ -516,18 +543,18 @@
   cursor:pointer !important;
 }
 
-.foglio button.copy-btn:hover{
+#creazione-pozione button.copy-btn:hover{
   background:var(--purple2) !important;
   border-color:var(--acid) !important;
 }
 
-.foglio .result-line > span:first-child{
+#creazione-pozione .result-line > span:first-child{
   color:var(--text-soft) !important;
   font-family:var(--serif) !important;
   font-size:14px !important;
 }
 
-.foglio .result-line input[type="number"]{
+#creazione-pozione .result-line input[type="number"]{
   flex:0 0 88px !important;
   width:88px !important;
   max-width:88px !important;
@@ -536,7 +563,7 @@
 
 /* ---------- tag esito ---------- */
 
-.foglio .out-tag{
+#creazione-pozione .out-tag{
   display:inline-block !important;
   padding:5px 11px !important;
   border:1px solid var(--line) !important;
@@ -548,19 +575,19 @@
   letter-spacing:.035em !important;
 }
 
-.foglio .out-ok{
+#creazione-pozione .out-ok{
   background:rgba(159,190,40,.09) !important;
   border-color:var(--acid) !important;
   color:var(--acid-soft) !important;
 }
 
-.foglio .out-fail{
+#creazione-pozione .out-fail{
   background:rgba(201,104,124,.09) !important;
   border-color:var(--danger) !important;
   color:#e7a9b6 !important;
 }
 
-.foglio .out-neutral{
+#creazione-pozione .out-neutral{
   background:transparent !important;
   border-color:var(--line) !important;
   color:var(--text-dim) !important;
@@ -568,7 +595,7 @@
 
 /* ---------- formule / note minori ---------- */
 
-.foglio .formula-tag{
+#creazione-pozione .formula-tag{
   display:inline-block !important;
   margin:5px 0 8px !important;
   padding:5px 9px !important;
@@ -582,7 +609,7 @@
   font-size:11.5px !important;
 }
 
-.foglio .small-note{
+#creazione-pozione .small-note{
   margin:7px 0 12px !important;
   color:var(--text-dim) !important;
   font-size:13px !important;
@@ -593,7 +620,7 @@
 
 /* ---------- esito complessivo Preparazione Ingredienti ---------- */
 
-.foglio .prep-summary-box{
+#creazione-pozione .prep-summary-box{
   margin:18px 0 4px !important;
   padding:15px 17px !important;
   background:rgba(16,18,19,.55) !important;
@@ -604,14 +631,14 @@
   font-family:var(--serif) !important;
   line-height:1.55 !important;
 }
-.foglio .prep-summary-box.success{ background:rgba(159,190,40,.09) !important; border-left-color:var(--acid) !important; }
-.foglio .prep-summary-box.fail{ background:rgba(201,104,124,.09) !important; border-left-color:var(--danger) !important; }
-.foglio .prep-summary-box.warning{ background:rgba(184,156,193,.08) !important; border-left-color:var(--purple-soft) !important; }
-.foglio .prep-summary-box .prep-main{ display:block !important; margin-bottom:5px !important; color:var(--text) !important; font-size:16px !important; }
-.foglio .prep-summary-box.success .prep-main{ color:var(--acid-soft) !important; }
-.foglio .prep-summary-box.fail .prep-main{ color:#ef9aab !important; }
+#creazione-pozione .prep-summary-box.success{ background:rgba(159,190,40,.09) !important; border-left-color:var(--acid) !important; }
+#creazione-pozione .prep-summary-box.fail{ background:rgba(201,104,124,.09) !important; border-left-color:var(--danger) !important; }
+#creazione-pozione .prep-summary-box.warning{ background:rgba(184,156,193,.08) !important; border-left-color:var(--purple-soft) !important; }
+#creazione-pozione .prep-summary-box .prep-main{ display:block !important; margin-bottom:5px !important; color:var(--text) !important; font-size:16px !important; }
+#creazione-pozione .prep-summary-box.success .prep-main{ color:var(--acid-soft) !important; }
+#creazione-pozione .prep-summary-box.fail .prep-main{ color:#ef9aab !important; }
 
-.foglio .inventory-box{
+#creazione-pozione .inventory-box{
   margin:20px 0 14px !important;
   padding:16px 17px !important;
   background:linear-gradient(90deg,rgba(53,22,63,.45),rgba(16,18,19,.76)) !important;
@@ -619,7 +646,7 @@
   border-left:4px solid var(--acid) !important;
   border-radius:8px !important;
 }
-.foglio .inventory-label{
+#creazione-pozione .inventory-label{
   display:block !important;
   margin:0 0 10px !important;
   color:var(--acid-soft) !important;
@@ -628,7 +655,7 @@
   letter-spacing:.055em !important;
   text-transform:uppercase !important;
 }
-.foglio .inventory-sentence{
+#creazione-pozione .inventory-sentence{
   width:100% !important;
   margin:0 !important;
   padding:14px 15px !important;
@@ -645,7 +672,7 @@
 
 /* ---------- Fatica / consapevolezza del calderone ---------- */
 
-.foglio .fatigue-box{
+#creazione-pozione .fatigue-box{
   margin:20px 0 6px !important;
   padding:14px 16px !important;
   background:linear-gradient(90deg,rgba(53,22,63,.48),rgba(16,18,19,.58)) !important;
@@ -658,17 +685,17 @@
   line-height:1.55 !important;
 }
 
-.foglio .fatigue-box b{
+#creazione-pozione .fatigue-box b{
   color:var(--acid-soft) !important;
   font-size:16px !important;
 }
 
-.foglio .fatigue-box.zero{
+#creazione-pozione .fatigue-box.zero{
   background:rgba(159,190,40,.08) !important;
   border-left-color:var(--acid) !important;
 }
 
-.foglio .awareness-box{
+#creazione-pozione .awareness-box{
   margin:16px 0 8px !important;
   padding:15px 17px !important;
   background:rgba(53,22,63,.24) !important;
@@ -677,7 +704,7 @@
   border-radius:8px !important;
 }
 
-.foglio .awareness-box .awareness-title{
+#creazione-pozione .awareness-box .awareness-title{
   margin:0 0 8px !important;
   color:var(--acid-soft) !important;
   font-family:var(--serif) !important;
@@ -687,7 +714,7 @@
 
 /* ---------- post finali Step 6 ---------- */
 
-.foglio .final-posts-box{
+#creazione-pozione .final-posts-box{
   margin:14px 0 8px !important;
   padding:14px 16px !important;
   background:linear-gradient(90deg,rgba(159,190,40,.12),rgba(53,22,63,.22)) !important;
@@ -700,12 +727,12 @@
   line-height:1.5 !important;
 }
 
-.foglio .final-posts-box b{
+#creazione-pozione .final-posts-box b{
   color:var(--acid-soft) !important;
   font-size:17px !important;
 }
 
-.foglio .final-posts-box.fail{
+#creazione-pozione .final-posts-box.fail{
   background:rgba(201,104,124,.09) !important;
   border-color:rgba(201,104,124,.55) !important;
   border-left-color:var(--danger) !important;
@@ -713,7 +740,7 @@
 
 /* ---------- scheda riassuntiva finale ---------- */
 
-.foglio .potion-summary{
+#creazione-pozione .potion-summary{
   margin:18px 0 22px !important;
   padding:18px !important;
   background:
@@ -724,23 +751,23 @@
   border-radius:9px !important;
 }
 
-.foglio .potion-summary-title{
+#creazione-pozione .potion-summary-title{
   margin:0 0 14px !important;
   padding:0 0 10px !important;
   border-bottom:1px solid rgba(80,89,87,.75) !important;
   color:var(--acid-soft) !important;
-  font-family:var(--serif) !important;
+  font-family:'magic',var(--serif) !important;
   font-size:18px !important;
   font-weight:400 !important;
 }
 
-.foglio .potion-summary-grid{
+#creazione-pozione .potion-summary-grid{
   display:grid !important;
   grid-template-columns:repeat(3,minmax(0,1fr)) !important;
   gap:12px !important;
 }
 
-.foglio .summary-stat{
+#creazione-pozione .summary-stat{
   min-width:0 !important;
   padding:13px 14px !important;
   background:rgba(16,18,19,.66) !important;
@@ -748,7 +775,7 @@
   border-radius:7px !important;
 }
 
-.foglio .summary-stat-label{
+#creazione-pozione .summary-stat-label{
   display:block !important;
   margin:0 0 6px !important;
   color:var(--text-dim) !important;
@@ -759,7 +786,7 @@
   text-transform:uppercase !important;
 }
 
-.foglio .summary-stat-value{
+#creazione-pozione .summary-stat-value{
   display:block !important;
   color:var(--text) !important;
   font-family:var(--serif) !important;
@@ -768,18 +795,18 @@
   overflow-wrap:anywhere !important;
 }
 
-.foglio .summary-stat-value.accent{
+#creazione-pozione .summary-stat-value.accent{
   color:var(--acid-soft) !important;
 }
 
 @media (max-width:950px){
-  .foglio .potion-summary-grid{
+  #creazione-pozione .potion-summary-grid{
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
   }
 }
 
 @media (max-width:560px){
-  .foglio .potion-summary-grid{
+  #creazione-pozione .potion-summary-grid{
     grid-template-columns:1fr !important;
   }
 }
@@ -787,7 +814,7 @@
 
 /* ---------- tabelle ---------- */
 
-.foglio table.bracket{
+#creazione-pozione table.bracket{
   width:100% !important;
   margin-top:12px !important;
   border-collapse:collapse !important;
@@ -795,14 +822,14 @@
   font-size:14px !important;
 }
 
-.foglio table.bracket th,
-.foglio table.bracket td{
+#creazione-pozione table.bracket th,
+#creazione-pozione table.bracket td{
   padding:9px 10px !important;
   border:1px solid var(--line) !important;
   text-align:center !important;
 }
 
-.foglio table.bracket th{
+#creazione-pozione table.bracket th{
   background:rgba(53,22,63,.62) !important;
   color:var(--acid-soft) !important;
   font-family:var(--mono) !important;
@@ -812,58 +839,122 @@
   text-transform:uppercase !important;
 }
 
-.foglio table.bracket td{
+#creazione-pozione table.bracket td{
   background:rgba(16,18,19,.54) !important;
 }
 
 /* ---------- link ---------- */
 
-.foglio a{
+#creazione-pozione a{
   color:var(--acid-soft) !important;
 }
 
 /* ---------- responsive ---------- */
 
+
+/* ---------- Conoscenze Extra+ ---------- */
+#creazione-pozione .phase-extra-control{
+  margin:10px 0 16px !important;
+  padding:13px 14px !important;
+  background:rgba(159,190,40,.035) !important;
+  border:1px solid rgba(159,190,40,.25) !important;
+  border-left:4px solid var(--acid-dim) !important;
+  border-radius:7px !important;
+}
+#creazione-pozione .phase-extra-title{
+  margin:0 0 10px !important;
+  color:var(--acid-soft) !important;
+  font-family:var(--serif) !important;
+  font-size:13px !important;
+  font-weight:700 !important;
+  letter-spacing:.045em !important;
+  text-transform:uppercase !important;
+}
+
+#creazione-pozione .extra-off-note{
+  margin:8px 0 0 !important;
+  padding:10px 11px !important;
+  background:rgba(159,190,40,.055) !important;
+  border:1px solid rgba(159,190,40,.22) !important;
+  border-left:3px solid var(--acid-dim) !important;
+  border-radius:6px !important;
+  color:var(--text-soft) !important;
+  font-family:var(--serif) !important;
+  font-size:12.8px !important;
+  line-height:1.5 !important;
+}
+#creazione-pozione .extra-off-note b{ color:var(--acid-soft) !important; }
+#creazione-pozione .extra-efficacy-box{
+  margin:12px 0 16px !important;
+  padding:13px 14px !important;
+  background:rgba(53,22,63,.24) !important;
+  border:1px solid var(--line) !important;
+  border-left:4px solid var(--purple-soft) !important;
+  border-radius:7px !important;
+}
+#creazione-pozione .extra-efficacy-title{
+  margin:0 0 7px !important;
+  color:var(--acid-soft) !important;
+  font-family:var(--serif) !important;
+  font-size:15px !important;
+}
+
+/* ---------- accessibilità / stati interattivi ---------- */
+#creazione-pozione button:focus-visible,
+#creazione-pozione input:focus-visible,
+#creazione-pozione select:focus-visible,
+#creazione-pozione textarea:focus-visible{
+  outline:2px solid var(--acid-soft) !important;
+  outline-offset:2px !important;
+}
+
+#creazione-pozione button:disabled{
+  opacity:.48 !important;
+  cursor:not-allowed !important;
+  filter:saturate(.55) !important;
+}
+
 @media (max-width:760px){
-  .foglio .wrap{
+  #creazione-pozione .wrap{
     width:100% !important;
     padding:30px 14px 55px !important;
   }
 
-  .foglio .main-title{
+  #creazione-pozione .main-title{
     font-size:31px !important;
   }
 
-  .foglio .panel{
+  #creazione-pozione .panel{
     padding:22px 18px 24px !important;
   }
 
-  .foglio .step-btn{
+  #creazione-pozione .step-btn{
     flex:1 1 145px !important;
   }
 
-  .foglio .row{
+  #creazione-pozione .row{
     column-gap:14px !important;
     row-gap:14px !important;
   }
 
-  .foglio .row > div{
+  #creazione-pozione .row > div{
     flex-basis:100% !important;
     min-width:0 !important;
   }
 
-  .foglio .dice-code{
+  #creazione-pozione .dice-code{
     flex-basis:100% !important;
   }
 }
 </style> 
 <div class="wrap"> 
- <h1 class="main-title"><i class="fa-solid fa-flask title-flask" aria-hidden="true"></i> Creazione di una Pozione <i class="fa-solid fa-flask title-flask" aria-hidden="true"></i></h1> 
+ <div class="seal" aria-hidden="true"><i class="fa-solid fa-flask"></i></div>
+ <h1 class="main-title">Creazione di una Pozione</h1> 
  <p class="subtitle">Segui i passaggi uno alla volta: la pagina calcola formule e dadi, tu incolli i codici [dice] sul forum.</p> 
 <br> 
- <div class="steps-nav" id="stepsNav"></div> 
+ <div class="steps-nav" id="stepsNav" aria-label="Fasi della creazione della Pozione"></div> 
 <br> 
- <div id="stepContainer"></div> 
+ <div id="stepContainer" aria-live="polite"></div> 
 </div> 
 <br> 
 <script type="text/javascript"> 
@@ -875,10 +966,12 @@
  /* ---------- STATO GLOBALE ---------- */ 
  var POZ = { 
  nome: "", 
- classificazione: "X", 
- tierBase: true, 
+ classificazione: "", 
+ tierBase: false, 
  tierIV: false, 
- tierV: false 
+ tierV: false,
+ conoscenzaPosseduta: false,
+ valigettaAdduco: false
  }; 
  
  var pgCounter = 0; 
@@ -889,10 +982,10 @@
  return { 
  id: pgCounter, 
  nome: "Personaggio", 
- tipo: "studente", 
- tecnica: 10, 
- voto: "A", 
- sapienzaPozionistica: 0, 
+ tipo: "", 
+ tecnica: null, 
+ voto: "", 
+ sapienzaPozionistica: null, 
  sapienzaAdulto: false, 
  speziale: "0", 
  chimico: "0", 
@@ -901,7 +994,10 @@
  distillatore: "0", 
  manualita: "no", 
  memoria: "no", 
- sintesi: "no", 
+ sintesi: "no",
+ manualitaUsata: false,
+ memoriaUsata: false,
+ sintesiUsata: false,
  data: {} 
  }; 
  } 
@@ -922,6 +1018,8 @@
  /* ---------- HELPERS ---------- */ 
  var voto_bonus = { T:-3, D:-2, S:-1, A:0, O:1, E:2 }; 
  var voto_labels = ["T","D","S","A","O","E"]; 
+ var voto_nomi = { T:"Troll", D:"Desolante", S:"Scadente", A:"Accettabile", O:"Oltre Ogni Previsione", E:"Eccezionale" };
+ function votoNome(v){ return voto_nomi[v] ? (voto_nomi[v] + " (" + v + ")") : v; }
  
  function getVotoBonus(pg){ 
  if(pg.tipo === "adulto"){ return 0; } 
@@ -932,10 +1030,106 @@
  var n = parseFloat(v); 
  if(isNaN(n)){ return def; } 
  return n; 
+ }
+
+ function intInRange(v, min, max){
+  if(v === "" || v === null || v === undefined){ return false; }
+  var n = Number(v);
+  return isFinite(n) && Math.floor(n) === n && n >= min && n <= max;
+ }
+
+ function nonNegativeInt(v){
+  if(v === "" || v === null || v === undefined){ return false; }
+  var n = Number(v);
+  return isFinite(n) && Math.floor(n) === n && n >= 0;
+ }
+
+ function optionalNonNegativeInt(v){
+  if(v === "" || v === null || v === undefined){ return true; }
+  return nonNegativeInt(v);
+ }
+
+ function safeBonus(v){
+  return nonNegativeInt(v) ? Number(v) : 0;
+ }
+
+ function positiveInt(v){
+  if(v === "" || v === null || v === undefined){ return false; }
+  var n = Number(v);
+  return isFinite(n) && Math.floor(n) === n && n > 0;
+ }
+
+ function setupIssue(){
+  var classi = ["X","XX","XXX","XXXX","XXXXX"];
+  if(classi.indexOf(POZ.classificazione) === -1){ return "Seleziona la Classificazione della Pozione nello Step 1."; }
+  if(!POZ.tierBase && !POZ.tierIV && !POZ.tierV){ return "Seleziona almeno una fascia di Ingredienti nello Step 1."; }
+  if(!POZ.conoscenzaPosseduta){ return "Conferma nello Step 1 che il creatore possiede la Conoscenza della Pozione o la possiede tramite il Piano di Studi."; }
+  if(!pgs.length){ return "Inserisci il Personaggio nello Step 2."; }
+  var pg = pgs[0];
+  if(pg.tipo !== "studente" && pg.tipo !== "adulto"){ return "Seleziona se il Personaggio è Studente o Adulto nello Step 2."; }
+  if(!intInRange(pg.tecnica, 1, 20)){ return "Inserisci la Tecnica come intero da 1 a 20 nello Step 2."; }
+  if(pg.tipo === "studente" && voto_labels.indexOf(pg.voto) === -1){ return "Seleziona il voto scolastico in Pozioni nello Step 2."; }
+  if(pg.tipo === "studente"){
+   var advFields = ["speziale","chimico","toccoMagico","calderaio","distillatore"];
+   for(var ai=0; ai<advFields.length; ai++){
+    var lv = pg[advFields[ai]];
+    if(lv !== "0" && lv !== "I"){ return "Uno Studente può possedere soltanto il livello I della Sapienza: le Conoscenze Avanzate devono essere assenti oppure al livello I."; }
+   }
+  }
+  if(pg.tipo === "adulto" && !intInRange(pg.sapienzaPozionistica, 0, 25)){ return "Inserisci la Sapienza Pozionistica dell'Adulto come intero da 0 a 25 nello Step 2."; }
+  return "";
+ }
+
+ function appendSetupGate(panel){
+  var issue = setupIssue();
+  if(!issue){ return false; }
+  panel.appendChild(el("div", "guide-text", "<b>Dati iniziali incompleti.</b> " + issue + " I calcoli restano bloccati per evitare risultati ottenuti con valori impliciti."));
+  return true;
+ }
+
+ function phaseDependencyIssue(step, pg){
+  if(!pg){ return "Inserisci prima il Personaggio."; }
+  if(step === "prod"){
+    var tiers = getTiersPresentList();
+    var prep = computePrepAccumulo(pg, tiers);
+    if(!prep.complete){ return "Completa tutti i risultati della Preparazione degli Ingredienti prima di passare alla Produzione."; }
+  }
+  if(step === "bacchetta"){
+    var ps = pgDataGet(pg, "prod_status", "pending");
+    if(ps !== "success" && ps !== "fail"){ return "Completa la Produzione prima di usare la Bacchetta."; }
+  }
+  if(step === "imbott"){
+    var bs = pgDataGet(pg, "bac_status", "pending");
+    if(bs !== "success" && bs !== "fail"){ return "Completa l'Uso della Bacchetta prima dell'Imbottigliamento e Pulizia del Calderone."; }
+  }
+  if(step === "distill"){
+    var ie = pgDataGet(pg, "imb_esito", "");
+    var ist = pgDataGet(pg, "imb_status", "pending");
+    if(ist !== "done" || (ie !== "33%" && ie !== "66%" && ie !== "100%")){
+      return "La Distillazione è disponibile soltanto dopo una creazione conclusa con Imbottigliamento/Pulizia diverso da 0%.";
+    }
+  }
+  if(step === "riepilogo"){
+    var rie = pgDataGet(pg, "imb_esito", "");
+    var rist = pgDataGet(pg, "imb_status", "pending");
+    if(rist !== "done"){ return "Completa l'Imbottigliamento e Pulizia del Calderone prima del Riepilogo Finale."; }
+    if(rie === "0%"){ return "La Pozione è andata persa per l'esplosione del calderone: non esiste un risultato finale da registrare."; }
+    if(!!pgDataGet(pg, "distill_destroyed", false)){ return "La Pozione è esplosa durante il tentativo di ripetere la Distillazione: non esiste un risultato finale da registrare."; }
+  }
+  return "";
+ }
+
+ function appendDependencyGate(panel, step){
+  var pg = pgs.length ? pgs[0] : null;
+  var issue = phaseDependencyIssue(step, pg);
+  if(!issue){ return false; }
+  panel.appendChild(el("div", "guide-text", "<b>Fase precedente non conclusa.</b> " + issue));
+  return true;
  } 
  
  function el(tag, cls, html){ 
  var e = document.createElement(tag); 
+ if(tag === "button"){ e.type = "button"; } 
  if(cls){ e.className = cls; } 
  if(html !== undefined){ e.innerHTML = html; } 
  return e; 
@@ -992,6 +1186,7 @@
  if(!btn){ return; } 
  btn.addEventListener(EV, function(){ 
  var src = document.getElementById(sourceId); 
+ if(!src){ flashCopied(btn, false); return; } 
  var txt = src.textContent; 
  var handledAsync = false; 
  if(navigator.clipboard){ 
@@ -1074,6 +1269,22 @@ function faticaFaseNumero(pg, fase){
  return 0;
  }
 
+function extraUseKey(field){ return field + "Usata"; }
+function extraIsUsed(pg, field){ return !!pg[extraUseKey(field)]; }
+
+function faticaExtraFaseNumero(pg, fase){
+ if(fase === "prep" && extraIsUsed(pg,"manualita")){ return 1.5; }
+ if(fase === "prod" && extraIsUsed(pg,"memoria")){ return 1.5; }
+ if(fase === "imbott" && extraIsUsed(pg,"sintesi")){ return 2; }
+ return 0;
+ }
+
+function faticaExtraTotale(pg){
+ return faticaExtraFaseNumero(pg,"prep") +
+        faticaExtraFaseNumero(pg,"prod") +
+        faticaExtraFaseNumero(pg,"imbott");
+ }
+
 function fmtFatica(n){
  var s = String(n);
  if(s.indexOf(".5") !== -1){ s = s.replace(".5", ",5"); }
@@ -1085,15 +1296,26 @@ function faticaFaseTesto(pg, fase){
    var eff = pgDataGet(pg, "distill_eff", "skip");
    if(eff === "skip"){ return "0 Fatica — Distillazione non svolta."; }
    if(haSapienzaPozionistica25(pg)){ return "0 Fatica — Sapienza Pozionistica 25."; }
-   return "-1 Fatica per ogni dose distillata.";
+   var att = Number(pgDataGet(pg, "distill_attempts", 1));
+   if(!isFinite(att) || att < 1){ att = 1; }
+   return "-" + att + " Fatica per la dose calcolata (" + att + (att === 1 ? " tentativo" : " tentativi") + ").";
  }
- var n = faticaFaseNumero(pg, fase);
- if(n === 0){ return "0 Fatica — Sapienza Pozionistica 25."; }
- return "-" + fmtFatica(n) + " Fatica.";
+ var base = faticaFaseNumero(pg, fase);
+ var extra = faticaExtraFaseNumero(pg, fase);
+ var totale = base + extra;
+ var parti = [];
+ if(base === 0){ parti.push("fase 0 per Sapienza Pozionistica 25"); }
+ else { parti.push("fase -" + fmtFatica(base)); }
+ if(extra > 0){
+   var nomeExtra = fase === "prep" ? "Manualità Tecnica+" : (fase === "prod" ? "Memoria Tecnica+" : "Sintesi Tecnica+");
+   parti.push(nomeExtra + " -" + fmtFatica(extra));
+ }
+ return "-" + fmtFatica(totale) + " Fatica totale (" + parti.join("; ") + ").";
  }
 
 function buildFaticaBox(pg, fase){
- var box = el("div", "fatigue-box" + ((fase !== "prep" && haSapienzaPozionistica25(pg)) ? " zero" : ""));
+ var zero = (fase !== "prep" && haSapienzaPozionistica25(pg) && faticaExtraFaseNumero(pg,fase) === 0);
+ var box = el("div", "fatigue-box" + (zero ? " zero" : ""));
  box.id = "fatigue-" + fase + "-" + pg.id;
  var labels = {
    prep:"Preparazione degli Ingredienti",
@@ -1109,7 +1331,8 @@ function buildFaticaBox(pg, fase){
 function updateFaticaBox(pg, fase){
  var box = document.getElementById("fatigue-" + fase + "-" + pg.id);
  if(!box){ return; }
- box.className = "fatigue-box" + ((fase !== "prep" && haSapienzaPozionistica25(pg)) ? " zero" : "");
+ var zero = (fase !== "prep" && haSapienzaPozionistica25(pg) && faticaExtraFaseNumero(pg,fase) === 0);
+ box.className = "fatigue-box" + (zero ? " zero" : "");
  var labels = {
    prep:"Preparazione degli Ingredienti",
    prod:"Produzione",
@@ -1124,9 +1347,9 @@ function faticaObbligatoriaTotale(pg){
  return faticaFaseNumero(pg,"prep") +
         faticaFaseNumero(pg,"prod") +
         faticaFaseNumero(pg,"bacchetta") +
-        faticaFaseNumero(pg,"imbott");
- }
- 
+        faticaFaseNumero(pg,"imbott") +
+        faticaExtraTotale(pg);
+ } 
  
  /* ---------- NAV ---------- */ 
  /* ---------- NAV ---------- */ 
@@ -1141,6 +1364,7 @@ function renderNav(){
  "step-btn" + (s.key === currentStep ? " active" : ""), 
  s.label 
  ); 
+ if(s.key === currentStep){ b.setAttribute("aria-current", "step"); } 
  
  b.addEventListener(EV, function(){ 
  currentStep = s.key; 
@@ -1152,7 +1376,47 @@ function renderNav(){
  } 
 } 
  
- function renderAll(){
+ function normalizePGProfile(pg){
+  if(!pg || pg.tipo !== "studente"){ return; }
+  var advFields = ["speziale","chimico","toccoMagico","calderaio","distillatore"];
+  var anyLevelI = false;
+  for(var i=0;i<advFields.length;i++){
+   var f = advFields[i];
+   if(pg[f] !== "0" && pg[f] !== "I"){ pg[f] = "0"; }
+   if(pg[f] === "I"){ anyLevelI = true; }
+  }
+  /* Uno Studente può possedere soltanto Sapienza I: non deve trascinarsi dietro
+     un vecchio valore Adulto (es. 25) mentre il campo è nascosto. */
+  pg.sapienzaPozionistica = anyLevelI ? 1 : null;
+  pg.sapienzaAdulto = false;
+ }
+
+ function ruleConfigSignature(){
+ var pg = pgs.length ? pgs[0] : null;
+ var parts = [
+  POZ.classificazione, POZ.tierBase ? 1 : 0, POZ.tierIV ? 1 : 0, POZ.tierV ? 1 : 0, POZ.conoscenzaPosseduta ? 1 : 0
+ ];
+ if(pg){
+  parts = parts.concat([
+   pg.tipo, pg.tecnica, pg.voto, pg.sapienzaPozionistica,
+   pg.speziale, pg.chimico, pg.toccoMagico, pg.calderaio, pg.distillatore
+  ]);
+ }
+ return parts.join("|");
+}
+
+var lastRuleConfigSignature = null;
+function invalidateStaleResultsIfNeeded(){
+ var sig = ruleConfigSignature();
+ if(lastRuleConfigSignature !== null && sig !== lastRuleConfigSignature){
+  for(var i=0;i<pgs.length;i++){ pgs[i].data = {}; }
+ }
+ lastRuleConfigSignature = sig;
+}
+
+function renderAll(){
+ if(pgs.length){ normalizePGProfile(pgs[0]); }
+ invalidateStaleResultsIfNeeded();
  var c = document.getElementById("stepContainer");
  try{
   renderNav();
@@ -1188,7 +1452,7 @@ function renderNav(){
  p.appendChild(el("h2", null, "Per prima cosa: che Pozione vuoi creare?")); 
  p.appendChild(el("div", "guide-text", 
  "Inserisci il nome della Pozione, la sua Classificazione e quali fasce di Ingredienti compaiono " + 
- "nella sua ricetta. Questi dati servono a calcolare correttamente tutte le fasi successive.")); 
+ "nella sua ricetta. Recupera Classificazione, Forza Standard e Ingredienti dal Pozionario: nessun valore viene presunto automaticamente.")); 
  
  var row = el("div", "row"); 
  
@@ -1204,6 +1468,7 @@ function renderNav(){
  var d2 = el("div"); 
  d2.appendChild(el("label", null, "Classificazione della Pozione")); 
  var sel = el("select"); 
+ var phClass = el("option", null, "— seleziona —"); phClass.value = ""; if(POZ.classificazione === ""){ phClass.selected = true; } sel.appendChild(phClass);
  var opts = ["X","XX","XXX","XXXX","XXXXX"]; 
  for(var i=0;i<opts.length;i++){ 
  var o = el("option", null, opts[i]); 
@@ -1240,10 +1505,32 @@ function renderNav(){
  chk3.appendChild(c3); 
  chk3.appendChild(el("span", null, "Presenti Ingredienti di Classificazione XXXXX")); 
  p.appendChild(chk3); 
+
+ var knowLine = el("div", "chk-line");
+ var know = el("input"); know.type = "checkbox"; know.checked = !!POZ.conoscenzaPosseduta;
+ know.addEventListener("change", function(){ POZ.conoscenzaPosseduta = know.checked; });
+ knowLine.appendChild(know);
+ knowLine.appendChild(el("span", null, "Confermo che il creatore possiede la Conoscenza della Pozione (Scheda PG / Piano di Studi)"));
+ p.appendChild(knowLine);
+ p.appendChild(el("p", "small-note", "Il regolamento richiede che la Conoscenza sia posseduta prima della creazione ONGame."));
+
+ var adducoLine = el("div", "chk-line");
+ var adduco = el("input"); adduco.type = "checkbox"; adduco.checked = !!POZ.valigettaAdduco;
+ adduco.addEventListener("change", function(){ POZ.valigettaAdduco = adduco.checked; });
+ adducoLine.appendChild(adduco);
+ adducoLine.appendChild(el("span", null, "La Pozione viene creata in una Valigetta del Pozionista ottenuta con Adduco Maxima (-50% della Forza finale)"));
+ p.appendChild(adducoLine);
+ p.appendChild(el("p", "small-note", "Caso speciale: Adduco Maxima rende la Valigetta illegale e dimezza permanentemente la Forza delle Pozioni create al suo interno. Il malus viene applicato nel Riepilogo Finale dopo gli altri modificatori di Forza."));
  
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Personaggio &#8594;"); 
- nextBtn.addEventListener(EV, function(){ currentStep = "pg"; renderAll(); }); 
+ nextBtn.addEventListener(EV, function(){
+  if(["X","XX","XXX","XXXX","XXXXX"].indexOf(POZ.classificazione) === -1 || (!POZ.tierBase && !POZ.tierIV && !POZ.tierV)){
+   window.alert("Seleziona la Classificazione e almeno una fascia di Ingredienti prima di proseguire."); return;
+  }
+  if(!POZ.conoscenzaPosseduta){ window.alert("Conferma che il creatore possiede la Conoscenza della Pozione."); return; }
+  currentStep = "pg"; renderAll();
+ }); 
  p.appendChild(nextBtn); 
  
  container.appendChild(p); 
@@ -1258,7 +1545,7 @@ function renderNav(){
  p.appendChild(el("div", "guide-text", 
  "Inserisci qui il Personaggio che prepara materialmente la Pozione. " + 
  "Gli eventuali altri PG non vengono aggiunti come co-creatori: potranno intervenire soltanto nella Preparazione degli Ingredienti, " + 
- "quando devono accorgersi di un errore e aiutare a rimediare.")); 
+ "quando devono accorgersi di un errore e aiutare a rimediare. Le Conoscenze Extra+ non si impostano qui: ciascuna viene scelta direttamente nella fase in cui può essere utilizzata.")); 
 
  if(pgs.length === 0){ pgs.push(newPG()); } 
  if(pgs.length > 1){ pgs = [pgs[0]]; } 
@@ -1266,7 +1553,10 @@ function renderNav(){
 
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Preparazione degli Ingredienti &#8594;"); 
- nextBtn.addEventListener(EV, function(){ currentStep = "prep"; renderAll(); }); 
+ nextBtn.addEventListener(EV, function(){
+  var issue = setupIssue(); if(issue){ window.alert(issue); return; }
+  currentStep = "prep"; renderAll();
+ }); 
  p.appendChild(nextBtn); 
 
  container.appendChild(p); 
@@ -1292,18 +1582,25 @@ function renderNav(){
  var dTipo = el("div"); 
  dTipo.appendChild(el("label", null, "Tipo di Personaggio")); 
  var selTipo = el("select"); 
+ var o0 = el("option", null, "— seleziona —"); o0.value="";
  var oS = el("option", null, "Studente"); oS.value="studente"; 
  var oA = el("option", null, "Adulto"); oA.value="adulto"; 
- if(pg.tipo === "studente"){ oS.selected = true; } else { oA.selected = true; } 
- selTipo.appendChild(oS); selTipo.appendChild(oA); 
- selTipo.addEventListener("change", function(){ pg.tipo = selTipo.value; renderAll(); }); 
+ if(pg.tipo === ""){ o0.selected = true; }
+ if(pg.tipo === "studente"){ oS.selected = true; }
+ if(pg.tipo === "adulto"){ oA.selected = true; } 
+ selTipo.appendChild(o0); selTipo.appendChild(oS); selTipo.appendChild(oA); 
+ selTipo.addEventListener("change", function(){
+  pg.tipo = selTipo.value;
+  normalizePGProfile(pg);
+  renderAll();
+ }); 
  dTipo.appendChild(selTipo); 
  row1.appendChild(dTipo); 
  
  var dTec = el("div"); 
  dTec.appendChild(el("label", null, "Tecnica")); 
- var inpTec = el("input"); inpTec.type="number"; inpTec.value = pg.tecnica; 
- inpTec.addEventListener("input", function(){ pg.tecnica = num(inpTec.value, 0); }); 
+ var inpTec = el("input"); inpTec.type="number"; inpTec.min="1"; inpTec.max="20"; inpTec.step="1"; inpTec.placeholder="1-20"; inpTec.value = (pg.tecnica === null ? "" : pg.tecnica); 
+ inpTec.addEventListener("input", function(){ pg.tecnica = inpTec.value === "" ? null : Number(inpTec.value); }); 
  dTec.appendChild(inpTec); 
  row1.appendChild(dTec); 
  
@@ -1314,8 +1611,9 @@ function renderNav(){
  var dVoto = el("div"); 
  dVoto.appendChild(el("label", null, "Voto scolastico in Pozioni")); 
  var selVoto = el("select"); 
+ var ov0 = el("option", null, "— seleziona —"); ov0.value=""; if(pg.voto === ""){ ov0.selected=true; } selVoto.appendChild(ov0);
  for(var i=0;i<voto_labels.length;i++){ 
- var ov = el("option", null, voto_labels[i]); ov.value = voto_labels[i]; 
+ var ov = el("option", null, votoNome(voto_labels[i])); ov.value = voto_labels[i]; 
  if(voto_labels[i] === pg.voto){ ov.selected = true; } 
  selVoto.appendChild(ov); 
  } 
@@ -1329,14 +1627,14 @@ function renderNav(){
  inpSap.type = "number"; 
  inpSap.min = "0"; 
  inpSap.max = "25"; 
- inpSap.value = sapienzaPozionisticaValue(pg); 
+ inpSap.step = "1";
+ inpSap.placeholder = "0-25";
+ inpSap.value = (pg.sapienzaPozionistica === null ? "" : pg.sapienzaPozionistica); 
  inpSap.addEventListener("input", function(){ 
-   var sv = num(inpSap.value, 0); 
-   if(sv < 0){ sv = 0; } 
-   if(sv > 25){ sv = 25; } 
-   pg.sapienzaPozionistica = sv; 
-   pg.sapienzaAdulto = sv > 0; 
- }); 
+   pg.sapienzaPozionistica = inpSap.value === "" ? null : Number(inpSap.value);
+   pg.sapienzaAdulto = intInRange(pg.sapienzaPozionistica, 1, 25);
+ });
+ inpSap.addEventListener("change", function(){ renderAll(); }); 
  dSap.appendChild(inpSap); 
  dSap.appendChild(el("p", "small-note", "A 25: 0 Fatica in Produzione, Uso della Bacchetta, Imbottigliamento/Pulizia e Distillazione. La Preparazione degli Ingredienti resta a -0,5 Fatica.")); 
  row2.appendChild(dSap); 
@@ -1344,7 +1642,10 @@ function renderNav(){
  card.appendChild(row2); 
  
  card.appendChild(el("div", "divider")); 
- card.appendChild(el("p", null, "<b>Conoscenze Avanzate possedute</b> (0 = non posseduta)")); 
+ card.appendChild(el("p", null, "<b>Conoscenze Avanzate possedute</b> (0 = non posseduta)"));
+ if(pg.tipo === "studente"){
+  card.appendChild(el("p", "small-note", "Studente: può possedere soltanto il livello I della Sapienza. Perciò ciascuna Conoscenza Avanzata può essere assente oppure al livello I; non sono disponibili i livelli II-V."));
+ }
  
  var row3 = el("div", "row"); 
  row3.appendChild(buildLevelSelect(pg, "speziale", "Speziale")); 
@@ -1357,49 +1658,230 @@ function renderNav(){
  row4.appendChild(buildLevelSelect(pg, "distillatore", "Distillatore")); 
  card.appendChild(row4); 
  
- card.appendChild(el("div", "divider")); 
- card.appendChild(el("p", null, "<b>Conoscenze Extra usate in questa preparazione</b> (facoltative)")); 
- 
- var row5 = el("div", "row"); 
- row5.appendChild(buildExtraSelect(pg, "manualita", "Manualità Tecnica+ (aiuta la Preparazione Ingredienti)")); 
- row5.appendChild(buildExtraSelect(pg, "memoria", "Memoria Tecnica+ (aiuta la Produzione)")); 
- row5.appendChild(buildExtraSelect(pg, "sintesi", "Sintesi Tecnica+ (riduce i post di Pulizia Calderone)")); 
- card.appendChild(row5); 
- 
  return card; 
  } 
  
  function buildLevelSelect(pg, field, label){ 
  var d = el("div"); 
  d.appendChild(el("label", null, label)); 
- var sel = el("select"); 
- var levels = ["0","I","II","III","IV","V"]; 
+ var sel = el("select");
+ var levels = pg.tipo === "studente" ? ["0","I"] : ["0","I","II","III","IV","V"];
+ if(pg.tipo === "studente" && pg[field] !== "0" && pg[field] !== "I"){ pg[field] = "0"; }
  for(var i=0;i<levels.length;i++){ 
  var o = el("option", null, levels[i] === "0" ? "Nessuno" : levels[i]); 
  o.value = levels[i]; 
  if(pg[field] === levels[i]){ o.selected = true; } 
  sel.appendChild(o); 
  } 
- sel.addEventListener("change", function(){ pg[field] = sel.value; renderAll(); }); 
+ sel.addEventListener("change", function(){
+  pg[field] = sel.value;
+  if(pg.tipo === "studente"){
+   var advFields = ["speziale","chimico","toccoMagico","calderaio","distillatore"];
+   var anyLevelI = false;
+   for(var ai=0; ai<advFields.length; ai++){
+    if(pg[advFields[ai]] === "I"){ anyLevelI = true; break; }
+   }
+   pg.sapienzaPozionistica = anyLevelI ? 1 : null;
+  }
+  renderAll();
+ }); 
  d.appendChild(sel); 
  return d; 
  } 
  
- function buildExtraSelect(pg, field, label){ 
- var d = el("div"); 
- d.appendChild(el("label", null, label)); 
- var sel = el("select"); 
- var vals = [["no","Non usata"],["33","Efficacia 33%"],["66","Efficacia 66%"],["100","Efficacia 100%"]]; 
- for(var i=0;i<vals.length;i++){ 
- var o = el("option", null, vals[i][1]); o.value = vals[i][0]; 
- if(pg[field] === vals[i][0]){ o.selected = true; } 
- sel.appendChild(o); 
- } 
- sel.addEventListener("change", function(){ pg[field] = sel.value; renderAll(); }); 
- d.appendChild(sel); 
- return d; 
- } 
- 
+ function extraOffDescription(field){
+ var map = {
+  manualita:"<b>Effetto OFFGame:</b> agisce nella Preparazione degli Ingredienti e aumenta le possibilità utili dei d14. Studente: 33% +1; 66% +1d2; 100% +2. Adulto senza Sapienza: 33% +1d2; 66% +1d3; 100% +(1+1d2). Adulto con Sapienza Pozionistica 1+: 100% +3. <b>Costo: -1,5 Fatica.</b>",
+  memoria:"<b>Effetto OFFGame:</b> agisce nella Produzione e aumenta le possibilità utili del d30. Studente: 33% +1; 66% +1d2; 100% +2. Adulto senza Sapienza: 33% +1d2; 66% +1d3; 100% +(1+1d2). Adulto con Sapienza Pozionistica 1+: 100% +3. <b>Costo: -1,5 Fatica.</b>",
+  sintesi:"<b>Effetto OFFGame:</b> riduce i post finali di Imbottigliamento e Pulizia. Studente: 33% -10%; 66% -(1d2×10%); 100% -20%. Adulto senza Sapienza: 33% -20%; 66% -(10% + 1d2×10%); 100% -30%. Adulto con Sapienza Pozionistica 1+: 100% -40%. <b>Costo: -2 Fatica.</b>"
+ };
+ return map[field] || "";
+ }
+
+ function clearExtraResolution(pg, field){
+ delete pg.data["extra_eff_roll_" + field];
+ if(field === "manualita"){ delete pg.data["prep_man_dice"]; }
+ if(field === "memoria"){ delete pg.data["prod_mem_dice"]; }
+ if(field === "sintesi"){ delete pg.data["sintesi_d2"]; }
+ }
+
+ function normalizeExtraEfficacia(pg, field){
+ if(!extraIsUsed(pg,field)){ pg[field] = "no"; return "no"; }
+ if(pg.tipo === "adulto" && haSapienzaPozionistica(pg)){ pg[field] = "100"; return "100"; }
+ var roll = pgDataGet(pg,"extra_eff_roll_" + field,"");
+ if(!intInRange(roll,1,10)){ pg[field] = "pending"; return "pending"; }
+ pg[field] = extraEfficaciaFromD10(pg,Number(roll));
+ return pg[field];
+ }
+
+ function deleteDataByPrefixes(pg, prefixes){
+  var keys = Object.keys(pg.data || {});
+  for(var i=0;i<keys.length;i++){
+   for(var j=0;j<prefixes.length;j++){
+    if(keys[i].indexOf(prefixes[j]) === 0){ delete pg.data[keys[i]]; break; }
+   }
+  }
+ }
+
+ function invalidateFromExtraPhase(pg, field){
+  /* Una Extra+ modificata invalida solo la sua fase e quelle successive, non il lavoro precedente. */
+  if(field === "manualita"){
+   deleteDataByPrefixes(pg,["prep_","prod_","bac_","dosi_","imb_","distill_","extra_eff_roll_manualita","extra_eff_roll_memoria","extra_eff_roll_sintesi","sintesi_d2"]);
+  } else if(field === "memoria"){
+   deleteDataByPrefixes(pg,["prod_","bac_","dosi_","imb_","distill_","extra_eff_roll_memoria","extra_eff_roll_sintesi","sintesi_d2"]);
+  } else if(field === "sintesi"){
+   deleteDataByPrefixes(pg,["imb_","distill_","extra_eff_roll_sintesi","sintesi_d2"]);
+  }
+ }
+
+ function buildPhaseExtraControl(pg, field, nome){
+ var wrap = el("div", "phase-extra-control");
+ wrap.appendChild(el("div", "phase-extra-title", "Conoscenza Extra — " + nome));
+ wrap.appendChild(buildExtraSelect(pg, field, "Utilizzo in questa fase"));
+ return wrap;
+ }
+
+ function buildExtraSelect(pg, field, label){
+ var d = el("div");
+ d.appendChild(el("label", null, label));
+ var sel = el("select");
+ var vals = [["no","Non usata"],["use","Usa in questa fase"]];
+ var current = extraIsUsed(pg,field) ? "use" : "no";
+ for(var i=0;i<vals.length;i++){
+  var o = el("option", null, vals[i][1]); o.value = vals[i][0];
+  if(current === vals[i][0]){ o.selected = true; }
+  sel.appendChild(o);
+ }
+ sel.addEventListener("change", function(){
+  invalidateFromExtraPhase(pg,field);
+  pg[extraUseKey(field)] = sel.value === "use";
+  clearExtraResolution(pg,field);
+  pg[field] = pg[extraUseKey(field)] ? ((pg.tipo === "adulto" && haSapienzaPozionistica(pg)) ? "100" : "pending") : "no";
+  renderAll();
+ });
+ d.appendChild(sel);
+ var off = el("div","extra-off-note");
+ off.innerHTML = extraOffDescription(field);
+ d.appendChild(off);
+ if(extraIsUsed(pg,field)){
+  if(pg.tipo === "adulto" && haSapienzaPozionistica(pg)){
+   pg[field] = "100";
+   d.appendChild(el("p","small-note","Efficacia automatica: 100% (Adulto con Sapienza Pozionistica affine 1+). Non serve il d10 di Efficacia."));
+  } else {
+   normalizeExtraEfficacia(pg,field);
+   d.appendChild(el("p","small-note","L'Efficacia non si sceglie: verrà determinata qui sotto con 1d10, usando il voto in Pozioni dello Studente oppure la tabella degli Adulti senza Sapienza affine."));
+  }
+ }
+ return d;
+ }
+
+ function extraEfficaciaFromD10(pg, roll){
+ if(pg.tipo === "adulto"){
+  if(haSapienzaPozionistica(pg)){ return "100"; }
+  if(roll === 1){ return "0"; }
+  if(roll === 2){ return "33"; }
+  if(roll === 3){ return "66"; }
+  return "100";
+ }
+ var v = pg.voto;
+ if(v === "T"){
+  if(roll <= 7){ return "0"; }
+  if(roll <= 9){ return "33"; }
+  return "66";
+ }
+ if(v === "D"){
+  if(roll <= 5){ return "0"; }
+  if(roll <= 7){ return "33"; }
+  if(roll <= 9){ return "66"; }
+  return "100";
+ }
+ if(v === "S"){
+  if(roll <= 3){ return "0"; }
+  if(roll <= 5){ return "33"; }
+  if(roll <= 8){ return "66"; }
+  return "100";
+ }
+ if(v === "A"){
+  if(roll <= 2){ return "0"; }
+  if(roll <= 4){ return "33"; }
+  if(roll <= 6){ return "66"; }
+  return "100";
+ }
+ if(v === "O"){
+  if(roll === 1){ return "0"; }
+  if(roll <= 3){ return "33"; }
+  if(roll <= 5){ return "66"; }
+  return "100";
+ }
+ if(v === "E"){
+  if(roll === 1){ return "0"; }
+  if(roll === 2){ return "33"; }
+  if(roll <= 4){ return "66"; }
+  return "100";
+ }
+ return "pending";
+ }
+
+ function extraEfficaciaRangeText(pg){
+ if(pg.tipo === "adulto"){
+  if(haSapienzaPozionistica(pg)){ return "100% automatico"; }
+  return "1 = 0% · 2 = 33% · 3 = 66% · 4-10 = 100%";
+ }
+ var map = {
+  T:"1-7 = 0% · 8-9 = 33% · 10 = 66%",
+  D:"1-5 = 0% · 6-7 = 33% · 8-9 = 66% · 10 = 100%",
+  S:"1-3 = 0% · 4-5 = 33% · 6-8 = 66% · 9-10 = 100%",
+  A:"1-2 = 0% · 3-4 = 33% · 5-6 = 66% · 7-10 = 100%",
+  O:"1 = 0% · 2-3 = 33% · 4-5 = 66% · 6-10 = 100%",
+  E:"1 = 0% · 2 = 33% · 3-4 = 66% · 5-10 = 100%"
+ };
+ return map[pg.voto] || "Seleziona prima il voto in Pozioni";
+ }
+
+ function buildExtraEfficaciaBlock(pg, field, nome){
+ if(!extraIsUsed(pg,field)){ pg[field] = "no"; return null; }
+ var box = el("div","extra-efficacy-box");
+ box.appendChild(el("div","extra-efficacy-title","Tiro di Efficacia — " + nome));
+ if(pg.tipo === "adulto" && haSapienzaPozionistica(pg)){
+  pg[field] = "100";
+  box.appendChild(el("div","result-line","<span>Adulto con Sapienza Pozionistica affine 1+: nessun tiro richiesto.</span><span class=\"out-tag out-ok\">Efficacia 100%</span>"));
+  return box;
+ }
+ var range = extraEfficaciaRangeText(pg);
+ var profiloExtra = pg.tipo === "studente" ? ("Profilo Studente: " + votoNome(pg.voto) + ". ") : "Adulto senza Sapienza Pozionistica affine. ";
+ box.appendChild(el("p","small-note",profiloExtra + "1d10 Efficacia: " + range + ". Con 0% la Extra+ non produce il proprio effetto OFFGame, ma il costo di Fatica dell'uso resta applicato."));
+ var line = el("div","result-line");
+ var codeId = "extra-eff-code-" + field + "-" + pg.id;
+ var code = el("div","dice-code"); code.id=codeId;
+ code.textContent = "[dice=1d10]Efficacia " + nome + " - " + pg.nome + " (" + range + ")[/dice]";
+ line.appendChild(code);
+ var copy = el("button","copy-btn","Copia"); copy.id="extra-eff-copy-" + field + "-" + pg.id; line.appendChild(copy);
+ var inp = el("input"); inp.type="number"; inp.min="1"; inp.max="10"; inp.step="1"; inp.placeholder="1-10";
+ inp.value = pgDataGet(pg,"extra_eff_roll_" + field,"");
+ line.appendChild(inp);
+ var effRaw = pgDataGet(pg,"extra_eff_roll_" + field,"");
+ var eff = normalizeExtraEfficacia(pg,field);
+ var effInvalid = effRaw !== "" && !intInRange(effRaw,1,10);
+ var tagClass = effInvalid ? "out-fail" : (eff === "pending" ? "out-neutral" : (eff === "0" ? "out-fail" : "out-ok"));
+ var tagText = effInvalid ? "Risultato impossibile" : (eff === "pending" ? "in attesa" : "Efficacia " + eff + "%");
+ var tag = el("span","out-tag " + tagClass, tagText);
+ line.appendChild(tag);
+ inp.addEventListener("change",function(){
+  var oldEff = pg[field];
+  pg.data["extra_eff_roll_" + field] = inp.value;
+  var newEff = normalizeExtraEfficacia(pg,field);
+  if(oldEff !== newEff){
+   if(field === "manualita"){ delete pg.data["prep_man_dice"]; }
+   if(field === "memoria"){ delete pg.data["prod_mem_dice"]; }
+   if(field === "sintesi"){ delete pg.data["sintesi_d2"]; }
+  }
+  renderAll();
+ });
+ box.appendChild(line);
+ setTimeout(function(){ attachCopy("extra-eff-copy-" + field + "-" + pg.id,codeId); },0);
+ return box;
+ }
+
  function levelNum(lvl){ 
  var map = { "0":0, "I":1, "II":2, "III":3, "IV":4, "V":5 }; 
  return map[lvl]; 
@@ -1407,15 +1889,15 @@ function renderNav(){
  
  /* ---------- CONSEGUENZE: bonus/malus Forza e Durata ---------- */ 
  
- function prepForzaBonusPercent(pg){ 
- if(pg.tipo === "studente"){ 
- if(pg.voto === "O"){ return 5; } 
- if(pg.voto === "E"){ return 10; } 
- return 2; 
- } 
- if(levelNum(pg.speziale) === 0){ return 15; } 
- var map = { I:20, II:25, III:30, IV:35, V:40 }; 
- return map[pg.speziale]; 
+ function prepForzaBonusPercent(pg){
+ var map = { I:20, II:25, III:30, IV:35, V:40 };
+ if(levelNum(pg.speziale) > 0){ return map[pg.speziale]; }
+ if(pg.tipo === "studente"){
+  if(pg.voto === "O"){ return 5; }
+  if(pg.voto === "E"){ return 10; }
+  return 2;
+ }
+ return 15;
  } 
  
  function prepMalusPercent(pg){ 
@@ -1455,15 +1937,15 @@ function renderNav(){
  return base; 
  } 
 
- function prodForzaBonusPercent(pg){ 
- if(pg.tipo === "studente"){ 
- if(pg.voto === "O"){ return 5; } 
- if(pg.voto === "E"){ return 10; } 
- return 2; 
- } 
- if(levelNum(pg.chimico) === 0){ return 15; } 
- var map = { I:20, II:25, III:30, IV:35, V:40 }; 
- return map[pg.chimico]; 
+ function prodForzaBonusPercent(pg){
+ var map = { I:20, II:25, III:30, IV:35, V:40 };
+ if(levelNum(pg.chimico) > 0){ return map[pg.chimico]; }
+ if(pg.tipo === "studente"){
+  if(pg.voto === "O"){ return 5; }
+  if(pg.voto === "E"){ return 10; }
+  return 2;
+ }
+ return 15;
  } 
  
  function prodMalusPercent(pg){ 
@@ -1500,7 +1982,7 @@ function renderNav(){
  if(tiersList.length === 0){ allSuccess = false; anyIncomplete = true; } 
  for(var i=0;i<tiersList.length;i++){ 
  var st = pgDataGet(pg, "prep_status_" + tiersList[i], "pending"); 
- if(st === "pending"){ anyIncomplete = true; } 
+ if(st === "pending" || st === "invalid"){ anyIncomplete = true; } 
  if(st === "fail_pending"){ anyIncomplete = true; } 
  if(st !== "success"){ allSuccess = false; } 
  if(st === "fail_unremediated"){ anyUnremFail = true; } 
@@ -1517,7 +1999,7 @@ function renderNav(){
  var forza = 0; 
  if(status === "success"){ forza = prodForzaBonusPercent(pg); } 
  if(status === "fail"){ forza = 0 - prodMalusPercent(pg); } 
- return { forza: forza, complete: status !== "pending" }; 
+ return { forza: forza, complete: status === "success" || status === "fail" }; 
  } 
  
  function computeDosiFinali(pg){ 
@@ -1532,10 +2014,12 @@ function renderNav(){
  finale = finale - 1; 
  if(finale < 0){ finale = 0; } 
  testo = "" + finale + " (base " + dosiBase + ", -1 per fallimento dell'Uso della Bacchetta)"; 
- } else if(bacStatus === "pending"){ 
- testo = "" + dosiBase + " (base, provvisorio: dipende dall'esito dell'Uso della Bacchetta qui sopra)"; 
- } else { 
+ } else if(bacStatus === "success"){ 
  testo = "" + finale + " (base " + dosiBase + ", nessuna penalità: Uso della Bacchetta riuscito)"; 
+ } else if(bacStatus === "invalid"){
+ return { finale:null, testo:"correggi prima il risultato impossibile dell'Uso della Bacchetta" };
+ } else { 
+ return { finale:null, testo:"provvisorio: dipende dall'esito dell'Uso della Bacchetta qui sopra" };
  } 
  return { finale: finale, testo: testo }; 
  } 
@@ -1574,8 +2058,10 @@ function renderNav(){
  p.appendChild(el("div", "guide-text", 
  "Per ogni fascia di Ingredienti presente nella ricetta si lancia un d14 separato. " + 
  "La preparazione di quella fascia riesce se il risultato rientra nel numero di possibilità calcolato. " + 
- "Se una preparazione fallisce, oltre al PG che prepara può intervenire anche un altro PG per accorgersi dell'errore e permettere di sostituire l'ingrediente. " + 
- "L'aiutante viene inserito soltanto qui e non partecipa automaticamente alle altre fasi. Costo della fase: -0,5 Fatica.")); 
+ "Se una preparazione fallisce, il PG (o un aiutante) deve prima accorgersi dell'errore; poi gli Ingredienti danneggiati vanno sostituiti e si ripete il d14 della stessa fascia per tentare il rimedio. " + 
+ "L'aiutante viene inserito soltanto qui e non diventa co-creatore. Costo base della fase: -0,5 Fatica; l'eventuale Manualità Tecnica+ costa inoltre -1,5 Fatica. Se usata, il tool determina prima la sua Efficacia con 1d10 e poi applica automaticamente il bonus OFFGame ai d14.")); 
+
+ if(appendSetupGate(p)){ container.appendChild(p); return; }
 
  var tiers = []; 
  if(POZ.tierBase){ tiers.push({ key:"base", label:"Ingredienti X, XX e XXX" }); } 
@@ -1602,31 +2088,32 @@ function renderNav(){
  container.appendChild(p); 
  } 
  
- function extraBonusStatic(pg, field, efficacia){ 
- // ritorna { fixed:number, diceLabel:string|null, diceFaces:number } 
- if(pg[field] === "no"){ return { fixed:0, diceFaces:0 }; } 
- var eff = pg[field]; 
- if(pg.tipo === "studente"){ 
- if(eff === "100"){ return { fixed:2, diceFaces:0 }; } 
- if(eff === "66"){ return { fixed:0, diceFaces:2 }; } 
- if(eff === "33"){ return { fixed:1, diceFaces:0 }; } 
- } else { 
- var haSapienza = haSapienzaPozionistica(pg); 
- if(haSapienza){ 
- if(eff === "100"){ return { fixed:3, diceFaces:0 }; } 
- return { fixed:0, diceFaces:0 }; 
- } else { 
- if(eff === "100"){ return { fixed:1, diceFaces:2 }; } 
- if(eff === "66"){ return { fixed:0, diceFaces:3 }; } 
- if(eff === "33"){ return { fixed:0, diceFaces:2 }; } 
- } 
- } 
- return { fixed:0, diceFaces:0 }; 
- } 
- 
+ function extraBonusStatic(pg, field, efficacia){
+ // Manualità/Memoria: ritorna bonus OFFGame dopo la risoluzione dell'Efficacia
+ if(!extraIsUsed(pg,field)){ return { fixed:0, diceFaces:0, ready:true }; }
+ var eff = normalizeExtraEfficacia(pg,field);
+ if(eff === "pending"){ return { fixed:0, diceFaces:0, ready:false }; }
+ if(eff === "0"){ return { fixed:0, diceFaces:0, ready:true }; }
+ if(pg.tipo === "studente"){
+  if(eff === "100"){ return { fixed:2, diceFaces:0, ready:true }; }
+  if(eff === "66"){ return { fixed:0, diceFaces:2, ready:true }; }
+  if(eff === "33"){ return { fixed:1, diceFaces:0, ready:true }; }
+ } else {
+  if(haSapienzaPozionistica(pg)){
+   if(eff === "100"){ return { fixed:3, diceFaces:0, ready:true }; }
+   return { fixed:0, diceFaces:0, ready:false };
+  }
+  if(eff === "100"){ return { fixed:1, diceFaces:2, ready:true }; }
+  if(eff === "66"){ return { fixed:0, diceFaces:3, ready:true }; }
+  if(eff === "33"){ return { fixed:0, diceFaces:2, ready:true }; }
+ }
+ return { fixed:0, diceFaces:0, ready:false };
+ }
+
  function buildPrepCard(pg, tiers){ 
  var card = el("div", "pg-card"); 
  card.appendChild(el("h3", null, pg.nome)); 
+ card.appendChild(buildPhaseExtraControl(pg, "manualita", "Manualità Tecnica+"));
  
  var isAdultoNoSpeziale = false; 
  if(pg.tipo === "adulto"){ 
@@ -1646,7 +2133,7 @@ function renderNav(){
  var copyBtn = el("button", "copy-btn", "Copia"); 
  copyBtn.id = "prep-d6-copy-" + pg.id; 
  d6box.appendChild(copyBtn); 
- var resInp = el("input"); resInp.type="number"; resInp.placeholder="1-6"; 
+ var resInp = el("input"); resInp.type="number"; resInp.min="1"; resInp.max="6"; resInp.step="1"; resInp.placeholder="1-6"; 
  resInp.value = pgDataGet(pg, "prep_d6", ""); 
  resInp.addEventListener("input", function(){ pg.data["prep_d6"] = resInp.value; recomputePrep(pg, tiers); }); 
  d6box.appendChild(resInp); 
@@ -1655,13 +2142,10 @@ function renderNav(){
  card.appendChild(el("div","divider")); 
  } 
  
+ var manEffBox = buildExtraEfficaciaBlock(pg, "manualita", "Manualità Tecnica+");
+ if(manEffBox){ card.appendChild(manEffBox); card.appendChild(el("div","divider")); }
  var manExtra = extraBonusStatic(pg, "manualita", pg.manualita); 
- var showManDice = false; 
- if(pg.manualita !== "no"){ 
- if(manExtra.diceFaces > 0){ 
- showManDice = true; 
- } 
- } 
+ var showManDice = extraIsUsed(pg,"manualita") && manExtra.ready && manExtra.diceFaces > 0; 
  if(showManDice){ 
  var mBox = el("div", "result-line"); 
  mBox.appendChild(el("span", null, "Bonus Manualità Tecnica+ — tira 1d" + manExtra.diceFaces + ":")); 
@@ -1671,7 +2155,7 @@ function renderNav(){
  mBox.appendChild(mCode); 
  var mCopy = el("button", "copy-btn", "Copia"); mCopy.id = "prep-man-copy-" + pg.id; 
  mBox.appendChild(mCopy); 
- var mRes = el("input"); mRes.type="number"; mRes.placeholder="risultato"; 
+ var mRes = el("input"); mRes.type="number"; mRes.min="1"; mRes.max="" + manExtra.diceFaces; mRes.step="1"; mRes.placeholder="1-" + manExtra.diceFaces; 
  mRes.value = pgDataGet(pg, "prep_man_dice", ""); 
  mRes.addEventListener("input", function(){ pg.data["prep_man_dice"] = mRes.value; recomputePrep(pg, tiers); }); 
  mBox.appendChild(mRes); 
@@ -1693,34 +2177,39 @@ function renderNav(){
  
  function calcPrepTier(pg, tier){
  var tecBase = tecnicaBasePrep(pg.tecnica);
- var votoB = getVotoBonus(pg);
  var d6 = pgDataGet(pg, "prep_d6", "");
- var adultoNoSpezialeBonus = 0;
+ var competenzaB = 0;
+ var ready = true;
+ var waiting = [];
 
- if(pg.tipo === "adulto"){
-   if(levelNum(pg.speziale) === 0){
-     if(d6 !== ""){ adultoNoSpezialeBonus = num(d6,0) - 4; }
-   }
+ if(levelNum(pg.speziale) > 0){
+   competenzaB = levelNum(pg.speziale);
+ } else if(pg.tipo === "studente"){
+   competenzaB = getVotoBonus(pg);
+ } else {
+   if(intInRange(d6,1,6)){ competenzaB = Number(d6) - 4; }
+   else { ready = false; waiting.push("1d6 Adulto senza Speziale"); }
  }
 
- var spezialeB = levelNum(pg.speziale);
  var classB = tierBonusPrep(tier.key);
 
  var extraObj = extraBonusStatic(pg, "manualita", pg.manualita);
  var manFixed = extraObj.fixed;
 
- if(extraObj.diceFaces > 0){
+ if(!extraObj.ready){
+   manFixed = 0; ready = false; waiting.push("1d10 Efficacia Manualità Tecnica+");
+ } else if(extraObj.diceFaces > 0){
    var dv = pgDataGet(pg, "prep_man_dice", "");
-   if(dv !== ""){
-     manFixed = manFixed + num(dv,0);
+   if(intInRange(dv,1,extraObj.diceFaces)){
+     manFixed = manFixed + Number(dv);
    } else {
-     manFixed = 0;
+     manFixed = 0; ready = false; waiting.push("dado Manualità Tecnica+");
    }
  }
 
- var extraManual = num(pgDataGet(pg, "prep_extra_" + tier.key, 0), 0);
+ var extraManual = safeBonus(pgDataGet(pg, "prep_extra_" + tier.key, 0));
 
- var votoTotale = votoB + adultoNoSpezialeBonus + spezialeB;
+ var votoTotale = competenzaB;
  var extraTotale = manFixed + extraManual;
  var total = tecBase + votoTotale + classB + extraTotale;
 
@@ -1732,11 +2221,14 @@ function renderNav(){
    votoTotale: votoTotale,
    classB: classB,
    extraTotale: extraTotale,
-   total: total
+   total: total,
+   ready: ready,
+   waiting: waiting
  };
  }
 
  function prepDiceText(pg, tier, calc){
+ if(calc.ready === false){ return "Completa prima: " + calc.waiting.join(", ") + "."; }
  return "[dice=1d14]Preparazione Ingredienti " + tier.label + " - " + pg.nome +
  " (Riesce se 1-" + calc.total +
  ": Tecnica " + calc.tecBase +
@@ -1752,8 +2244,8 @@ function renderNav(){
 
  var bonusRow = el("div", "row"); 
  var dBonus = el("div"); 
- dBonus.appendChild(el("label", null, "Bonus extra Oggetti/Conoscenze")); 
- var inpBonus = el("input"); inpBonus.type="number"; 
+ dBonus.appendChild(el("label", null, "Altri bonus (Oggetti/Conoscenze; NON includere la Extra+ già calcolata sopra)")); 
+ var inpBonus = el("input"); inpBonus.type="number"; inpBonus.min="0"; inpBonus.step="1"; 
  inpBonus.value = pgDataGet(pg, "prep_extra_" + tier.key, 0); 
  inpBonus.addEventListener("input", function(){ 
  pg.data["prep_extra_" + tier.key] = num(inpBonus.value, 0); 
@@ -1773,14 +2265,14 @@ function renderNav(){
  var initCalc = calcPrepTier(pg, tier);
  codeDiv.textContent = prepDiceText(pg, tier, initCalc);
  box.appendChild(codeDiv); 
- var copyBtn = el("button", "copy-btn", "Copia"); copyBtn.id = "prep-copy-" + tier.key + "-" + pg.id; 
+ var copyBtn = el("button", "copy-btn", "Copia"); copyBtn.id = "prep-copy-" + tier.key + "-" + pg.id; copyBtn.disabled = !initCalc.ready; 
  box.appendChild(copyBtn); 
  setTimeout(function(){ attachCopy("prep-copy-" + tier.key + "-" + pg.id, codeId); }, 0); 
  block.appendChild(box); 
 
  var resLine = el("div", "result-line"); 
  resLine.appendChild(el("span", null, "Risultato ottenuto (1-14):")); 
- var resInp = el("input"); resInp.type="number"; resInp.min="1"; resInp.max="14"; 
+ var resInp = el("input"); resInp.type="number"; resInp.id="prep-result-" + tier.key + "-" + pg.id; resInp.min="1"; resInp.max="14"; resInp.step="1"; 
  resInp.value = pgDataGet(pg, "prep_result_" + tier.key, ""); 
  resInp.addEventListener("input", function(){ 
  pg.data["prep_result_" + tier.key] = resInp.value; 
@@ -1800,7 +2292,7 @@ function renderNav(){
 
  if(pg.speziale === "V"){ 
  remedWrap.appendChild(el("p", "small-note", 
- "Con Speziale V il PG se ne accorge autoconclusivamente: ingrediente sostituito, nessun malus per questa fase (ma niente bonus pieno di Forza).")); 
+ "Con Speziale V il PG si accorge autoconclusivamente dell'errore. Deve comunque sostituire gli Ingredienti danneggiati e ripetere il d14 della stessa fascia per tentare di rimediare.")); 
  } else { 
  var soglia = accorgersiPrepSoglia(pg); 
  var accLine = el("div", "result-line"); 
@@ -1811,7 +2303,7 @@ function renderNav(){
  accLine.appendChild(accCode); 
  var accCopy = el("button", "copy-btn", "Copia"); accCopy.id = "prep-acc-copy-" + tier.key + "-" + pg.id; 
  accLine.appendChild(accCopy); 
- var accResInp = el("input"); accResInp.type="number"; accResInp.min="1"; accResInp.max="10"; 
+ var accResInp = el("input"); accResInp.type="number"; accResInp.min="1"; accResInp.max="10"; accResInp.step="1"; 
  accResInp.value = pgDataGet(pg, "prep_acc_result_" + tier.key, ""); 
  accResInp.addEventListener("input", function(){ 
  pg.data["prep_acc_result_" + tier.key] = accResInp.value; 
@@ -1836,7 +2328,8 @@ function renderNav(){
  }); 
  helpCheckLine.appendChild(helpCheck); 
  helpCheckLine.appendChild(el("span", null, "Un altro PG interviene per controllare l'errore e aiutare a rimediare")); 
- remedWrap.appendChild(helpCheckLine); 
+ remedWrap.appendChild(helpCheckLine);
+ remedWrap.appendChild(el("p", "small-note", "Il regolamento consente anche a più PG presenti di tentare il controllo. Il calcolatore ne registra uno alla volta: se intervengono più aiutanti, esegui i loro controlli separatamente e usa qui quello che individua l'errore.")); 
 
  if(helpCheck.checked){ 
  var helpRow = el("div", "row"); 
@@ -1898,7 +2391,7 @@ function renderNav(){
  helpCopy.id = "prep-help-copy-" + tier.key + "-" + pg.id; 
  helpAccLine.appendChild(helpCopy); 
 
- var helpRes = el("input"); helpRes.type = "number"; helpRes.min = "1"; helpRes.max = "10"; 
+ var helpRes = el("input"); helpRes.type = "number"; helpRes.min = "1"; helpRes.max = "10"; helpRes.step = "1"; 
  helpRes.value = pgDataGet(pg, "prep_help_acc_result_" + tier.key, ""); 
  helpRes.addEventListener("input", function(){ 
  pg.data["prep_help_acc_result_" + tier.key] = helpRes.value; 
@@ -1914,6 +2407,11 @@ function renderNav(){
  } 
  } 
  } 
+
+ var retryWrap = el("div");
+ retryWrap.id = "prep-retry-wrap-" + tier.key + "-" + pg.id;
+ retryWrap.style.display = "none";
+ remedWrap.appendChild(retryWrap);
 
  block.appendChild(remedWrap); 
  block.appendChild(el("div", "divider")); 
@@ -1978,145 +2476,142 @@ function renderNav(){
  refreshPrepAccumulo(pg); 
  } 
  
+ function renderPrepRetryUI(pg, tier, calc, noticedBy){
+ var wrap = document.getElementById("prep-retry-wrap-" + tier.key + "-" + pg.id);
+ if(!wrap){ return; }
+ wrap.innerHTML = "";
+ wrap.style.display = "block";
+ wrap.appendChild(el("div", "divider"));
+ wrap.appendChild(el("p", "small-note",
+   noticedBy + " si accorge dell'errore. Sostituisci gli Ingredienti danneggiati e <b>ripeti il d14 della stessa fascia</b>: il rimedio riesce se ottieni 1-" + calc.total + "."));
+ var line = el("div", "result-line");
+ var codeId = "prep-retry-code-" + tier.key + "-" + pg.id;
+ var code = el("div", "dice-code"); code.id = codeId;
+ code.textContent = "[dice=1d14]Rimedio Preparazione Ingredienti " + tier.label + " - " + pg.nome +
+   " (dopo sostituzione Ingredienti; riesce se 1-" + calc.total + " su 14)[/dice]";
+ line.appendChild(code);
+ var copy = el("button", "copy-btn", "Copia"); copy.id = "prep-retry-copy-" + tier.key + "-" + pg.id; line.appendChild(copy);
+ var inp = el("input"); inp.type="number"; inp.min="1"; inp.max="14"; inp.step="1"; inp.placeholder="1-14";
+ inp.value = pgDataGet(pg, "prep_retry_result_" + tier.key, "");
+ inp.addEventListener("change", function(){ pg.data["prep_retry_result_" + tier.key] = inp.value; recomputePrepTier(pg, tier); });
+ line.appendChild(inp);
+ var tag = el("span", "out-tag out-neutral", "in attesa"); tag.id = "prep-retry-tag-" + tier.key + "-" + pg.id; line.appendChild(tag);
+ wrap.appendChild(line);
+ setTimeout(function(){ attachCopy("prep-retry-copy-" + tier.key + "-" + pg.id, codeId); }, 0);
+ }
+
  function recomputePrepTier(pg, tier){
  var calc = calcPrepTier(pg, tier);
- var tecBase = calc.tecBase;
- var votoTotale = calc.votoTotale;
- var classB = calc.classB;
- var extraTotale = calc.extraTotale;
- var total = calc.total;
-
+ var tecBase = calc.tecBase, votoTotale = calc.votoTotale, classB = calc.classB, extraTotale = calc.extraTotale, total = calc.total;
  var formulaEl = document.getElementById("prep-formula-" + tier.key + "-" + pg.id); 
- if(formulaEl){ 
- formulaEl.textContent = "Tecnica " + tecBase + " + Voto/Speziale " + votoTotale +
- " + Classificazione " + classB + " + Extra " + extraTotale + " = " + total + " su 14"; 
- } 
-
- var codeEl = document.getElementById("prep-code-" + tier.key + "-" + pg.id); 
- if(codeEl){ codeEl.textContent = prepDiceText(pg, tier, calc); } 
-
+ if(formulaEl){ formulaEl.textContent = "Tecnica " + tecBase + " + Voto/Speziale " + votoTotale + " + Classificazione " + classB + " + Extra " + extraTotale + " = " + total + " su 14"; } 
+ var codeEl = document.getElementById("prep-code-" + tier.key + "-" + pg.id); if(codeEl){ codeEl.textContent = prepDiceText(pg, tier, calc); }
  var tagEl = document.getElementById("prep-tag-" + tier.key + "-" + pg.id); 
  var conseqEl = document.getElementById("prep-conseq-" + tier.key + "-" + pg.id); 
- var remedWrapEl = document.getElementById("prep-remedio-wrap-" + tier.key + "-" + pg.id); 
+ var remedWrapEl = document.getElementById("prep-remedio-wrap-" + tier.key + "-" + pg.id);
+ var retryWrapEl = document.getElementById("prep-retry-wrap-" + tier.key + "-" + pg.id);
  var tierStatus = "pending"; 
- var resV = pgDataGet(pg, "prep_result_" + tier.key, ""); 
+ var resV = pgDataGet(pg, "prep_result_" + tier.key, "");
+ var prepCopy = document.getElementById("prep-copy-" + tier.key + "-" + pg.id);
+ var prepResultInput = document.getElementById("prep-result-" + tier.key + "-" + pg.id);
+ if(prepCopy){ prepCopy.disabled = calc.ready === false; }
+ if(prepResultInput){ prepResultInput.disabled = calc.ready === false; }
+ if(retryWrapEl){ retryWrapEl.style.display = "none"; retryWrapEl.innerHTML = ""; }
 
+ if(calc.ready === false){
+   if(formulaEl){ formulaEl.textContent = "In attesa: " + calc.waiting.join(", ") + "."; }
+   if(tagEl){ tagEl.textContent = "Bloccato"; tagEl.className = "out-tag out-neutral"; }
+   if(conseqEl){ conseqEl.textContent = "Completa prima i dadi ausiliari richiesti."; }
+   if(remedWrapEl){ remedWrapEl.style.display = "none"; }
+   pg.data["prep_status_" + tier.key] = "pending"; refreshPrepAccumulo(pg); return;
+ }
  if(total >= 14){ 
- tierStatus = "success"; 
- if(tagEl){ tagEl.textContent = "Automaticamente riuscita"; tagEl.className = "out-tag out-ok"; } 
- if(conseqEl){ conseqEl.textContent = "Ingredienti preparati correttamente."; } 
- if(remedWrapEl){ remedWrapEl.style.display = "none"; } 
+   tierStatus = "success"; 
+   if(tagEl){ tagEl.textContent = "Automaticamente riuscita"; tagEl.className = "out-tag out-ok"; } 
+   if(conseqEl){ conseqEl.textContent = "Ingredienti preparati correttamente."; } 
+   if(remedWrapEl){ remedWrapEl.style.display = "none"; } 
  } else if(resV === ""){ 
- tierStatus = "pending"; 
- if(tagEl){ tagEl.textContent = "in attesa"; tagEl.className = "out-tag out-neutral"; } 
- if(conseqEl){ conseqEl.textContent = ""; } 
- if(remedWrapEl){ remedWrapEl.style.display = "none"; } 
- } else { 
- var rv = num(resV, 0); 
- var successo = (rv >= 1 && rv <= total); 
+   tierStatus = "pending"; 
+   if(tagEl){ tagEl.textContent = "in attesa"; tagEl.className = "out-tag out-neutral"; } 
+   if(conseqEl){ conseqEl.textContent = ""; } 
+   if(remedWrapEl){ remedWrapEl.style.display = "none"; } 
+ } else if(!intInRange(resV,1,14)){
+   tierStatus = "invalid";
+   if(tagEl){ tagEl.textContent = "Risultato impossibile"; tagEl.className = "out-tag out-fail"; }
+   if(conseqEl){ conseqEl.textContent = "Inserisci un risultato intero compreso fra 1 e 14."; }
+   if(remedWrapEl){ remedWrapEl.style.display = "none"; }
+ } else if(Number(resV) <= total){ 
+   tierStatus = "success"; 
+   if(tagEl){ tagEl.textContent = "Riuscita"; tagEl.className = "out-tag out-ok"; } 
+   if(conseqEl){ conseqEl.textContent = "Ingredienti preparati correttamente."; } 
+   if(remedWrapEl){ remedWrapEl.style.display = "none"; } 
+ } else {
+   if(tagEl){ tagEl.textContent = "Fallita"; tagEl.className = "out-tag out-fail"; }
+   if(remedWrapEl){ remedWrapEl.style.display = "block"; }
 
- if(successo){ 
- tierStatus = "success"; 
- if(tagEl){ tagEl.textContent = "Riuscita"; tagEl.className = "out-tag out-ok"; } 
- if(conseqEl){ conseqEl.textContent = "Ingredienti preparati correttamente."; } 
- if(remedWrapEl){ remedWrapEl.style.display = "none"; } 
- } else { 
- if(tagEl){ tagEl.textContent = "Fallita"; tagEl.className = "out-tag out-fail"; } 
- if(remedWrapEl){ remedWrapEl.style.display = "block"; } 
+   var selfPending=false, selfSuccess=false, helpPending=false, helpSuccess=false;
+   var helpEnabled=!!pgDataGet(pg,"prep_help_enabled_"+tier.key,false);
+   var helperName=pgDataGet(pg,"prep_help_name_"+tier.key,"") || "Il PG aiutante";
+   var noticedBy="";
 
- if(pg.speziale === "V"){ 
- tierStatus = "fail_remediated"; 
- if(conseqEl){ 
- conseqEl.textContent = "Ingrediente sostituito grazie a Speziale V: nessun malus alla Durata, ma il bonus complessivo di +" + 
- prepForzaBonusPercent(pg) + "% alla Forza non si applica più."; 
- } 
- } else { 
- var accResV = pgDataGet(pg, "prep_acc_result_" + tier.key, ""); 
- var soglia = accorgersiPrepSoglia(pg); 
- var accTagEl = document.getElementById("prep-acc-tag-" + tier.key + "-" + pg.id); 
- var selfPending = false; 
- var selfSuccess = false; 
+   if(pg.speziale === "V"){
+     selfSuccess=true; noticedBy=pg.nome+" (Speziale V)";
+   } else {
+     var accResV=pgDataGet(pg,"prep_acc_result_"+tier.key,"");
+     var soglia=accorgersiPrepSoglia(pg);
+     var accTagEl=document.getElementById("prep-acc-tag-"+tier.key+"-"+pg.id);
+     if(accResV===""){ selfPending=true; if(accTagEl){accTagEl.textContent="in attesa";accTagEl.className="out-tag out-neutral";} }
+     else if(!intInRange(accResV,1,10)){ selfPending=true; if(accTagEl){accTagEl.textContent="Risultato impossibile";accTagEl.className="out-tag out-fail";} }
+     else { selfSuccess=Number(accResV)<=soglia; if(accTagEl){accTagEl.textContent=selfSuccess?"Se ne accorge":"Non se ne accorge";accTagEl.className=selfSuccess?"out-tag out-ok":"out-tag out-fail";} }
 
- if(accResV === ""){ 
- selfPending = true; 
- if(accTagEl){ accTagEl.textContent = "in attesa"; accTagEl.className = "out-tag out-neutral"; } 
- } else { 
- var accRv = num(accResV, 0); 
- selfSuccess = (accRv >= 1 && accRv <= soglia); 
- if(accTagEl){ 
- if(selfSuccess){ accTagEl.textContent = "Se ne accorge"; accTagEl.className = "out-tag out-ok"; } 
- else { accTagEl.textContent = "Non se ne accorge"; accTagEl.className = "out-tag out-fail"; } 
- } 
- } 
+     var helperSpec=pgDataGet(pg,"prep_help_speziale_"+tier.key,"0");
+     var helpTagEl=document.getElementById("prep-help-tag-"+tier.key+"-"+pg.id);
+     if(helpEnabled){
+       if(helperSpec==="V"){ helpSuccess=true; if(helpTagEl){helpTagEl.textContent="Si accorge dell'errore";helpTagEl.className="out-tag out-ok";} }
+       else {
+         var helpSoglia=accorgersiPrepSogliaAiutante(helperSpec);
+         var helpResV=pgDataGet(pg,"prep_help_acc_result_"+tier.key,"");
+         var helpCodeEl=document.getElementById("prep-help-code-"+tier.key+"-"+pg.id);
+         if(helpCodeEl){helpCodeEl.textContent="[dice=1d10]Aiuto nella Preparazione Ingredienti - "+helperName+" controlla l'errore di "+pg.nome+" ("+tier.label+", riesce se 1-"+helpSoglia+")[/dice]";}
+         if(helpResV===""){helpPending=true;if(helpTagEl){helpTagEl.textContent="in attesa";helpTagEl.className="out-tag out-neutral";}}
+         else if(!intInRange(helpResV,1,10)){helpPending=true;if(helpTagEl){helpTagEl.textContent="Risultato impossibile";helpTagEl.className="out-tag out-fail";}}
+         else {helpSuccess=Number(helpResV)<=helpSoglia;if(helpTagEl){helpTagEl.textContent=helpSuccess?"Si accorge dell'errore":"Non se ne accorge";helpTagEl.className=helpSuccess?"out-tag out-ok":"out-tag out-fail";}}
+       }
+     }
+     if(selfSuccess&&helpSuccess){noticedBy=pg.nome+" e "+helperName;} else if(selfSuccess){noticedBy=pg.nome;} else if(helpSuccess){noticedBy=helperName;}
+   }
 
- var helpEnabled = !!pgDataGet(pg, "prep_help_enabled_" + tier.key, false); 
- var helpSuccess = false; 
- var helpPending = false; 
- var helperName = pgDataGet(pg, "prep_help_name_" + tier.key, ""); 
- if(helperName === ""){ helperName = "Il PG aiutante"; } 
- var helperSpec = pgDataGet(pg, "prep_help_speziale_" + tier.key, "0"); 
- var helpTagEl = document.getElementById("prep-help-tag-" + tier.key + "-" + pg.id); 
-
- if(helpEnabled){ 
- if(helperSpec === "V"){ 
- helpSuccess = true; 
- if(helpTagEl){ helpTagEl.textContent = "Aiuto riuscito"; helpTagEl.className = "out-tag out-ok"; } 
- } else { 
- var helpSoglia = accorgersiPrepSogliaAiutante(helperSpec); 
- var helpResV = pgDataGet(pg, "prep_help_acc_result_" + tier.key, ""); 
- var helpCodeEl = document.getElementById("prep-help-code-" + tier.key + "-" + pg.id); 
- if(helpCodeEl){ 
- helpCodeEl.textContent = "[dice=1d10]Aiuto nella Preparazione Ingredienti - " + helperName + 
- " controlla l'errore di " + pg.nome + " (" + tier.label + ", riesce se 1-" + helpSoglia + ")[/dice]"; 
- } 
- if(helpResV === ""){ 
- helpPending = true; 
- if(helpTagEl){ helpTagEl.textContent = "in attesa"; helpTagEl.className = "out-tag out-neutral"; } 
- } else { 
- var helpRv = num(helpResV, 0); 
- helpSuccess = (helpRv >= 1 && helpRv <= helpSoglia); 
- if(helpTagEl){ 
- if(helpSuccess){ helpTagEl.textContent = "Si accorge dell'errore"; helpTagEl.className = "out-tag out-ok"; } 
- else { helpTagEl.textContent = "Non se ne accorge"; helpTagEl.className = "out-tag out-fail"; } 
- } 
- } 
- } 
- } 
-
- if(selfSuccess || helpSuccess){ 
- tierStatus = "fail_remediated"; 
- var chi = selfSuccess ? pg.nome : helperName; 
- if(selfSuccess && helpSuccess){ chi = pg.nome + " e " + helperName; } 
- if(conseqEl){ 
- conseqEl.textContent = chi + " si accorge dell'errore in tempo: l'ingrediente viene sostituito. " + 
- "Nessun malus alla Durata, ma il bonus complessivo di +" + prepForzaBonusPercent(pg) + 
- "% alla Forza non si applica più."; 
- } 
- } else if(selfPending || (helpEnabled && helpPending)){ 
- tierStatus = "fail_pending"; 
- if(conseqEl){ 
- var testoPending = "Preparazione fallita. L'errore può ancora essere individuato"; 
- if(helpEnabled){ testoPending = testoPending + " dal PG che prepara oppure dal PG aiutante"; } 
- else { testoPending = testoPending + " dal PG che prepara"; } 
- conseqEl.textContent = testoPending + ". Se nessuno se ne accorge: -" + prepMalusPercent(pg) + 
- "% alla Durata degli effetti e dei bonus/malus. Se qualcuno riesce a rimediare, il malus non si applica, " + 
- "ma il bonus complessivo di +" + prepForzaBonusPercent(pg) + "% alla Forza viene comunque perso."; 
- } 
- } else { 
- tierStatus = "fail_unremediated"; 
- var malusV = prepMalusPercent(pg); 
- if(conseqEl){ 
- conseqEl.textContent = "Nessuno si accorge dell'errore: malus di -" + malusV + 
- "% sulla Durata degli effetti e dei bonus/malus della Pozione."; 
- } 
- } 
- } 
- } 
- } 
-
- pg.data["prep_status_" + tier.key] = tierStatus; 
- refreshPrepAccumulo(pg); 
- } 
+   if(selfSuccess || helpSuccess){
+     renderPrepRetryUI(pg,tier,calc,noticedBy);
+     var retryV=pgDataGet(pg,"prep_retry_result_"+tier.key,"");
+     var retryTag=document.getElementById("prep-retry-tag-"+tier.key+"-"+pg.id);
+     if(retryV===""){
+       tierStatus="fail_pending";
+       if(conseqEl){conseqEl.textContent="Errore individuato: sostituisci gli Ingredienti danneggiati e ripeti il d14 per tentare il rimedio. Il bonus pieno alla Forza è comunque perso.";}
+     } else if(!intInRange(retryV,1,14)){
+       tierStatus="fail_pending";
+       if(retryTag){retryTag.textContent="Risultato impossibile";retryTag.className="out-tag out-fail";}
+       if(conseqEl){conseqEl.textContent="Il tiro di rimedio deve essere un intero da 1 a 14.";}
+     } else if(Number(retryV)<=total){
+       tierStatus="fail_remediated";
+       if(retryTag){retryTag.textContent="Rimedio riuscito";retryTag.className="out-tag out-ok";}
+       if(conseqEl){conseqEl.textContent="Il nuovo d14 riesce: nessun malus alla Durata. Il bonus pieno alla Forza resta perso perché la procedura era fallita almeno una volta.";}
+     } else {
+       tierStatus="fail_unremediated";
+       if(retryTag){retryTag.textContent="Rimedio fallito";retryTag.className="out-tag out-fail";}
+       if(conseqEl){conseqEl.textContent="Anche il tentativo di rimedio fallisce: si applica -"+prepMalusPercent(pg)+"% alla Durata degli effetti e dei bonus/malus. Il regolamento non specifica ulteriori tentativi automatici in questa procedura.";}
+     }
+   } else if(selfPending || (helpEnabled && helpPending)){
+     tierStatus="fail_pending";
+     if(conseqEl){conseqEl.textContent="Preparazione fallita. Occorre prima stabilire se il PG che prepara o l'eventuale aiutante si accorge dell'errore. Solo dopo un esito positivo si può sostituire l'Ingrediente e ripetere il d14.";}
+   } else {
+     tierStatus="fail_unremediated";
+     if(conseqEl){conseqEl.textContent="Nessuno si accorge dell'errore: malus di -"+prepMalusPercent(pg)+"% sulla Durata degli effetti e dei bonus/malus della Pozione.";}
+   }
+ }
+ pg.data["prep_status_"+tier.key]=tierStatus;
+ refreshPrepAccumulo(pg);
+ }
 
  /* ==================================================== */ 
  /* STEP 4 - PRODUZIONE */ 
@@ -2126,11 +2621,11 @@ function renderNav(){
  return map[classificazione]; 
  } 
  
- function chimicoBonusFixed(pg){ 
- if(pg.tipo === "studente"){ return getVotoBonus(pg); } 
- if(levelNum(pg.chimico) === 0){ return 3; } 
- var map = { "I":4, "II":5, "III":6, "IV":7, "V":8 }; 
- return map[pg.chimico]; 
+ function chimicoBonusFixed(pg){
+ var map = { "I":4, "II":5, "III":6, "IV":7, "V":8 };
+ if(levelNum(pg.chimico) > 0){ return map[pg.chimico]; }
+ if(pg.tipo === "studente"){ return getVotoBonus(pg); }
+ return 3;
  } 
  
  function renderProdStep(container){ 
@@ -2138,7 +2633,10 @@ function renderNav(){
  p.appendChild(el("h2", null, "Fase 2: Produzione")); 
  p.appendChild(el("div", "guide-text", 
  "Si lancia un solo d30. Questa fase è la più cruciale: sbagliarla comporta malus pesanti e irrimediabili di Forza. " + 
- "Costo: -1 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
+ "Costo base: -1 Fatica (0 con Sapienza Pozionistica 25). Se usi Memoria Tecnica+, aggiungi il suo costo di -1,5 Fatica: il tool ne determina prima l'Efficacia con 1d10 e poi applica automaticamente il bonus OFFGame al d30.")); 
+
+ if(appendSetupGate(p)){ container.appendChild(p); return; }
+ if(appendDependencyGate(p, "prod")){ container.appendChild(p); return; }
 
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildProdCard(pgs[i])); 
@@ -2157,14 +2655,12 @@ function renderNav(){
  function buildProdCard(pg){ 
  var card = el("div", "pg-card"); 
  card.appendChild(el("h3", null, pg.nome)); 
+ card.appendChild(buildPhaseExtraControl(pg, "memoria", "Memoria Tecnica+"));
  
+ var memEffBox = buildExtraEfficaciaBlock(pg, "memoria", "Memoria Tecnica+");
+ if(memEffBox){ card.appendChild(memEffBox); card.appendChild(el("div","divider")); }
  var memExtra = extraBonusStatic(pg, "memoria", pg.memoria); 
- var showMemDice = false; 
- if(pg.memoria !== "no"){ 
- if(memExtra.diceFaces > 0){ 
- showMemDice = true; 
- } 
- } 
+ var showMemDice = extraIsUsed(pg,"memoria") && memExtra.ready && memExtra.diceFaces > 0; 
  if(showMemDice){ 
  var mBox = el("div", "result-line"); 
  mBox.appendChild(el("span", null, "Bonus Memoria Tecnica+ — tira 1d" + memExtra.diceFaces + ":")); 
@@ -2174,7 +2670,7 @@ function renderNav(){
  mBox.appendChild(mCode); 
  var mCopy = el("button", "copy-btn", "Copia"); mCopy.id = "prod-mem-copy-" + pg.id; 
  mBox.appendChild(mCopy); 
- var mRes = el("input"); mRes.type="number"; mRes.placeholder="risultato"; 
+ var mRes = el("input"); mRes.type="number"; mRes.min="1"; mRes.max="" + memExtra.diceFaces; mRes.step="1"; mRes.placeholder="1-" + memExtra.diceFaces; 
  mRes.value = pgDataGet(pg, "prod_mem_dice", ""); 
  mRes.addEventListener("input", function(){ pg.data["prod_mem_dice"] = mRes.value; recomputeProd(pg); }); 
  mBox.appendChild(mRes); 
@@ -2184,8 +2680,8 @@ function renderNav(){
  } 
  
  var dBonus = el("div"); 
- dBonus.appendChild(el("label", null, "Bonus extra Oggetti/Conoscenze")); 
- var inpBonus = el("input"); inpBonus.type="number"; 
+ dBonus.appendChild(el("label", null, "Altri bonus (Oggetti/Conoscenze; NON includere la Extra+ già calcolata sopra)")); 
+ var inpBonus = el("input"); inpBonus.type="number"; inpBonus.min="0"; inpBonus.step="1"; 
  inpBonus.value = pgDataGet(pg, "prod_extra", 0); 
  inpBonus.addEventListener("input", function(){ 
  pg.data["prod_extra"] = num(inpBonus.value, 0); 
@@ -2208,7 +2704,7 @@ function renderNav(){
  
  var resLine = el("div", "result-line"); 
  resLine.appendChild(el("span", null, "Risultato ottenuto (1-30):")); 
- var resInp = el("input"); resInp.type="number"; resInp.min="1"; resInp.max="30"; 
+ var resInp = el("input"); resInp.type="number"; resInp.id="prod-result-" + pg.id; resInp.min="1"; resInp.max="30"; resInp.step="1"; 
  resInp.value = pgDataGet(pg, "prod_result", ""); 
  resInp.addEventListener("input", function(){ 
  pg.data["prod_result"] = resInp.value; 
@@ -2234,12 +2730,13 @@ function renderNav(){
  var chimicoB = chimicoBonusFixed(pg); 
  var classB = classBonusProd(POZ.classificazione); 
  var memExtra = extraBonusStatic(pg, "memoria", pg.memoria); 
- var memFixed = memExtra.fixed; 
- if(memExtra.diceFaces > 0){ 
+ var memFixed = memExtra.fixed;
+ var prodReady = memExtra.ready !== false; 
+ if(memExtra.ready !== false && memExtra.diceFaces > 0){ 
  var dv = pgDataGet(pg, "prod_mem_dice", ""); 
- if(dv !== ""){ memFixed = memFixed + num(dv,0); } else { memFixed = 0; } 
+ if(intInRange(dv,1,memExtra.diceFaces)){ memFixed = memFixed + Number(dv); } else { memFixed = 0; prodReady = false; } 
  } 
- var extraManual = num(pgDataGet(pg, "prod_extra", 0), 0); 
+ var extraManual = safeBonus(pgDataGet(pg, "prod_extra", 0)); 
  
  var total = tecBase + chimicoB + classB + memFixed + extraManual; 
  if(total > 30){ total = 30; } 
@@ -2259,8 +2756,19 @@ function renderNav(){
  } 
  
  var tagEl = document.getElementById("prod-tag-" + pg.id); 
- var conseqEl = document.getElementById("prod-conseq-" + pg.id); 
- var status = "pending"; 
+ var conseqEl = document.getElementById("prod-conseq-" + pg.id);
+ var prodCopy = document.getElementById("prod-copy-" + pg.id);
+ var prodResInput = document.getElementById("prod-result-" + pg.id);
+ if(prodCopy){ prodCopy.disabled = !prodReady; }
+ if(prodResInput){ prodResInput.disabled = !prodReady; }
+ var status = "pending";
+ if(!prodReady){
+   if(formulaEl){ formulaEl.textContent = "In attesa del dado richiesto da Memoria Tecnica+."; }
+   if(codeEl){ codeEl.textContent = "Completa prima il dado di Memoria Tecnica+."; }
+   if(tagEl){ tagEl.textContent = "Bloccato"; tagEl.className = "out-tag out-neutral"; }
+   if(conseqEl){ conseqEl.textContent = ""; }
+   pg.data["prod_status"] = "pending"; return;
+ } 
  var bonusP = prodForzaBonusPercent(pg); 
  var malusP = prodMalusPercent(pg); 
  if(tagEl){ 
@@ -2277,7 +2785,12 @@ function renderNav(){
  if(conseqEl){ conseqEl.textContent = ""; } 
  } 
  } else { 
- var rv = num(resV, 0); 
+ if(!intInRange(resV,1,30)){
+   tagEl.textContent = "Risultato impossibile"; tagEl.className = "out-tag out-fail"; status = "invalid";
+   if(conseqEl){ conseqEl.textContent = "Inserisci un risultato intero compreso fra 1 e 30."; }
+   pg.data["prod_status"] = status; return;
+ }
+ var rv = Number(resV); 
  var successo = false; 
  if(rv >= 1){ 
  if(rv <= total){ 
@@ -2339,6 +2852,9 @@ function renderNav(){
  "Si lancia un d15. Senza questo passaggio la Pozione non ha alcun effetto. " + 
  "Costo: -0,5 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
 
+ if(appendSetupGate(p)){ container.appendChild(p); return; }
+ if(appendDependencyGate(p, "bacchetta")){ container.appendChild(p); return; }
+
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildBacchettaCard(pgs[i])); 
  } 
@@ -2358,8 +2874,8 @@ function renderNav(){
  card.appendChild(el("h3", null, pg.nome)); 
  
  var dBonus = el("div"); 
- dBonus.appendChild(el("label", null, "Bonus extra Oggetti/Conoscenze")); 
- var inpBonus = el("input"); inpBonus.type="number"; 
+ dBonus.appendChild(el("label", null, "Altri bonus Oggetti/Conoscenze")); 
+ var inpBonus = el("input"); inpBonus.type="number"; inpBonus.min="0"; inpBonus.step="1"; 
  inpBonus.value = pgDataGet(pg, "bac_extra", 0); 
  inpBonus.addEventListener("input", function(){ 
  pg.data["bac_extra"] = num(inpBonus.value, 0); 
@@ -2382,7 +2898,7 @@ function renderNav(){
  
  var resLine = el("div", "result-line"); 
  resLine.appendChild(el("span", null, "Risultato ottenuto (1-15):")); 
- var resInp = el("input"); resInp.type="number"; resInp.min="1"; resInp.max="15"; 
+ var resInp = el("input"); resInp.type="number"; resInp.id="bac-result-" + pg.id; resInp.min="1"; resInp.max="15"; resInp.step="1"; 
  resInp.value = pgDataGet(pg, "bac_result", ""); 
  resInp.addEventListener("input", function(){ 
  pg.data["bac_result"] = resInp.value; 
@@ -2406,7 +2922,7 @@ function renderNav(){
  function recomputeBacchetta(pg){ 
  var tecBase = tecnicaBaseBacchetta(pg.tecnica); 
  var toccoB = levelNum(pg.toccoMagico); 
- var extraManual = num(pgDataGet(pg, "bac_extra", 0), 0); 
+ var extraManual = safeBonus(pgDataGet(pg, "bac_extra", 0)); 
  var total = tecBase + toccoB + extraManual; 
  if(total > 15){ total = 15; } 
  if(total < 0){ total = 0; } 
@@ -2437,7 +2953,11 @@ function renderNav(){
  tagEl.className = "out-tag out-neutral"; 
  } 
  } else { 
- var rv = num(resV, 0); 
+ if(!intInRange(resV,1,15)){
+   tagEl.textContent = "Risultato impossibile"; tagEl.className = "out-tag out-fail"; bacStatus = "invalid";
+   pg.data["bac_status"] = bacStatus; recomputeDosiFinaleDisplay(pg); return;
+ }
+ var rv = Number(resV); 
  var successo2 = false; 
  if(rv >= 1){ 
  if(rv <= total){ 
@@ -2479,7 +2999,7 @@ function renderNav(){
  wrap.appendChild(el("p", null, "Dosi fisse: <b>" + fixedMap[lvl] + "</b> (Tocco Magico " + (lvl === "0" ? "assente" : lvl) + ")")); 
  pg.data["dosi_base_total"] = fixedMap[lvl]; 
  } else { 
- var baseFix = (lvl === "I") ? 1 : 2; 
+ var baseFix = (lvl === "I") ? 1 : (lvl === "III" ? 2 : 3); 
  var lineWrap = el("div", "result-line"); 
  lineWrap.appendChild(el("span", null, "Dosi = " + baseFix + " + 1d2 — tira il dado:")); 
  var codeId = "dosi-code-" + pg.id; 
@@ -2493,27 +3013,27 @@ function renderNav(){
  
  var resLine = el("div", "result-line"); 
  resLine.appendChild(el("span", null, "Risultato 1d2:")); 
- var resInp = el("input"); resInp.type="number"; resInp.min="1"; resInp.max="2"; 
+ var resInp = el("input"); resInp.type="number"; resInp.min="1"; resInp.max="2"; resInp.step="1"; 
  resInp.value = pgDataGet(pg, "dosi_dice", ""); 
  var out = el("span", "out-tag out-neutral", "in attesa"); 
  resInp.addEventListener("input", function(){ 
  pg.data["dosi_dice"] = resInp.value; 
- var rv = num(resInp.value, 0); 
- if(rv > 0){ 
+ if(intInRange(resInp.value,1,2)){
+ var rv = Number(resInp.value); 
  out.textContent = "Totale dosi: " + (baseFix + rv); 
  out.className = "out-tag out-ok"; 
  pg.data["dosi_base_total"] = baseFix + rv; 
  } else { 
- out.textContent = "in attesa"; 
- out.className = "out-tag out-neutral"; 
+ out.textContent = resInp.value === "" ? "in attesa" : "Risultato impossibile"; 
+ out.className = resInp.value === "" ? "out-tag out-neutral" : "out-tag out-fail"; 
  pg.data["dosi_base_total"] = null; 
  } 
  recomputeDosiFinaleDisplay(pg); 
  }); 
  var dv0 = pgDataGet(pg, "dosi_dice", ""); 
  if(dv0 !== ""){ 
- var rv0 = num(dv0, 0); 
- if(rv0 > 0){ 
+ if(intInRange(dv0,1,2)){
+ var rv0 = Number(dv0); 
  out.textContent = "Totale dosi: " + (baseFix + rv0); 
  out.className = "out-tag out-ok"; 
  pg.data["dosi_base_total"] = baseFix + rv0; 
@@ -2529,14 +3049,16 @@ function renderNav(){
  /* ==================================================== */ 
  /* STEP 6 - IMBOTTIGLIAMENTO E PULIZIA DEL CALDERONE */ 
  /* ==================================================== */ 
- function votoCalderaioFixed(pg){ 
- if(pg.tipo === "studente"){ 
- var map = { T:1, D:2, S:3, A:4, O:5, E:6 }; 
- return map[pg.voto]; 
- } 
- if(levelNum(pg.calderaio) === 0){ return null; } // richiede 1d6 
- var mapC = { I:7, II:8, III:9, IV:10, V:11 }; 
- return mapC[pg.calderaio]; 
+ function votoCalderaioFixed(pg){
+ var map = { T:1, D:2, S:3, A:4, O:5, E:6 };
+ if(pg.tipo === "studente"){
+  // Per gli Studenti il voto resta la base. Calderaio I aggiunge +1 al valore X
+  // usato per stabilire la fascia del successivo 1d10.
+  return map[pg.voto] + levelNum(pg.calderaio);
+ }
+ var mapC = { I:7, II:8, III:9, IV:10, V:11 };
+ if(levelNum(pg.calderaio) > 0){ return mapC[pg.calderaio]; }
+ return null; // Adulto senza Calderaio: richiede 1d6
  } 
  
  function bracketFor(x){ 
@@ -2548,6 +3070,46 @@ function renderNav(){
  return { z:"1-2-3-4", tt:"5-6-7", ss:"8-9", cc:"10" }; 
  } 
  
+
+function sintesiReductionInfo(pg){
+ if(!extraIsUsed(pg,"sintesi")){ return { ready:true, percent:0, label:"Sintesi non usata" }; }
+ var eff = normalizeExtraEfficacia(pg,"sintesi");
+ if(eff === "pending"){ return { ready:false, percent:0, label:"Serve il 1d10 di Efficacia di Sintesi Tecnica+" }; }
+ if(eff === "0"){ return { ready:true, percent:0, label:"Sintesi 0%: nessuna riduzione dei post (Fatica comunque spesa)" }; }
+ var sapiente = pg.tipo === "adulto" && haSapienzaPozionistica(pg);
+ if(sapiente){
+   if(eff === "100"){ return { ready:true, percent:40, label:"Sintesi 100%: -40% post" }; }
+   return { ready:false, percent:0, label:"Efficacia non prevista per Adulto con Sapienza Pozionistica 1+" };
+ }
+ if(pg.tipo === "studente") {
+   if(eff === "100"){ return { ready:true, percent:20, label:"Sintesi 100%: -20% post" }; }
+   if(eff === "33"){ return { ready:true, percent:10, label:"Sintesi 33%: -10% post" }; }
+   if(eff === "66"){
+     var d2s = pgDataGet(pg, "sintesi_d2", "");
+     if(!intInRange(d2s,1,2)){ return { ready:false, percent:0, needsD2:true, label:"Sintesi 66%: serve 1d2 ×10%" }; }
+     return { ready:true, percent:Number(d2s)*10, label:"Sintesi 66%: -" + (Number(d2s)*10) + "% post" };
+   }
+ } else {
+   if(eff === "100"){ return { ready:true, percent:30, label:"Sintesi 100%: -30% post" }; }
+   if(eff === "33"){ return { ready:true, percent:20, label:"Sintesi 33%: -20% post" }; }
+   if(eff === "66"){
+     var d2a = pgDataGet(pg, "sintesi_d2", "");
+     if(!intInRange(d2a,1,2)){ return { ready:false, percent:0, needsD2:true, label:"Sintesi 66%: serve -10% -1d2×10%" }; }
+     var pct = 10 + Number(d2a)*10;
+     return { ready:true, percent:pct, label:"Sintesi 66%: -" + pct + "% post" };
+   }
+ }
+ return { ready:false, percent:0, label:"Efficacia Sintesi non interpretabile" };
+}
+
+function applySintesiToPosts(pg, basePosts){
+ var info = sintesiReductionInfo(pg);
+ if(basePosts === null || basePosts === undefined){ return { ready:false, base:basePosts, exact:null, info:info }; }
+ if(!info.ready){ return { ready:false, base:basePosts, exact:null, info:info }; }
+ var exact = basePosts * (100 - info.percent) / 100;
+ exact = Math.round(exact * 100) / 100;
+ return { ready:true, base:basePosts, exact:exact, info:info, fractional:Math.floor(exact) !== exact };
+}
 
  function imbottPostFinali(pg, esito){
  if(esito === "" || esito === "0%"){ return null; }
@@ -2632,6 +3194,7 @@ function renderImbottAwareness(pg, esito, imbPosts){
  inp.type = "number";
  inp.min = "1";
  inp.max = "10";
+ inp.step = "1";
  inp.placeholder = "1-10";
  inp.value = pgDataGet(pg, "imb_awareness_result", "");
  line.appendChild(inp);
@@ -2647,7 +3210,10 @@ function renderImbottAwareness(pg, esito, imbPosts){
      tag.className = "out-tag out-neutral";
      return;
    }
-   var rv = num(inp.value, 0);
+   if(!intInRange(inp.value,1,10)){
+     pg.data["imb_awareness"] = "pending"; tag.textContent = "Risultato impossibile"; tag.className = "out-tag out-fail"; return;
+   }
+   var rv = Number(inp.value);
    if(rv >= 1 && rv <= soglia){
      pg.data["imb_awareness"] = "noticed";
      tag.textContent = "Se ne accorge";
@@ -2670,9 +3236,13 @@ function renderImbottStep(container){
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Fase 4: Imbottigliamento e Pulizia del Calderone")); 
  p.appendChild(el("div", "guide-text", 
- "Si lancia un d10. L'esito (0%, 33%, 66%, 100%) determina il numero di post finali necessari in base al profilo del PG e alla Classificazione della Pozione. " +
+ "Si lancia un d10. L'esito (0%, 33%, 66%, 100%) determina il numero di post finali necessari in base al profilo del PG e alla Classificazione della Pozione. Per uno Studente, Calderaio I aggiunge +1 al valore del Voto prima di sommare la Tecnica: serve soltanto a stabilire la fascia di riferimento del d10 e il profilo dei post resta Studente. " +
  "Con 0% la Pozione è persa e il calderone esplode. Con 33% o 66% la Pozione è pronta, ma il PG deve anche verificare se si accorge che la postazione resterà occupata più a lungo. " +
- "Costo: -2 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
+ "Costo base: -2 Fatica (0 con Sapienza Pozionistica 25). Se usi Sintesi Tecnica+, aggiungi il suo costo di -2 Fatica: il tool ne determina prima l'Efficacia con 1d10 e applica la riduzione dei post prevista. " +
+ "Il calcolatore segue la tabella formale dei range del regolamento; il testo contiene un esempio Veritaserum non coincidente con quella tabella e un valore 6 sovrapposto fra 33% e 66% nella fascia 14-20, che viene segnalato come ambiguo.")); 
+
+ if(appendSetupGate(p)){ container.appendChild(p); return; }
+ if(appendDependencyGate(p, "imbott")){ container.appendChild(p); return; }
 
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildImbottCard(pgs[i])); 
@@ -2691,6 +3261,10 @@ function renderImbottStep(container){
  function buildImbottCard(pg){ 
  var card = el("div", "pg-card"); 
  card.appendChild(el("h3", null, pg.nome)); 
+ card.appendChild(buildPhaseExtraControl(pg, "sintesi", "Sintesi Tecnica+"));
+
+ var sintEffBox = buildExtraEfficaciaBlock(pg, "sintesi", "Sintesi Tecnica+");
+ if(sintEffBox){ card.appendChild(sintEffBox); card.appendChild(el("div","divider")); }
  
  var needsD6 = false; 
  if(pg.tipo === "adulto"){ 
@@ -2707,15 +3281,32 @@ function renderImbottStep(container){
  d6box.appendChild(codeDiv); 
  var copyBtn = el("button", "copy-btn", "Copia"); copyBtn.id = "imb-d6-copy-" + pg.id; 
  d6box.appendChild(copyBtn); 
- var resInp = el("input"); resInp.type="number"; resInp.placeholder="1-6"; 
- resInp.value = pgDataGet(pg, "imb_d6", ""); 
- resInp.addEventListener("input", function(){ pg.data["imb_d6"] = resInp.value; recomputeImbott(pg); }); 
- d6box.appendChild(resInp); 
+ var d6Inp = el("input"); d6Inp.type="number"; d6Inp.min="1"; d6Inp.max="6"; d6Inp.step="1"; d6Inp.placeholder="1-6"; 
+ d6Inp.value = pgDataGet(pg, "imb_d6", ""); 
+ d6Inp.addEventListener("input", function(){ pg.data["imb_d6"] = d6Inp.value; recomputeImbott(pg); }); 
+ d6box.appendChild(d6Inp); 
  card.appendChild(d6box); 
  setTimeout(function(){ attachCopy("imb-d6-copy-" + pg.id, codeId); }, 0); 
  card.appendChild(el("div","divider")); 
  } 
  
+ if(extraIsUsed(pg,"sintesi") && pg.sintesi === "66" && !(pg.tipo === "adulto" && haSapienzaPozionistica(pg))){
+   var sintBox = el("div", "result-line");
+   sintBox.appendChild(el("span", null, pg.tipo === "studente" ? "Sintesi Tecnica+ 66% — tira 1d2: riduzione = risultato ×10%" : "Sintesi Tecnica+ 66% — tira 1d2: riduzione = 10% + risultato ×10%"));
+   var sintCodeId = "sintesi-d2-code-" + pg.id;
+   var sintCode = el("div", "dice-code"); sintCode.id = sintCodeId;
+   sintCode.textContent = "[dice=1d2]Sintesi Tecnica+ - " + pg.nome + " (riduzione post Imbottigliamento/Pulizia)[/dice]";
+   sintBox.appendChild(sintCode);
+   var sintCopy = el("button", "copy-btn", "Copia"); sintCopy.id = "sintesi-d2-copy-" + pg.id; sintBox.appendChild(sintCopy);
+   var sintInp = el("input"); sintInp.type="number"; sintInp.min="1"; sintInp.max="2"; sintInp.step="1"; sintInp.placeholder="1-2";
+   sintInp.value = pgDataGet(pg, "sintesi_d2", "");
+   sintInp.addEventListener("input", function(){ pg.data["sintesi_d2"] = sintInp.value; recomputeImbott(pg); });
+   sintBox.appendChild(sintInp);
+   card.appendChild(sintBox);
+   setTimeout(function(){ attachCopy("sintesi-d2-copy-" + pg.id, sintCodeId); },0);
+   card.appendChild(el("div","divider"));
+ }
+
  var formulaTag = el("div", "guide-text"); formulaTag.id = "imb-formula-" + pg.id; 
  card.appendChild(formulaTag); 
  
@@ -2735,8 +3326,8 @@ function renderImbottStep(container){
  card.appendChild(box); 
  
  var bonusRow = el("div"); 
- bonusRow.appendChild(el("label", null, "Bonus extra Oggetti/Conoscenze (si somma al risultato del dado)")); 
- var inpBonus = el("input"); inpBonus.type="number"; 
+ bonusRow.appendChild(el("label", null, "Altri bonus (NON includere Sintesi Tecnica+; si sommano al risultato del dado)")); 
+ var inpBonus = el("input"); inpBonus.type="number"; inpBonus.min="0"; inpBonus.step="1"; 
  inpBonus.value = pgDataGet(pg, "imb_extra", 0); 
  inpBonus.addEventListener("input", function(){ pg.data["imb_extra"] = num(inpBonus.value, 0); recomputeImbott(pg); }); 
  bonusRow.appendChild(inpBonus); 
@@ -2744,7 +3335,7 @@ function renderImbottStep(container){
  
  var resLine = el("div", "result-line"); 
  resLine.appendChild(el("span", null, "Risultato ottenuto (1-10):")); 
- var resInp = el("input"); resInp.type="number"; resInp.min="1"; resInp.max="10"; 
+ var resInp = el("input"); resInp.type="number"; resInp.id="imb-result-" + pg.id; resInp.min="1"; resInp.max="10"; resInp.step="1"; 
  resInp.value = pgDataGet(pg, "imb_result", ""); 
  resInp.addEventListener("input", function(){ pg.data["imb_result"] = resInp.value; recomputeImbott(pg); }); 
  resLine.appendChild(resInp); 
@@ -2771,17 +3362,28 @@ function renderImbottStep(container){
  } 
  
  function recomputeImbott(pg){ 
- var votoC = votoCalderaioFixed(pg); 
+ var votoC = votoCalderaioFixed(pg);
+ var imbAuxReady = true; 
  if(votoC === null){ 
- var d6v = pgDataGet(pg, "imb_d6", ""); 
- if(d6v === ""){ votoC = 0; } else { votoC = num(d6v, 0); } 
+  var d6v = pgDataGet(pg, "imb_d6", "");
+  if(intInRange(d6v,1,6)){ votoC = Number(d6v); } else { votoC = 0; imbAuxReady = false; }
  } 
- var x = votoC + pg.tecnica; 
+ var x = votoC + pg.tecnica;
+ var imbCopyBtn = document.getElementById("imb-copy-" + pg.id);
+ var imbResultInp = document.getElementById("imb-result-" + pg.id);
+ if(imbCopyBtn){ imbCopyBtn.disabled = !imbAuxReady; }
+ if(imbResultInp){ imbResultInp.disabled = !imbAuxReady; } 
  
  var formulaEl = document.getElementById("imb-formula-" + pg.id); 
  if(formulaEl){ 
- formulaEl.innerHTML = "A questo punto si sommano <b>Voto/Calderaio</b> (" + votoC + ") e <b>Tecnica</b> (" + pg.tecnica + 
- "): X = " + votoC + " + " + pg.tecnica + " = <b>" + x + "</b>."; 
+ if(pg.tipo === "studente"){
+   var votoBaseMap = { T:1, D:2, S:3, A:4, O:5, E:6 };
+   var votoBase = votoBaseMap[pg.voto];
+   var caldBonus = levelNum(pg.calderaio);
+   formulaEl.innerHTML = "Studente: <b>Voto</b> (" + votoBase + ")" + (caldBonus ? " + <b>Calderaio I</b> (+1)" : "") + " + <b>Tecnica</b> (" + pg.tecnica + ") = X <b>" + x + "</b>.";
+  } else {
+   formulaEl.innerHTML = "A questo punto si sommano <b>Voto/Calderaio</b> (" + votoC + ") e <b>Tecnica</b> (" + pg.tecnica + "): X = " + votoC + " + " + pg.tecnica + " = <b>" + x + "</b>.";
+  } 
  } 
  
  var br = bracketFor(x); 
@@ -2804,8 +3406,16 @@ function renderImbottStep(container){
  
  var codeEl = document.getElementById("imb-code-" + pg.id); 
  if(codeEl){ 
- codeEl.textContent = "[dice=1d10]Imbottigliamento e Pulizia del Calderone - " + pg.nome + 
- " (X = Voto/Calderaio " + votoC + " + Tecnica " + pg.tecnica + " = " + x + ")[/dice]"; 
+ if(pg.tipo === "studente"){
+   var votoBaseMap2 = { T:1, D:2, S:3, A:4, O:5, E:6 };
+   var votoBase2 = votoBaseMap2[pg.voto];
+   var caldBonus2 = levelNum(pg.calderaio);
+   codeEl.textContent = "[dice=1d10]Imbottigliamento e Pulizia del Calderone - " + pg.nome +
+   " (X = Voto " + votoBase2 + (caldBonus2 ? " + Calderaio I +1" : "") + " + Tecnica " + pg.tecnica + " = " + x + ")[/dice]";
+  } else {
+   codeEl.textContent = "[dice=1d10]Imbottigliamento e Pulizia del Calderone - " + pg.nome +
+   " (X = Voto/Calderaio " + votoC + " + Tecnica " + pg.tecnica + " = " + x + ")[/dice]";
+  } 
  } 
  
  var tagEl = document.getElementById("imb-tag-" + pg.id); 
@@ -2815,9 +3425,18 @@ function renderImbottStep(container){
  var imbEsito = "";
  var imbPosts = null;
 
+ if(!imbAuxReady){
+   if(formulaEl){ formulaEl.innerHTML = "<b>In attesa:</b> completa il 1d6 richiesto all'Adulto senza Calderaio."; }
+   if(codeEl){ codeEl.textContent = "Completa prima il 1d6 Adulto senza Calderaio."; }
+   if(tagEl){ tagEl.textContent = "Bloccato"; tagEl.className = "out-tag out-neutral"; }
+   if(noteEl){ noteEl.textContent = "Inserisci un risultato intero da 1 a 6 nel dado preliminare."; }
+   if(postsEl){ postsEl.className = "final-posts-box"; postsEl.innerHTML = "Post finali: <b>in attesa del 1d6 preliminare</b>"; }
+   pg.data["imb_status"] = "pending"; pg.data["imb_esito"] = ""; pg.data["imb_posts"] = null; return;
+ }
+
  if(tagEl){ 
    var resV = pgDataGet(pg, "imb_result", ""); 
-   var extraB = num(pgDataGet(pg, "imb_extra", 0), 0); 
+   var extraB = safeBonus(pgDataGet(pg, "imb_extra", 0)); 
 
    if(resV === ""){ 
      tagEl.textContent = "in attesa"; 
@@ -2827,12 +3446,33 @@ function renderImbottStep(container){
        postsEl.className = "final-posts-box";
        postsEl.innerHTML = "Post finali: <b>in attesa dell'esito</b>";
      }
-   } else { 
-     var rv = num(resV, 0) + extraB; 
-     var esito = esitoFromBracket(br, rv); 
-     imbEsito = esito; 
+   } else {
+     if(!intInRange(resV,1,10)){
+       tagEl.textContent = "Risultato impossibile"; tagEl.className = "out-tag out-fail";
+       if(noteEl){ noteEl.textContent = "Inserisci un risultato intero compreso fra 1 e 10."; }
+       if(postsEl){ postsEl.className = "final-posts-box"; postsEl.innerHTML = "Post finali: <b>in attesa di un risultato valido</b>"; }
+       pg.data["imb_status"] = "pending"; pg.data["imb_esito"] = ""; pg.data["imb_posts"] = null; return;
+     }
+     var rv = Number(resV) + extraB; 
+     var esito = esitoFromBracket(br, rv);
+     if(esito === "AMBIGUO"){
+       tagEl.textContent = "Tabella ambigua"; tagEl.className = "out-tag out-fail";
+       if(noteEl){ noteEl.textContent = "Il risultato ricade in due fasce contemporaneamente nella tabella incorporata nell'HTML. L'esito non viene assegnato automaticamente: verifica la Guida alla creazione delle Pozioni."; }
+       if(postsEl){ postsEl.className = "final-posts-box"; postsEl.innerHTML = "Post finali: <b>bloccati finché l'ambiguità della tabella non è risolta</b>"; }
+       pg.data["imb_status"] = "pending"; pg.data["imb_esito"] = ""; pg.data["imb_posts"] = null; return;
+     }
+     if(esito === "INVALIDO"){
+       tagEl.textContent = "Risultato impossibile"; tagEl.className = "out-tag out-fail";
+       if(noteEl){ noteEl.textContent = "Il risultato modificato non è interpretabile dalla tabella."; }
+       pg.data["imb_status"] = "pending"; pg.data["imb_esito"] = ""; pg.data["imb_posts"] = null; return;
+     }
+     imbEsito = esito;
      imbStatus = "done";
-     imbPosts = imbottPostFinali(pg, esito);
+     var imbPostsBase = imbottPostFinali(pg, esito);
+     var sintCalc = applySintesiToPosts(pg, imbPostsBase);
+     imbPosts = sintCalc.ready ? sintCalc.exact : null;
+     if(esito !== "0%" && !sintCalc.ready){ imbStatus = "pending"; }
+     pg.data["imb_posts_base"] = imbPostsBase;
 
      tagEl.textContent = "Esito: " + esito; 
 
@@ -2859,33 +3499,44 @@ function renderImbottStep(container){
 
        if(postsEl){
          postsEl.className = "final-posts-box";
-         postsEl.innerHTML = "<b>" + imbPosts + " post finali</b> per " + pg.nome +
-           " — " + imbottProfiloPost(pg) + ", Pozione " + POZ.classificazione + ", esito " + esito + ".";
+         if(!sintCalc.ready){
+           postsEl.innerHTML = "Post base: <b>" + imbPostsBase + "</b>. <b>Completa il dado di Sintesi Tecnica+</b> per calcolare la riduzione dei post.";
+         } else if(sintCalc.info.percent > 0){
+           postsEl.innerHTML = "Post base: <b>" + imbPostsBase + "</b> → " + sintCalc.info.label + " → <b>" + sintCalc.exact + " post</b>." +
+             (sintCalc.fractional ? " <span class=\"small-note\">Il regolamento allegato non specifica come arrotondare un risultato non intero: il calcolatore mostra il valore matematico senza inventare una regola.</span>" : "");
+         } else {
+           postsEl.innerHTML = "<b>" + imbPostsBase + " post finali</b> per " + pg.nome +
+             " — " + imbottProfiloPost(pg) + ", Pozione " + POZ.classificazione + ", esito " + esito + ".";
+         }
        }
      }
    } 
  } 
 
- renderImbottAwareness(pg, imbEsito, imbPosts);
+ renderImbottAwareness(pg, imbStatus === "done" ? imbEsito : "", imbPosts);
 
  pg.data["imb_status"] = imbStatus; 
  pg.data["imb_esito"] = imbEsito;
  pg.data["imb_posts"] = imbPosts; 
  } 
  
- function esitoFromBracket(br, rv){ 
- var rvStr = String(rv); 
- function inRange(rangeStr){ 
- var parts = rangeStr.split("-"); 
- for(var i=0;i<parts.length;i++){ 
- if(parts[i] === rvStr){ return true; } 
- } 
- return false; 
- } 
- if(inRange(br.z)){ return "0%"; } 
- if(inRange(br.tt)){ return "33%"; } 
- if(inRange(br.ss)){ return "66%"; } 
- return "100%"; 
+ function esitoFromBracket(br, rv){
+ if(!isFinite(rv) || Math.floor(rv) !== rv || rv < 1){ return "INVALIDO"; }
+ if(rv > 10){ return "100%"; }
+ var rvStr = String(rv);
+ function inRange(rangeStr){
+  var parts = rangeStr.split("-");
+  for(var i=0;i<parts.length;i++){ if(parts[i] === rvStr){ return true; } }
+  return false;
+ }
+ var matches = [];
+ if(inRange(br.z)){ matches.push("0%"); }
+ if(inRange(br.tt)){ matches.push("33%"); }
+ if(inRange(br.ss)){ matches.push("66%"); }
+ if(inRange(br.cc)){ matches.push("100%"); }
+ if(matches.length === 0){ return "INVALIDO"; }
+ if(matches.length > 1){ return "AMBIGUO"; }
+ return matches[0];
  } 
  
  /* ==================================================== */ 
@@ -2895,8 +3546,12 @@ function renderImbottStep(container){
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Fase Facoltativa: Distillazione")); 
  p.appendChild(el("div", "guide-text", 
- "Disponibile solo a chi possiede la Conoscenza Avanzata Distillatore. Va eseguita dopo l'Uso della Bacchetta, " + 
- "una volta per ogni dose che si vuole distillare. Costo: -1 Fatica per dose. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
+ "Disponibile solo a chi possiede la Conoscenza Avanzata Distillatore. In questo calcolatore viene resa disponibile solo dopo la conclusione delle quattro fasi di creazione e un Imbottigliamento/Pulizia diverso da 0%. " + 
+ "Va eseguita per ogni dose che si vuole distillare: <b>questo pannello calcola una singola dose alla volta</b>. Se distilli più dosi, ripeti la procedura per ciascuna e annotane separatamente l'esito. Ogni esecuzione della Distillazione costa -1 Fatica per la dose (0 con Sapienza Pozionistica 25); un secondo tentativo è quindi conteggiato come una nuova esecuzione. " + 
+ "Il regolamento nomina un tiro di Distillazione 1d10 ma nel testo fornito non riporta la tabella che converte quel tiro in 0%/33%/66%/100%: per questo l'Efficacia resta da selezionare manualmente.")); 
+
+ if(appendSetupGate(p)){ container.appendChild(p); return; }
+ if(appendDependencyGate(p, "distill")){ container.appendChild(p); return; }
 
  for(var i=0;i<pgs.length;i++){ 
  if(levelNum(pgs[i].distillatore) > 0){ 
@@ -2932,10 +3587,10 @@ function renderImbottStep(container){
  return card; 
  } 
  
- card.appendChild(el("p", null, "Determina prima l'Efficacia della Distillazione (0% / 33% / 66% / 100%) come da regolamento, poi seleziona qui il risultato per ottenere il dado corretto sulla dimensione della dose.")); 
+ card.appendChild(el("p", null, "Determina prima l'Efficacia della Distillazione (0% / 33% / 66% / 100%) come da regolamento, poi seleziona qui il risultato per ottenere l'eventuale dado sulla dimensione della dose. Il pannello gestisce anche un eventuale secondo tentativo sulla stessa dose.")); 
  
  var effRow = el("div"); 
- effRow.appendChild(el("label", null, "Efficacia ottenuta")); 
+ effRow.appendChild(el("label", null, "Efficacia ottenuta — 1° tentativo")); 
  var sel = el("select"); 
  var opts = [["skip","Non svolgere la Distillazione"],["0","0% (fallita)"],["33","33%"],["66","66%"],["100","100%"]]; 
  for(var i=0;i<opts.length;i++){ 
@@ -2943,7 +3598,15 @@ function renderImbottStep(container){
  sel.appendChild(o); 
  } 
  sel.value = pgDataGet(pg, "distill_eff", "skip"); 
- sel.addEventListener("change", function(){ pg.data["distill_eff"] = sel.value; recomputeDistill(pg); }); 
+ sel.addEventListener("change", function(){
+   pg.data["distill_eff"] = sel.value;
+   pg.data["distill_roll"] = "";
+   pg.data["distill_retry_risk"] = "";
+   pg.data["distill_retry_eff"] = "none";
+   pg.data["distill_retry_roll"] = "";
+   pg.data["distill_destroyed"] = false;
+   recomputeDistill(pg);
+ }); 
  effRow.appendChild(sel); 
  card.appendChild(effRow); 
  
@@ -2974,75 +3637,165 @@ function renderImbottStep(container){
  return null;
  }
 
+ function distillOutcomeSpec(pg, eff){
+  if(eff === "0"){ return {fixed:"standard", faces:0, desc:"Distillazione fallita: la dose resta a spazio standard."}; }
+  var stud = pg.tipo === "studente";
+  var sap = haSapienzaPozionistica(pg);
+  if(stud){
+    if(eff === "33"){ return {fixed:"1/2", faces:0, desc:"Con Efficacia 33% la dose occupa 1/2 spazio."}; }
+    if(eff === "66"){ return {fixed:null, faces:2, desc:"1: dose = 1/2 spazio, 2: dose = 1/3 spazio"}; }
+    if(eff === "100"){ return {fixed:null, faces:3, desc:"1-2: dose = 1/2 spazio, 3: dose = 1/3 spazio"}; }
+  } else if(sap){
+    if(eff === "33"){ return {fixed:"1/4", faces:0, desc:"Con Efficacia 33% la dose occupa 1/4 spazio."}; }
+    if(eff === "66"){ return {fixed:null, faces:2, desc:"1: dose = 1/4 spazio, 2: dose = 1/5 spazio"}; }
+    if(eff === "100"){ return {fixed:"1/5", faces:0, desc:"Con Efficacia 100% la dose occupa 1/5 spazio."}; }
+  } else {
+    if(eff === "33"){ return {fixed:"1/3", faces:0, desc:"Con Efficacia 33% la dose occupa 1/3 spazio."}; }
+    if(eff === "66"){ return {fixed:null, faces:2, desc:"1: dose = 1/3 spazio, 2: dose = 1/4 spazio"}; }
+    if(eff === "100"){ return {fixed:null, faces:3, desc:"1-2: dose = 1/3 spazio, 3: dose = 1/4 spazio"}; }
+  }
+  return {fixed:null, faces:0, desc:"Esito non riconosciuto."};
+ }
+
+ function renderDistillAttemptOutcome(out, pg, eff, prefix, label){
+  var spec = distillOutcomeSpec(pg, eff);
+  var heading = el("p", "small-note", "<b>" + label + ":</b> " + spec.desc);
+  out.appendChild(heading);
+  if(spec.fixed !== null){ return spec.fixed; }
+  if(spec.faces <= 0){ return null; }
+
+  var box = el("div", "result-line");
+  var codeId = prefix + "-code-" + pg.id;
+  var code = el("div", "dice-code"); code.id = codeId;
+  code.textContent = "[dice=1d" + spec.faces + "]" + label + " - " + pg.nome + " (" + spec.desc + ")[/dice]";
+  box.appendChild(code);
+  var copy = el("button", "copy-btn", "Copia"); copy.id = prefix + "-copy-" + pg.id; box.appendChild(copy);
+  out.appendChild(box);
+  setTimeout(function(){ attachCopy(prefix + "-copy-" + pg.id, codeId); }, 0);
+
+  var line = el("div", "result-line");
+  line.appendChild(el("span", null, "Risultato ottenuto:"));
+  var inp = el("input"); inp.type="number"; inp.min="1"; inp.max=""+spec.faces; inp.step="1"; inp.placeholder="1-"+spec.faces;
+  var key = prefix === "distill" ? "distill_roll" : "distill_retry_roll";
+  inp.value = pgDataGet(pg, key, "");
+  line.appendChild(inp);
+  var tag = el("span", "out-tag out-neutral", "in attesa"); line.appendChild(tag); out.appendChild(line);
+  var val = inp.value;
+  var space = null;
+  if(val === ""){
+    tag.textContent="in attesa";
+  } else if(!intInRange(val,1,spec.faces)){
+    tag.textContent="Risultato impossibile"; tag.className="out-tag out-fail";
+  } else {
+    space=distillSpaceFrom(pg,eff,Number(val));
+    tag.textContent=space+" spazio"; tag.className="out-tag out-ok";
+  }
+  inp.addEventListener("change", function(){ pg.data[key]=inp.value; recomputeDistill(pg); });
+  return space;
+ }
+
+ function appendDistillRetryFlow(out, pg, firstEff, firstSpace){
+  if(firstEff !== "0" && firstEff !== "33" && firstEff !== "66"){ return {space:firstSpace, attempts:1, destroyed:false}; }
+
+  /* Il secondo tentativo può iniziare soltanto dopo aver risolto completamente il primo.
+     Con Efficacia 66% il regolamento richiede prima il relativo 1d2 sullo spazio occupato. */
+  if(firstEff === "66" && firstSpace === null){
+    pg.data["distill_retry_risk"] = "";
+    pg.data["distill_retry_eff"] = "none";
+    pg.data["distill_retry_roll"] = "";
+    out.appendChild(el("div", "divider"));
+    out.appendChild(el("p", "small-note", "Completa prima il <b>1d2 del 1° tentativo al 66%</b>. Il controllo di rischio e l’eventuale 2° tentativo saranno disponibili solo dopo che il primo tentativo avrà un esito completo."));
+    return {space:null, attempts:1, destroyed:false};
+  }
+
+  out.appendChild(el("div", "divider"));
+  out.appendChild(el("p", "small-note", "Dopo un fallimento o un effetto ridotto puoi scegliere di tentare una seconda Distillazione sulla stessa dose. Prima del 2° tentativo tira 1d2: con 1 puoi procedere, con 2 la Pozione esplode. Un eventuale 3° tentativo farebbe esplodere automaticamente la Pozione, quindi il calcolatore non lo propone."));
+  var risk = el("div", "result-line");
+  var cid="distill-retry-risk-code-"+pg.id;
+  var code=el("div","dice-code"); code.id=cid; code.textContent="[dice=1d2]Rischio prima del 2° tentativo di Distillazione - "+pg.nome+" (1 = puoi procedere; 2 = Pozione esplosa)[/dice]"; risk.appendChild(code);
+  var cp=el("button","copy-btn","Copia"); cp.id="distill-retry-risk-copy-"+pg.id; risk.appendChild(cp);
+  var rinp=el("input"); rinp.type="number"; rinp.min="1"; rinp.max="2"; rinp.step="1"; rinp.placeholder="facoltativo 1-2"; rinp.value=pgDataGet(pg,"distill_retry_risk",""); risk.appendChild(rinp);
+  var rtag=el("span","out-tag out-neutral","non ritentata"); risk.appendChild(rtag); out.appendChild(risk);
+  setTimeout(function(){attachCopy("distill-retry-risk-copy-"+pg.id,cid);},0);
+  rinp.addEventListener("change",function(){ pg.data["distill_retry_risk"]=rinp.value; if(rinp.value!=="1"){ pg.data["distill_retry_eff"]="none"; pg.data["distill_retry_roll"]=""; } recomputeDistill(pg); });
+
+  if(rinp.value === ""){ return {space:firstSpace, attempts:1, destroyed:false}; }
+  if(!intInRange(rinp.value,1,2)){ rtag.textContent="Risultato impossibile"; rtag.className="out-tag out-fail"; return {space:firstSpace, attempts:1, destroyed:false}; }
+  if(Number(rinp.value)===2){
+    rtag.textContent="Pozione esplosa"; rtag.className="out-tag out-fail";
+    out.appendChild(el("div","guide-text","<b>La Pozione è persa.</b> Il d2 di rischio ha dato 2 prima del secondo tentativo: non può essere registrata nel Riepilogo finale."));
+    return {space:null, attempts:1, destroyed:true};
+  }
+  rtag.textContent="2° tentativo consentito"; rtag.className="out-tag out-ok";
+
+  var erow=el("div"); erow.appendChild(el("label",null,"Efficacia ottenuta — 2° tentativo (facoltativo)"));
+  var esel=el("select");
+  var ops=[["none","— non effettuato —"],["0","0% (fallita)"],["33","33%"],["66","66%"],["100","100%"]];
+  for(var i=0;i<ops.length;i++){var o=el("option",null,ops[i][1]);o.value=ops[i][0];esel.appendChild(o);}
+  esel.value=pgDataGet(pg,"distill_retry_eff","none"); erow.appendChild(esel); out.appendChild(erow);
+  esel.addEventListener("change",function(){pg.data["distill_retry_eff"]=esel.value;pg.data["distill_retry_roll"]="";recomputeDistill(pg);});
+  if(esel.value === "none"){ return {space:firstSpace, attempts:1, destroyed:false}; }
+
+  var secondSpace=renderDistillAttemptOutcome(out,pg,esel.value,"distill-retry","2° tentativo di Distillazione");
+  out.appendChild(el("p","small-note","Dopo questo 2° tentativo non viene proposto un ulteriore tentativo: il regolamento stabilisce che ripetere la Distillazione più di due volte fa esplodere la Pozione."));
+  return {space:secondSpace, attempts:2, destroyed:false};
+ }
+
  function recomputeDistill(pg){ 
  var eff = pgDataGet(pg, "distill_eff", "skip"); 
  var out = document.getElementById("distill-out-" + pg.id); 
  if(!out){ return; } 
  out.innerHTML = "";
+ pg.data["distill_destroyed"] = false;
+ pg.data["distill_attempts"] = 0;
  pg.data["distill_space"] = "standard";
 
  if(eff === "skip"){ 
    out.appendChild(el("p", "small-note", "Nessuna Distillazione: la dose mantiene lo spazio standard."));
    updateFaticaBox(pg, "distill");
    return; 
- } 
- if(eff === "0"){ 
-   out.appendChild(el("p", "small-note", "Distillazione fallita. La dose mantiene per ora lo spazio standard; puoi ritentare secondo regolamento."));
-   updateFaticaBox(pg, "distill");
-   return; 
- } 
+ }
 
- var haSapienza = haSapienzaPozionistica(pg);
- var isStudente = (pg.tipo === "studente"); 
- var faces = 0; 
- var esitoDesc = ""; 
+ pg.data["distill_attempts"] = 1;
+ var firstSpace = renderDistillAttemptOutcome(out, pg, eff, "distill", "1° tentativo di Distillazione");
+ if(firstSpace === null && eff !== "0"){
+   pg.data["distill_space"] = null;
+ } else {
+   pg.data["distill_space"] = firstSpace;
+ }
 
- if(isStudente){ 
-   if(eff === "100"){ faces = 3; esitoDesc = "1-2: dose = 1/2 spazio, 3: dose = 1/3 spazio"; } 
-   if(eff === "66"){ faces = 2; esitoDesc = "1: dose = 1/2 spazio, 2: dose = 1/3 spazio"; } 
-   if(eff === "33"){ pg.data["distill_space"] = "1/2"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/2 spazio</b>.")); updateFaticaBox(pg, "distill"); return; } 
- } else if(haSapienza){ 
-   if(eff === "100"){ pg.data["distill_space"] = "1/5"; out.appendChild(el("p", null, "Con Efficacia 100% la dose occupa direttamente <b>1/5 spazio</b>.")); updateFaticaBox(pg, "distill"); return; } 
-   if(eff === "66"){ faces = 2; esitoDesc = "1: dose = 1/4 spazio, 2: dose = 1/5 spazio"; } 
-   if(eff === "33"){ pg.data["distill_space"] = "1/4"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/4 spazio</b>.")); updateFaticaBox(pg, "distill"); return; } 
- } else { 
-   if(eff === "100"){ faces = 3; esitoDesc = "1-2: dose = 1/3 spazio, 3: dose = 1/4 spazio"; } 
-   if(eff === "66"){ faces = 2; esitoDesc = "1: dose = 1/3 spazio, 2: dose = 1/4 spazio"; } 
-   if(eff === "33"){ pg.data["distill_space"] = "1/3"; out.appendChild(el("p", null, "Con Efficacia 33% la dose occupa direttamente <b>1/3 spazio</b>.")); updateFaticaBox(pg, "distill"); return; } 
- } 
+ var retry = appendDistillRetryFlow(out, pg, eff, firstSpace);
+ pg.data["distill_attempts"] = retry.attempts;
+ pg.data["distill_destroyed"] = retry.destroyed;
+ if(retry.destroyed){ pg.data["distill_space"] = null; }
+ else if(retry.attempts === 2){ pg.data["distill_space"] = retry.space; }
+ else if(firstSpace !== null){ pg.data["distill_space"] = firstSpace; }
 
- if(faces > 0){ 
-   var box = el("div", "result-line"); 
-   var codeId = "distill-code-" + pg.id; 
-   var codeDiv = el("div", "dice-code"); codeDiv.id = codeId; 
-   codeDiv.textContent = "[dice=1d" + faces + "]Distillazione - " + pg.nome + " (" + esitoDesc + ")[/dice]"; 
-   box.appendChild(codeDiv); 
-   var copyBtn = el("button", "copy-btn", "Copia"); copyBtn.id = "distill-copy-" + pg.id; 
-   box.appendChild(copyBtn); out.appendChild(box); 
-   setTimeout(function(){ attachCopy("distill-copy-" + pg.id, codeId); }, 0); 
-   out.appendChild(el("p", "small-note", esitoDesc));
-
-   var resultLine = el("div", "result-line");
-   resultLine.appendChild(el("span", null, "Risultato ottenuto:"));
-   var rollInp = el("input"); rollInp.type = "number"; rollInp.min = "1"; rollInp.max = "" + faces; rollInp.placeholder = "1-" + faces;
-   rollInp.value = pgDataGet(pg, "distill_roll", "");
-   resultLine.appendChild(rollInp);
-   var spaceTag = el("span", "out-tag out-neutral", "in attesa"); resultLine.appendChild(spaceTag); out.appendChild(resultLine);
-
-   function aggiornaSpazio(){
-     pg.data["distill_roll"] = rollInp.value;
-     if(rollInp.value === ""){ pg.data["distill_space"] = null; spaceTag.textContent = "in attesa"; spaceTag.className = "out-tag out-neutral"; return; }
-     var rv = num(rollInp.value, 0);
-     var spazio = distillSpaceFrom(pg, eff, rv);
-     if(spazio === null){ pg.data["distill_space"] = null; spaceTag.textContent = "fuori range"; spaceTag.className = "out-tag out-fail"; }
-     else { pg.data["distill_space"] = spazio; spaceTag.textContent = spazio + " spazio"; spaceTag.className = "out-tag out-ok"; }
-   }
-   rollInp.addEventListener("input", aggiornaSpazio);
-   aggiornaSpazio();
- } 
- 
  updateFaticaBox(pg, "distill");
  } 
+
+ function extraAuditText(pg, field, nome){
+  if(!extraIsUsed(pg,field)){ return ""; }
+  var eff = normalizeExtraEfficacia(pg,field);
+  var costo = field === "sintesi" ? "2" : "1,5";
+  if(eff === "pending"){ return nome + ": Efficacia non ancora determinata; Fatica -" + costo + "."; }
+  if(eff === "0"){ return nome + ": Efficacia 0%, nessun effetto OFFGame; Fatica -" + costo + "."; }
+  if(field === "manualita" || field === "memoria"){
+    var obj = extraBonusStatic(pg,field,eff);
+    var bonus = obj.fixed || 0;
+    if(obj.diceFaces > 0){
+      var key = field === "manualita" ? "prep_man_dice" : "prod_mem_dice";
+      var dv = pgDataGet(pg,key,"");
+      if(intInRange(dv,1,obj.diceFaces)){ bonus += Number(dv); }
+      else { return nome + ": Efficacia " + eff + "%, dado dell'effetto non ancora risolto; Fatica -" + costo + "."; }
+    }
+    var destinazione = field === "manualita" ? "ai d14 di Preparazione" : "al d30 di Produzione";
+    return nome + ": Efficacia " + eff + "%, +" + bonus + " possibilità " + destinazione + "; Fatica -" + costo + ".";
+  }
+  var sinfo = sintesiReductionInfo(pg);
+  if(!sinfo.ready){ return nome + ": Efficacia " + eff + "%, dado dell'effetto non ancora risolto; Fatica -" + costo + "."; }
+  return nome + ": Efficacia " + eff + "%, -" + sinfo.percent + "% post di Imbottigliamento/Pulizia; Fatica -" + costo + ".";
+ }
 
  /* ==================================================== */ 
  /* STEP 8 - RIEPILOGO FINALE */ 
@@ -3055,8 +3808,11 @@ function renderImbottStep(container){
  p.appendChild(el("div", "guide-text", 
  "Qui trovi sia il resoconto tecnico sia una <b>frase già pronta da copiare nell’Inventario</b>, con Nome della Pozione, Dosi, Categoria di Forza, " +
  "calcolo della Forza finale, creatore, Tecnica, eventuale link alla role e spazio occupato dalla dose. " +
- "Per avere il calcolo numerico completo della Forza, inserisci la Forza Standard della Pozione.")); 
+ "Per avere il calcolo numerico completo della Forza e classificare correttamente OOP/E quando si applica il +10 fisso della role, inserisci la Forza Standard della Pozione. Promemoria: i PG Studenti, ogni 3 Pozioni create ONGame, effettuano anche il tiro previsto per il rischio di Acne Purulenta (1d10; con 1), che non modifica i calcoli della Pozione qui sotto. La Fatica delle fasi va tracciata durante una creazione giocata ONGame; se la creazione è solo OFFGame non genera un malus persistente in Scheda.")); 
  
+ if(appendSetupGate(p)){ container.appendChild(p); return; }
+ if(appendDependencyGate(p, "riepilogo")){ container.appendChild(p); return; }
+
  var tiersPresent = []; 
  if(POZ.tierBase){ tiersPresent.push("base"); } 
  if(POZ.tierIV){ tiersPresent.push("iv"); } 
@@ -3077,6 +3833,10 @@ function renderImbottStep(container){
  if(imbEsitoCheck === "0%"){ 
  card.appendChild(el("div", "guide-text", "Il calderone di questo Personaggio è esploso durante l'Imbottigliamento e Pulizia: la Pozione è persa, non c'è nessun Riepilogo da calcolare.")); 
  return card; 
+ }
+ if(!!pgDataGet(pg, "distill_destroyed", false)){
+ card.appendChild(el("div", "guide-text", "La Pozione è esplosa nel controllo di rischio prima del secondo tentativo di Distillazione: è persa e non c'è nessun Riepilogo da calcolare."));
+ return card;
  } 
  
  if(POZ.nome !== ""){ 
@@ -3089,7 +3849,7 @@ function renderImbottStep(container){
  
  var dForza = el("div"); 
  dForza.appendChild(el("label", null, "Forza Standard della Pozione (facoltativo, per il valore assoluto)")); 
- var inpForza = el("input"); inpForza.type="number"; inpForza.placeholder="lascia vuoto se non ti serve"; 
+ var inpForza = el("input"); inpForza.type="number"; inpForza.min="1"; inpForza.step="1"; inpForza.placeholder="lascia vuoto se non ti serve"; 
  inpForza.value = pgDataGet(pg, "riep_forza_base", ""); 
  inpForza.addEventListener("input", function(){ 
  pg.data["riep_forza_base"] = inpForza.value; 
@@ -3100,7 +3860,7 @@ function renderImbottStep(container){
  
  var dDosiOng = el("div"); 
  dDosiOng.appendChild(el("label", null, "Dosi di Ingredienti ONGame usati (+5% Forza l'una)")); 
- var inpOng = el("input"); inpOng.type="number"; 
+ var inpOng = el("input"); inpOng.type="number"; inpOng.min="0"; inpOng.step="1"; 
  inpOng.value = pgDataGet(pg, "riep_ingredienti_ong", 0); 
  inpOng.addEventListener("input", function(){ 
  pg.data["riep_ingredienti_ong"] = num(inpOng.value, 0); 
@@ -3128,8 +3888,9 @@ function renderImbottStep(container){
  recomputeRiepilogo(pg, tiersPresent); 
  }); 
  chk.appendChild(chkNarr); 
- chk.appendChild(el("span", null, "La creazione è stata narrata ONGame in una role con almeno 5 post (+10 Forza fissi)")); 
- card.appendChild(chk); 
+ chk.appendChild(el("span", null, "Una o più fasi della creazione sono state narrate ONGame in una role con almeno 5 post (+10 Forza fissi)")); 
+ card.appendChild(chk);
+ card.appendChild(el("p", "small-note", "Se il PG ruola da solo, il regolamento richiede che trascorra un giorno fra un suo post e il successivo per ottenere questo +10 Forza.")); 
  
  card.appendChild(el("div", "divider")); 
  
@@ -3146,32 +3907,47 @@ function renderImbottStep(container){
  out.innerHTML = ""; 
  
  var narrazione = pgDataGet(pg, "riep_narrazione", false); 
- var ongDosi = num(pgDataGet(pg, "riep_ingredienti_ong", 0), 0); 
+ var ongDosiRaw = pgDataGet(pg, "riep_ingredienti_ong", 0);
+ var ongDosi = nonNegativeInt(ongDosiRaw) ? Number(ongDosiRaw) : 0; 
  var roleLink = String(pgDataGet(pg, "riep_role_link", "") || "").replace(/^\s+|\s+$/g, "");
  var spazioDose = pgDataGet(pg, "distill_space", "standard");
  var faticaPrep = faticaFaseNumero(pg, "prep");
  var faticaProd = faticaFaseNumero(pg, "prod");
  var faticaBac = faticaFaseNumero(pg, "bacchetta");
  var faticaImb = faticaFaseNumero(pg, "imbott");
+ var faticaExtraPrep = faticaExtraFaseNumero(pg, "prep");
+ var faticaExtraProd = faticaExtraFaseNumero(pg, "prod");
+ var faticaExtraImb = faticaExtraFaseNumero(pg, "imbott");
  var faticaObbl = faticaObbligatoriaTotale(pg);
  var distEffRiep = pgDataGet(pg, "distill_eff", "skip");
  var faticaDistTesto = "0 Fatica (Distillazione non svolta)";
+ var distAttempts = Number(pgDataGet(pg, "distill_attempts", distEffRiep === "skip" ? 0 : 1));
+ if(!isFinite(distAttempts) || distAttempts < 0){ distAttempts = 0; }
  if(distEffRiep !== "skip"){
    if(haSapienzaPozionistica25(pg)){ faticaDistTesto = "0 Fatica (Sapienza Pozionistica 25)"; }
-   else { faticaDistTesto = "-1 Fatica per dose distillata"; }
+   else { faticaDistTesto = "-" + distAttempts + " Fatica per la dose calcolata (" + distAttempts + (distAttempts === 1 ? " tentativo" : " tentativi") + ")"; }
  }
- var faticaFinaleVisual = "-" + fmtFatica(faticaObbl) + " Fatica obbligatoria";
+ var faticaFinaleVisual = "-" + fmtFatica(faticaObbl) + " Fatica (fasi + Conoscenze Extra+)";
  if(distEffRiep !== "skip" && !haSapienzaPozionistica25(pg)){
-   faticaFinaleVisual += " + 1/dose distillata";
+   faticaFinaleVisual += " + " + distAttempts + " Distillazione dose calcolata";
  } 
  
  var incompleto = false; 
  var noteRighe = [];
- noteRighe.push("Fatica Preparazione Ingredienti: -" + fmtFatica(faticaPrep) + ".");
- noteRighe.push("Fatica Produzione: " + (faticaProd === 0 ? "0 (Sapienza Pozionistica 25)." : "-" + fmtFatica(faticaProd) + "."));
+ noteRighe.push("Fatica Preparazione Ingredienti: -" + fmtFatica(faticaPrep) + (faticaExtraPrep > 0 ? " + Manualità Tecnica+ -" + fmtFatica(faticaExtraPrep) : "") + ".");
+ noteRighe.push("Fatica Produzione: " + (faticaProd === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaProd) + " base") + (faticaExtraProd > 0 ? " + Memoria Tecnica+ -" + fmtFatica(faticaExtraProd) : "") + ".");
  noteRighe.push("Fatica Uso della Bacchetta: " + (faticaBac === 0 ? "0 (Sapienza Pozionistica 25)." : "-" + fmtFatica(faticaBac) + "."));
- noteRighe.push("Fatica Imbottigliamento e Pulizia: " + (faticaImb === 0 ? "0 (Sapienza Pozionistica 25)." : "-" + fmtFatica(faticaImb) + "."));
- noteRighe.push("Fatica Distillazione: " + faticaDistTesto + "."); 
+ noteRighe.push("Fatica Imbottigliamento e Pulizia: " + (faticaImb === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaImb) + " base") + (faticaExtraImb > 0 ? " + Sintesi Tecnica+ -" + fmtFatica(faticaExtraImb) : "") + ".");
+ noteRighe.push("Fatica Distillazione: " + faticaDistTesto + ".");
+ var extraAuditManualita = extraAuditText(pg,"manualita","Manualità Tecnica+");
+ var extraAuditMemoria = extraAuditText(pg,"memoria","Memoria Tecnica+");
+ var extraAuditSintesi = extraAuditText(pg,"sintesi","Sintesi Tecnica+");
+ if(extraAuditManualita){ noteRighe.push(extraAuditManualita); }
+ if(extraAuditMemoria){ noteRighe.push(extraAuditMemoria); }
+ if(extraAuditSintesi){ noteRighe.push(extraAuditSintesi); }
+ if(extraIsUsed(pg,"manualita") && normalizeExtraEfficacia(pg,"manualita") === "pending"){ incompleto = true; }
+ if(extraIsUsed(pg,"memoria") && normalizeExtraEfficacia(pg,"memoria") === "pending"){ incompleto = true; }
+ if(extraIsUsed(pg,"sintesi") && !sintesiReductionInfo(pg).ready){ incompleto = true; }
  
  var prepAcc = computePrepAccumulo(pg, tiersPresent); 
  var prodAcc = computeProdAccumulo(pg); 
@@ -3216,13 +3992,28 @@ function renderImbottStep(container){
  noteRighe.push(ongDosi + " dose/i di Ingredienti ONGame: " + fmtPct(forzaPercentExtra) + " Forza."); 
  } 
  
- var forzaPercentTotal = prepAcc.forza + prodAcc.forza + forzaPercentExtra; 
+ var forzaPercentTotal = prepAcc.forza + prodAcc.forza + forzaPercentExtra;
+ var valigettaFactor = POZ.valigettaAdduco ? 0.5 : 1;
+ if(POZ.valigettaAdduco){ noteRighe.push("Valigetta creata con Adduco Maxima: -50% della Forza finale (la Forza viene dimezzata dopo gli altri modificatori)."); }
  var durataPercent = prepAcc.durata; 
- 
- var categoria = "Standard"; 
- if(forzaPercentTotal >= 80){ categoria = "Eccezionale"; } 
- else if(forzaPercentTotal >= 40){ categoria = "Oltre Ogni Previsione (OOP)"; } 
- 
+
+ var forzaBaseRawPerCategoria = pgDataGet(pg, "riep_forza_base", "");
+ var categoriaPercent = ((1 + forzaPercentTotal/100) * valigettaFactor - 1) * 100;
+ var categoria = "Standard";
+ if(forzaFlatBonus > 0 && !positiveInt(forzaBaseRawPerCategoria)){
+   categoria = "Da determinare (serve Forza Standard)";
+   noteRighe.push("Categoria OOP/E non determinabile senza Forza Standard: il +10 fisso della role va rapportato alla Forza base.");
+ } else {
+   if(positiveInt(forzaBaseRawPerCategoria)){
+     var baseCat = Number(forzaBaseRawPerCategoria);
+     var finaleCat = ((baseCat * (1 + forzaPercentTotal/100)) + forzaFlatBonus) * valigettaFactor;
+     categoriaPercent = ((finaleCat - baseCat) / baseCat) * 100;
+   }
+   if(categoriaPercent >= 80){ categoria = "Eccezionale"; }
+   else if(categoriaPercent >= 40){ categoria = "Oltre Ogni Previsione (OOP)"; }
+ }
+ if(categoria.indexOf("Da determinare") === 0){ incompleto = true; }
+
  var dosiInfo = computeDosiFinali(pg); 
  if(dosiInfo.finale === null){ incompleto = true; } 
  
@@ -3230,6 +4021,7 @@ function renderImbottStep(container){
  var imbEsito = pgDataGet(pg, "imb_esito", "");
  var imbPosts = pgDataGet(pg, "imb_posts", null);
  if(imbStatus === "pending"){ incompleto = true; }
+ if(imbEsito !== "" && imbEsito !== "0%" && (imbPosts === null || imbPosts === undefined)){ incompleto = true; }
  var imbAwareness = pgDataGet(pg, "imb_awareness", "not_applicable");
  if(imbEsito === "33%" || imbEsito === "66%"){
    if(imbAwareness === "noticed"){ noteRighe.push("Imbottigliamento/Pulizia: il PG si accorge che postazione e calderone richiederanno più tempo."); }
@@ -3240,10 +4032,11 @@ function renderImbottStep(container){
  
  var forzaBaseRaw = pgDataGet(pg, "riep_forza_base", ""); 
  var forzaAssolutaTesto = ""; 
- if(forzaBaseRaw !== ""){ 
- var forzaBaseNum = num(forzaBaseRaw, null); 
+ if(forzaBaseRaw !== "" && !positiveInt(forzaBaseRaw)){ incompleto = true; noteRighe.push("Forza Standard: valore non valido, usa un intero maggiore di 0."); }
+ if(forzaBaseRaw !== "" && positiveInt(forzaBaseRaw)){ 
+ var forzaBaseNum = Number(forzaBaseRaw); 
  if(forzaBaseNum !== null){ 
- var forzaAssoluta = (forzaBaseNum * (1 + forzaPercentTotal/100)) + forzaFlatBonus; 
+ var forzaAssoluta = ((forzaBaseNum * (1 + forzaPercentTotal/100)) + forzaFlatBonus) * valigettaFactor; 
  forzaAssoluta = Math.round(forzaAssoluta * 100) / 100; 
  forzaAssolutaTesto = " = Forza " + forzaAssoluta + " (partendo da Standard " + forzaBaseNum + ")"; 
  } 
@@ -3251,16 +4044,16 @@ function renderImbottStep(container){
  
  /* --- riepilogo visuale della Pozione --- */
  var forzaFinaleVisual = "";
- if(forzaBaseRaw !== ""){
-   var fbv = num(forzaBaseRaw, null);
+ if(forzaBaseRaw !== "" && positiveInt(forzaBaseRaw)){
+   var fbv = Number(forzaBaseRaw);
    if(fbv !== null){
-     var fav = (fbv * (1 + forzaPercentTotal/100)) + forzaFlatBonus;
+     var fav = ((fbv * (1 + forzaPercentTotal/100)) + forzaFlatBonus) * valigettaFactor;
      fav = Math.round(fav * 100) / 100;
-     forzaFinaleVisual = "" + fav + " (" + fmtPct(forzaPercentTotal) + (forzaFlatBonus > 0 ? " + " + forzaFlatBonus + " fissi" : "") + ")";
+     forzaFinaleVisual = "" + fav + " (" + fmtPct(forzaPercentTotal) + (forzaFlatBonus > 0 ? " + " + forzaFlatBonus + " fissi" : "") + (POZ.valigettaAdduco ? "; poi -50% Valigetta Adduco Maxima" : "") + ")";
    }
  }
  if(forzaFinaleVisual === ""){
-   forzaFinaleVisual = "Standard " + fmtPct(forzaPercentTotal) + (forzaFlatBonus > 0 ? " + " + forzaFlatBonus + " fissi" : "");
+   forzaFinaleVisual = "Standard " + fmtPct(forzaPercentTotal) + (forzaFlatBonus > 0 ? " + " + forzaFlatBonus + " fissi" : "") + (POZ.valigettaAdduco ? "; poi -50% Valigetta Adduco Maxima" : "");
  }
 
  var durataFinaleVisual = durataPercent === 0 ? "Standard" : ("Standard " + fmtPct(durataPercent));
@@ -3291,7 +4084,7 @@ function renderImbottStep(container){
  var spazioFinaleVisual = "Standard";
  if(spazioDose && spazioDose !== "standard"){ spazioFinaleVisual = spazioDose + " spazio"; }
  if(spazioDose === null){ spazioFinaleVisual = "Da determinare"; }
- addSummaryStat("Spazio / dose", spazioFinaleVisual, false);
+ addSummaryStat("Spazio / dose calcolata", spazioFinaleVisual, false);
  addSummaryStat("Post finali", postsFinaliVisual, false);
  addSummaryStat("Fatica", faticaFinaleVisual, true);
 
@@ -3301,7 +4094,7 @@ function renderImbottStep(container){
  /* --- valori testuali usati anche nel dettaglio tecnico --- */
  var durataTesto = durataPercent === 0 ? "standard" : fmtPct(durataPercent);
  var dosiTesto = dosiInfo.finale === null ? "? dosi" : (dosiInfo.finale + " dosi");
- var forzaTesto = fmtPct(forzaPercentTotal) + (forzaFlatBonus > 0 ? " e +" + forzaFlatBonus + " fissi" : "") + forzaAssolutaTesto;
+ var forzaTesto = fmtPct(forzaPercentTotal) + (forzaFlatBonus > 0 ? " e +" + forzaFlatBonus + " fissi" : "") + (POZ.valigettaAdduco ? ", poi -50% Valigetta Adduco Maxima" : "") + forzaAssolutaTesto;
 
  /* --- frase pronta da incollare in Inventario --- */ 
  var nomeP = POZ.nome !== "" ? POZ.nome : "Pozione senza nome";
@@ -3313,16 +4106,18 @@ function renderImbottStep(container){
  if(forzaBaseRaw !== ""){
    var forzaBaseInv = num(forzaBaseRaw, null);
    if(forzaBaseInv !== null){
-     var forzaFinaleInv = (forzaBaseInv * (1 + forzaPercentTotal/100)) + forzaFlatBonus;
+     var forzaFinaleInv = ((forzaBaseInv * (1 + forzaPercentTotal/100)) + forzaFlatBonus) * valigettaFactor;
      forzaFinaleInv = Math.round(forzaFinaleInv * 100) / 100;
      forzaFormulaInventario = "" + forzaBaseInv + fmtPct(forzaPercentTotal);
      if(forzaFlatBonus > 0){ forzaFormulaInventario += "+" + forzaFlatBonus; }
+     if(POZ.valigettaAdduco){ forzaFormulaInventario += " poi -50% Valigetta Adduco Maxima"; }
      forzaFormulaInventario += ": " + forzaFinaleInv;
    }
  }
  if(forzaFormulaInventario === ""){
    forzaFormulaInventario = "Standard " + fmtPct(forzaPercentTotal);
    if(forzaFlatBonus > 0){ forzaFormulaInventario += " +" + forzaFlatBonus; }
+   if(POZ.valigettaAdduco){ forzaFormulaInventario += " poi -50% Valigetta Adduco Maxima"; }
  }
 
  var roleInventario = "";
@@ -3343,6 +4138,7 @@ function renderImbottStep(container){
  var cartCode = el("div", "inventory-sentence"); cartCode.id = "riep-cart-" + pg.id;
  cartCode.textContent = inventarioTesto; cartCode.setAttribute("data-plain", inventarioTesto); inventoryBox.appendChild(cartCode);
  var cartCopy = el("button", "copy-btn", "Copia frase Inventario"); cartCopy.id = "riep-cart-copy-" + pg.id; cartCopy.style.marginTop = "10px";
+ if(incompleto){ cartCopy.disabled = true; cartCopy.title = "Completa prima tutti i risultati necessari al riepilogo."; }
  inventoryBox.appendChild(cartCopy); out.appendChild(inventoryBox);
  setTimeout(function(){ attachCopyPlain("riep-cart-copy-" + pg.id, "riep-cart-" + pg.id); }, 0); 
  
@@ -3379,9 +4175,33 @@ function renderImbottStep(container){
  out.appendChild(ul); 
  } 
  
+ /* ---------- AUTO-ALTEZZA IFRAME ---------- */
+ (function(){
+  var lastHeight = 0;
+  var heightTimer = null;
+  function sendHeight(){
+   if(heightTimer){ clearTimeout(heightTimer); }
+   heightTimer = setTimeout(function(){
+    var root = document.getElementById("creazione-pozione");
+    if(!root){ return; }
+    var h = Math.ceil(Math.max(root.scrollHeight, root.getBoundingClientRect().height));
+    if(h > 0 && h !== lastHeight){
+     lastHeight = h;
+     try{ window.parent.postMessage({tipo:"altezzaCreazionePozione",altezza:h}, "*"); }catch(e){}
+    }
+   },30);
+  }
+  var root = document.getElementById("creazione-pozione");
+  if(window.ResizeObserver && root){ try{ new ResizeObserver(sendHeight).observe(root); }catch(e){} }
+  if(window.MutationObserver && root){ try{ new MutationObserver(sendHeight).observe(root,{childList:true,subtree:true,attributes:true,characterData:true}); }catch(e){} }
+  document.addEventListener(EV, sendHeight, true);
+  document.addEventListener("change", sendHeight, true);
+  document.addEventListener("input", sendHeight, true);
+  sendHeight(); setTimeout(sendHeight,250); setTimeout(sendHeight,1000);
+ })();
+
  /* ---------- INIT ---------- */ 
  renderAll(); 
  
 })(); 
 </script></div>
-```
