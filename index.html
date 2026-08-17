@@ -52,7 +52,7 @@
 
   width:100% !important;
   max-width:none !important;
-  min-height:100% !important;
+  min-height:0 !important;
   margin:0 !important;
   padding:0 0 72px 0 !important;
   box-sizing:border-box !important;
@@ -4187,7 +4187,7 @@ function renderImbottStep(container){
     var h = Math.ceil(Math.max(root.scrollHeight, root.getBoundingClientRect().height));
     if(h > 0 && h !== lastHeight){
      lastHeight = h;
-     try{ window.parent.postMessage({tipo:"altezzaCreazionePozione",altezza:h}, "*"); }catch(e){}
+     try{ window.parent.postMessage({tipo:"altezzaPozioni",altezza:h}, "*"); }catch(e){}
     }
    },30);
   }
