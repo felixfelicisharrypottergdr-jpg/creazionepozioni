@@ -1,3 +1,4 @@
+<!-- Revisione v55: bonus/possibilità da Oggetti e Conoscenze tracciabili con fonte, condizione, Fatica e usi; editor riallineati e riepilogo usi finale -->
 <!-- Revisione v54: Uso della Bacchetta separa i bonus che aumentano Tecnica dai bonus che aggiungono direttamente possibilità al d15 -->
 <!-- Revisione v53: Categoria Standard/OOP/E calcolata sulla Forza complessiva effettiva, incluso il bonus di Preparazione -->
 <!-- Revisione regolamento v52: bonus Tecnica centralizzati nello Step 2 e applicati alla Tecnica effettiva prima di tutte le formule; refresh = nuova creazione vuota -->
@@ -919,13 +920,20 @@
 }
 #creazione-pozione .manual-bonus-grid{
   display:grid !important;
-  grid-template-columns:minmax(105px,.55fr) minmax(165px,.9fr) minmax(220px,1.35fr) auto !important;
-  gap:9px !important;
+  grid-template-columns:minmax(135px,.62fr) minmax(175px,.82fr) minmax(260px,1.45fr) 46px !important;
+  gap:10px 12px !important;
   align-items:end !important;
-  margin-top:10px !important;
+  margin-top:12px !important;
 }
 #creazione-pozione .manual-bonus-grid > div{min-width:0 !important;}
-#creazione-pozione .manual-bonus-grid label{margin-bottom:4px !important;}
+#creazione-pozione .manual-bonus-grid label{
+  min-height:30px !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  margin-bottom:5px !important;
+}
+#creazione-pozione .manual-bonus-grid input,
+#creazione-pozione .manual-bonus-grid select{min-height:43px !important;}
 #creazione-pozione .manual-bonus-remove{
   min-width:40px !important;
   min-height:39px !important;
@@ -939,6 +947,93 @@
   font-family:var(--mono) !important;
   font-size:10.5px !important;
   line-height:1.3 !important;
+}
+
+/* ---------- effetti extra tracciati: possibilità / Fatica / usi ---------- */
+#creazione-pozione .tracked-effect-editor{
+  margin:18px 0 22px !important;
+  padding:17px 18px !important;
+  background:linear-gradient(135deg,rgba(159,190,40,.075),rgba(53,22,63,.25)),var(--panel2) !important;
+  border:1px solid rgba(159,190,40,.48) !important;
+  border-left:5px solid var(--acid) !important;
+  border-radius:9px !important;
+  box-shadow:0 8px 22px rgba(0,0,0,.16) !important;
+}
+#creazione-pozione .tracked-effect-title{
+  margin:0 0 6px !important;
+  color:var(--acid-soft) !important;
+  font-family:'magic',var(--serif) !important;
+  font-size:19px !important;
+  font-weight:400 !important;
+}
+#creazione-pozione .tracked-effect-card{
+  margin:13px 0 0 !important;
+  padding:14px !important;
+  background:rgba(16,18,19,.72) !important;
+  border:1px solid var(--line) !important;
+  border-radius:8px !important;
+}
+#creazione-pozione .tracked-effect-grid{
+  display:grid !important;
+  grid-template-columns:minmax(210px,1.2fr) minmax(190px,1fr) minmax(125px,.55fr) 46px !important;
+  gap:10px 12px !important;
+  align-items:end !important;
+}
+#creazione-pozione .tracked-effect-meta{
+  display:grid !important;
+  grid-template-columns:minmax(210px,1.25fr) minmax(120px,.6fr) minmax(145px,.7fr) minmax(145px,.7fr) !important;
+  gap:10px 12px !important;
+  margin-top:10px !important;
+  align-items:end !important;
+}
+#creazione-pozione .tracked-effect-grid > div,
+#creazione-pozione .tracked-effect-meta > div{min-width:0 !important;}
+#creazione-pozione .tracked-effect-grid label,
+#creazione-pozione .tracked-effect-meta label{
+  min-height:30px !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  margin-bottom:5px !important;
+}
+#creazione-pozione .tracked-effect-grid input,
+#creazione-pozione .tracked-effect-grid select,
+#creazione-pozione .tracked-effect-meta input{min-height:43px !important;}
+#creazione-pozione .tracked-effect-highlight{
+  margin:11px 0 0 !important;
+  padding:9px 11px !important;
+  background:linear-gradient(90deg,rgba(159,190,40,.16),rgba(53,22,63,.28)) !important;
+  border:1px solid rgba(159,190,40,.4) !important;
+  border-radius:6px !important;
+  color:var(--text) !important;
+  font-family:var(--mono) !important;
+  font-size:11.5px !important;
+  line-height:1.5 !important;
+  letter-spacing:.02em !important;
+}
+#creazione-pozione .tracked-effect-highlight b{color:var(--acid-soft) !important;}
+#creazione-pozione .tracked-effect-add{margin-top:13px !important;}
+#creazione-pozione .usage-summary-box{
+  margin:16px 0 20px !important;
+  padding:15px 17px !important;
+  background:linear-gradient(90deg,rgba(159,190,40,.12),rgba(53,22,63,.30)) !important;
+  border:1px solid rgba(159,190,40,.42) !important;
+  border-left:4px solid var(--acid) !important;
+  border-radius:8px !important;
+}
+#creazione-pozione .usage-summary-box .usage-title{
+  margin:0 0 8px !important;
+  color:var(--acid-soft) !important;
+  font-family:'magic',var(--serif) !important;
+  font-size:17px !important;
+}
+#creazione-pozione .usage-summary-box p{margin:5px 0 !important;font-size:13.5px !important;}
+@media (max-width:900px){
+  #creazione-pozione .tracked-effect-grid,
+  #creazione-pozione .tracked-effect-meta{grid-template-columns:1fr 1fr !important;}
+}
+@media (max-width:600px){
+  #creazione-pozione .tracked-effect-grid,
+  #creazione-pozione .tracked-effect-meta{grid-template-columns:1fr !important;}
 }
 @media (max-width:760px){
   #creazione-pozione .manual-bonus-grid{
@@ -1488,12 +1583,11 @@
      var row=el("div","manual-bonus-grid");
 
      var amountBox=el("div");
-     amountBox.appendChild(elText("label",null,"Bonus"));
+     amountBox.appendChild(elText("label",null,"Bonus — solo numeri"));
      var amount=el("input"); amount.type="number"; amount.min="0"; amount.step="1"; amount.inputMode="numeric"; amount.placeholder="0"; amount.value=entry.value;
      blockNonIntegerBonusKeys(amount);
      amount.addEventListener("input",function(){entry.value=amount.value;fireChange();});
      amountBox.appendChild(amount);
-     amountBox.appendChild(elText("p","numeric-only-note","Inserire solo numeri"));
      row.appendChild(amountBox);
 
      var targetBox=el("div");
@@ -1531,6 +1625,138 @@
   return wrap;
  }
 
+ function trackedEffectEntries(pg){
+  if(!pg.data){pg.data={};}
+  var arr=pg.data["tracked_effect_entries"];
+  if(!Array.isArray(arr)){arr=[];}
+  if(arr.length===0){arr.push({source:"",detail:"",phase:"prep",bonus:"",fatigue:"",usesBefore:"",usesSpent:""});}
+  for(var i=0;i<arr.length;i++){
+   if(!arr[i]||typeof arr[i]!=="object"){arr[i]={};}
+   var e=arr[i];
+   if(e.source===undefined||e.source===null){e.source="";}
+   if(e.detail===undefined||e.detail===null){e.detail="";}
+   if(["prep","prod","bacchetta","imbott"].indexOf(e.phase)===-1){e.phase="prep";}
+   if(e.bonus===undefined||e.bonus===null){e.bonus="";}
+   if(e.fatigue===undefined||e.fatigue===null){e.fatigue="";}
+   if(e.usesBefore===undefined||e.usesBefore===null){e.usesBefore="";}
+   if(e.usesSpent===undefined||e.usesSpent===null){e.usesSpent="";}
+  }
+  pg.data["tracked_effect_entries"]=arr;
+  return arr;
+ }
+
+ function nonNegativeNumber(v){
+  if(v===""||v===null||v===undefined){return false;}
+  var n=Number(v); return isFinite(n)&&n>=0;
+ }
+
+ function trackedEffectPhaseLabel(phase){
+  return {prep:"Preparazione — possibilità ai d14",prod:"Produzione — possibilità al d30",bacchetta:"Uso della Bacchetta — possibilità al d15",imbott:"Imbottigliamento/Pulizia — bonus al d10"}[phase]||phase;
+ }
+
+ function trackedEffectInfo(pg){
+  var arr=trackedEffectEntries(pg);
+  var bonus={prep:0,prod:0,bacchetta:0,imbott:0};
+  var fatigue={prep:0,prod:0,bacchetta:0,imbott:0};
+  var active=[]; var valid=true;
+  for(var i=0;i<arr.length;i++){
+   var e=arr[i];
+   var hasAny=String(e.source||"").trim()!==""||String(e.detail||"").trim()!==""||String(e.bonus||"")!==""||String(e.fatigue||"")!==""||String(e.usesBefore||"")!==""||String(e.usesSpent||"")!=="";
+   if(!hasAny){continue;}
+   var entryValid=true;
+   if(String(e.source||"").trim()===""){entryValid=false;}
+   if(!nonNegativeInt(e.bonus)){entryValid=false;}
+   if(e.fatigue!==""&&!nonNegativeNumber(e.fatigue)){entryValid=false;}
+   var usageEntered=(e.usesBefore!==""||e.usesSpent!=="");
+   if(usageEntered){
+    if(!nonNegativeInt(e.usesBefore)||!nonNegativeInt(e.usesSpent)||Number(e.usesSpent)>Number(e.usesBefore)){entryValid=false;}
+   }
+   if(!entryValid){valid=false;}
+   var b=nonNegativeInt(e.bonus)?Number(e.bonus):0;
+   var f=e.fatigue!==""&&nonNegativeNumber(e.fatigue)?Number(e.fatigue):0;
+   if(entryValid){bonus[e.phase]+=b;fatigue[e.phase]+=f;}
+   active.push({entry:e,valid:entryValid,bonus:b,fatigue:f,usageEntered:usageEntered,remaining:usageEntered&&entryValid?Number(e.usesBefore)-Number(e.usesSpent):null});
+  }
+  return {valid:valid,bonus:bonus,fatigue:fatigue,active:active};
+ }
+
+ function trackedEffectBonus(pg,phase){return trackedEffectInfo(pg).bonus[phase]||0;}
+ function trackedEffectFatigue(pg,phase){return trackedEffectInfo(pg).fatigue[phase]||0;}
+ function trackedEffectFatigueTotal(pg){var f=trackedEffectInfo(pg).fatigue;return (f.prep||0)+(f.prod||0)+(f.bacchetta||0)+(f.imbott||0);}
+
+ function trackedEffectAuditLines(pg){
+  var info=trackedEffectInfo(pg), lines=[];
+  for(var i=0;i<info.active.length;i++){
+   var a=info.active[i],e=a.entry;
+   if(!a.valid){lines.push("Effetto extra da correggere prima del riepilogo.");continue;}
+   var src=String(e.source||"").trim()||"Fonte non indicata";
+   var s=src+(String(e.detail||"").trim()?" — "+String(e.detail).trim():"")+": +"+a.bonus+" "+(e.phase==="imbott"?"al risultato":"possibilità")+" in "+trackedEffectPhaseLabel(e.phase)+"; Fatica -"+fmtFatica(a.fatigue);
+   if(a.usageEntered){s+="; usi consumati "+Number(e.usesSpent)+" su "+Number(e.usesBefore)+" → restano "+a.remaining;}
+   lines.push(s+".");
+  }
+  return lines;
+ }
+
+ function invalidateTrackedEffectPhase(pg,phase){
+  if(phase==="prep"){clearAllPrepOutcomes(pg);}
+  else if(phase==="prod"){clearProdOutcome(pg);}
+  else if(phase==="bacchetta"){clearBacOutcome(pg);}
+  else if(phase==="imbott"){clearImbOutcome(pg);}
+  staleResultsResetNotice=true; scheduleSave();
+ }
+
+ function buildTrackedEffectEditor(pg){
+  var wrap=el("div","tracked-effect-editor");
+  wrap.appendChild(elText("div","tracked-effect-title","Possibilità/bonus extra — Oggetti e Conoscenze"));
+  wrap.appendChild(elText("p","small-note","Usa questo blocco per effetti come Magibiografia o Oggetti che concedono possibilità aggiuntive e hanno anche un costo di Fatica e/o un numero di usi. Esempio: Magibiografia · 100% Studente · +2 possibilità · -3 Fatica · 3 usi. Il bonus viene applicato automaticamente alla fase scelta; Fatica e usi vengono riportati nel Riepilogo Finale. Per semplici bonus senza costo/usi puoi continuare a usare i campi della singola fase."));
+  var rows=el("div");wrap.appendChild(rows);
+  var add=el("button","action tracked-effect-add","+ Aggiungi effetto");wrap.appendChild(add);
+
+  function highlightText(e){
+   var src=String(e.source||"").trim()||"EFFETTO DA COMPLETARE";
+   var detail=String(e.detail||"").trim();
+   var bonus=nonNegativeInt(e.bonus)?Number(e.bonus):0;
+   var fat=e.fatigue!==""&&nonNegativeNumber(e.fatigue)?Number(e.fatigue):0;
+   var s="<b>"+escapeHtml(src.toUpperCase())+"</b>"+(detail?" · "+escapeHtml(detail.toUpperCase()):"")+" → +"+bonus+(e.phase==="imbott"?" AL RISULTATO":" POSSIBILITÀ")+" · "+escapeHtml(trackedEffectPhaseLabel(e.phase).toUpperCase())+" · -"+fmtFatica(fat)+" FATICA";
+   if(nonNegativeInt(e.usesBefore)&&nonNegativeInt(e.usesSpent)&&Number(e.usesSpent)<=Number(e.usesBefore)){s+=" · "+Number(e.usesSpent)+"/"+Number(e.usesBefore)+" USI → "+(Number(e.usesBefore)-Number(e.usesSpent))+" RIMASTI";}
+   return s;
+  }
+
+  function renderRows(){
+   rows.innerHTML="";var entries=trackedEffectEntries(pg);
+   for(var i=0;i<entries.length;i++){
+    (function(idx){
+     var e=entries[idx];var card=el("div","tracked-effect-card");
+     var top=el("div","tracked-effect-grid");
+     var sourceBox=el("div");sourceBox.appendChild(elText("label",null,"Fonte / Oggetto / Conoscenza"));var source=el("input");source.type="text";source.placeholder="es. Magibiografia";source.value=e.source;sourceBox.appendChild(source);top.appendChild(sourceBox);
+     var phaseBox=el("div");phaseBox.appendChild(elText("label",null,"Agisce su"));var phase=el("select");var po=[["prep","Preparazione — d14"],["prod","Produzione — d30"],["bacchetta","Uso Bacchetta — d15"],["imbott","Imbottigliamento — d10"]];for(var j=0;j<po.length;j++){var op=elText("option",null,po[j][1]);op.value=po[j][0];phase.appendChild(op);}phase.value=e.phase;phaseBox.appendChild(phase);top.appendChild(phaseBox);
+     var bonusBox=el("div");bonusBox.appendChild(elText("label",null,"Bonus — solo numeri"));var bonus=el("input");bonus.type="number";bonus.min="0";bonus.step="1";bonus.inputMode="numeric";bonus.placeholder="es. 2";bonus.value=e.bonus;blockNonIntegerBonusKeys(bonus);bonusBox.appendChild(bonus);top.appendChild(bonusBox);
+     var rem=el("button","action danger manual-bonus-remove","×");rem.title="Rimuovi questo effetto";top.appendChild(rem);card.appendChild(top);
+
+     var meta=el("div","tracked-effect-meta");
+     var detailBox=el("div");detailBox.appendChild(elText("label",null,"Esito / condizione"));var detail=el("input");detail.type="text";detail.placeholder="es. 100% Studente";detail.value=e.detail;detailBox.appendChild(detail);meta.appendChild(detailBox);
+     var fatBox=el("div");fatBox.appendChild(elText("label",null,"Fatica consumata"));var fat=el("input");fat.type="number";fat.min="0";fat.step="0.5";fat.placeholder="es. 3";fat.value=e.fatigue;fat.addEventListener("keydown",function(ev){if(ev.key==="e"||ev.key==="E"||ev.key==="+"||ev.key==="-"){ev.preventDefault();}});fatBox.appendChild(fat);meta.appendChild(fatBox);
+     var ubBox=el("div");ubBox.appendChild(elText("label",null,"Usi disponibili prima"));var ub=el("input");ub.type="number";ub.min="0";ub.step="1";ub.placeholder="es. 3";ub.value=e.usesBefore;blockNonIntegerBonusKeys(ub);ubBox.appendChild(ub);meta.appendChild(ubBox);
+     var usBox=el("div");usBox.appendChild(elText("label",null,"Usi consumati ora"));var us=el("input");us.type="number";us.min="0";us.step="1";us.placeholder="es. 1";us.value=e.usesSpent;blockNonIntegerBonusKeys(us);usBox.appendChild(us);meta.appendChild(usBox);card.appendChild(meta);
+     var hi=el("div","tracked-effect-highlight");hi.innerHTML=highlightText(e);card.appendChild(hi);
+
+     function refreshMeta(){hi.innerHTML=highlightText(e);scheduleSave();}
+     source.addEventListener("input",function(){e.source=source.value;refreshMeta();});
+     detail.addEventListener("input",function(){e.detail=detail.value;refreshMeta();});
+     fat.addEventListener("input",function(){e.fatigue=fat.value;refreshMeta();});
+     ub.addEventListener("input",function(){e.usesBefore=ub.value;refreshMeta();});
+     us.addEventListener("input",function(){e.usesSpent=us.value;refreshMeta();});
+     bonus.addEventListener("input",function(){var old=e.phase;e.bonus=bonus.value;invalidateTrackedEffectPhase(pg,old);refreshMeta();});
+     phase.addEventListener("change",function(){var old=e.phase;e.phase=phase.value;invalidateTrackedEffectPhase(pg,old);invalidateTrackedEffectPhase(pg,e.phase);refreshMeta();});
+     rem.addEventListener(EV,function(){var old=e.phase;entries.splice(idx,1);if(entries.length===0){entries.push({source:"",detail:"",phase:"prep",bonus:"",fatigue:"",usesBefore:"",usesSpent:""});}invalidateTrackedEffectPhase(pg,old);renderRows();});
+     rows.appendChild(card);
+    })(i);
+   }
+  }
+  add.addEventListener(EV,function(){trackedEffectEntries(pg).push({source:"",detail:"",phase:"prep",bonus:"",fatigue:"",usesBefore:"",usesSpent:""});renderRows();});
+  renderRows();return wrap;
+ }
+
  function globalTechniqueBonusInfo(pg){
   var info=manualBonusTotals(pg,"tecnica_global",false);
   var base=intInRange(pg.tecnica,1,20)?Number(pg.tecnica):0;
@@ -1564,6 +1790,7 @@
   if(pg.tipo !== "studente" && pg.tipo !== "adulto"){ return "Seleziona se il Personaggio è Studente o Adulto nello Step 2."; }
   if(!intInRange(pg.tecnica, 1, 20)){ return "Inserisci la Tecnica come intero da 1 a 20 nello Step 2."; }
   if(!globalTechniqueBonusInfo(pg).valid){ return "Nei bonus alla Tecnica dello Step 2 inserisci solo numeri interi da 0 in su."; }
+  if(!trackedEffectInfo(pg).valid){ return "Correggi Possibilità/bonus extra nello Step 2: indica la Fonte; bonus e usi devono essere numeri interi da 0 in su, la Fatica un numero da 0 in su e gli usi consumati non possono superare quelli disponibili."; }
   var setupCald=calderoneInfo(pg);
   if(setupCald.foldRisk){
    var setupRisk=pgDataGet(pg,"calderone_pieghevole_risk","");
@@ -1903,6 +2130,9 @@ function faticaExtraTotale(pg){
         faticaExtraFaseNumero(pg,"imbott");
  }
 
+function faticaTracciataFaseNumero(pg,fase){ return trackedEffectFatigue(pg,fase); }
+function faticaTracciataTotale(pg){ return trackedEffectFatigueTotal(pg); }
+
 function fmtFatica(n){
  var s = String(n);
  if(s.indexOf(".5") !== -1){ s = s.replace(".5", ",5"); }
@@ -1920,7 +2150,8 @@ function faticaFaseTesto(pg, fase){
  }
  var base = faticaFaseNumero(pg, fase);
  var extra = faticaExtraFaseNumero(pg, fase);
- var totale = base + extra;
+ var tracked = faticaTracciataFaseNumero(pg, fase);
+ var totale = base + extra + tracked;
  var parti = [];
  if(base === 0){ parti.push("fase 0 per Sapienza Pozionistica 25"); }
  else { parti.push("fase -" + fmtFatica(base)); }
@@ -1928,11 +2159,12 @@ function faticaFaseTesto(pg, fase){
    var nomeExtra = fase === "prep" ? "Manualità Tecnica+" : (fase === "prod" ? "Memoria Tecnica+" : "Sintesi Tecnica+");
    parti.push(nomeExtra + " -" + fmtFatica(extra));
  }
+ if(tracked > 0){parti.push("Oggetti/Conoscenze -"+fmtFatica(tracked));}
  return "-" + fmtFatica(totale) + " Fatica totale (" + parti.join("; ") + ").";
  }
 
 function buildFaticaBox(pg, fase){
- var zero = (fase !== "prep" && haSapienzaPozionistica25(pg) && faticaExtraFaseNumero(pg,fase) === 0);
+ var zero = (fase !== "prep" && haSapienzaPozionistica25(pg) && faticaExtraFaseNumero(pg,fase) === 0 && faticaTracciataFaseNumero(pg,fase) === 0);
  var box = el("div", "fatigue-box" + (zero ? " zero" : ""));
  box.id = "fatigue-" + fase + "-" + pg.id;
  var labels = {
@@ -1949,7 +2181,7 @@ function buildFaticaBox(pg, fase){
 function updateFaticaBox(pg, fase){
  var box = document.getElementById("fatigue-" + fase + "-" + pg.id);
  if(!box){ return; }
- var zero = (fase !== "prep" && haSapienzaPozionistica25(pg) && faticaExtraFaseNumero(pg,fase) === 0);
+ var zero = (fase !== "prep" && haSapienzaPozionistica25(pg) && faticaExtraFaseNumero(pg,fase) === 0 && faticaTracciataFaseNumero(pg,fase) === 0);
  box.className = "fatigue-box" + (zero ? " zero" : "");
  var labels = {
    prep:"Preparazione degli Ingredienti",
@@ -1966,7 +2198,8 @@ function faticaObbligatoriaTotale(pg){
         faticaFaseNumero(pg,"prod") +
         faticaFaseNumero(pg,"bacchetta") +
         faticaFaseNumero(pg,"imbott") +
-        faticaExtraTotale(pg);
+        faticaExtraTotale(pg) +
+        faticaTracciataTotale(pg);
  } 
  
  /* ---------- NAV ---------- */ 
@@ -2515,6 +2748,8 @@ function renderAll(){
   onChange:function(){invalidateFromTechniqueNow(pg);aggiornaTecnicaEffettiva();}
  }));
  var tecEffBox=elText("div","guide-text",effectiveTechniqueLabel(pg));tecEffBox.id=tecEffId;card.appendChild(tecEffBox);
+
+ card.appendChild(buildTrackedEffectEditor(pg));
 
  var caldBox = el("div", "guide-text");
  var caldLabel = el("label", null, "Calderone / strumento utilizzato per la Pozione");
@@ -3253,10 +3488,11 @@ function renderAll(){
  }
 
  var extraManual = prepManual.roll;
+ var extraTracked = trackedEffectBonus(pg,"prep");
  if(!prepManual.valid){ ready = false; waiting.push("Altri bonus: inserisci solo numeri interi da 0 in su"); }
 
  var votoTotale = competenzaB;
- var extraTotale = manFixed + extraManual;
+ var extraTotale = manFixed + extraManual + extraTracked;
  var total = tecBase + votoTotale + classB + extraTotale;
 
  if(total > 14){ total = 14; }
@@ -3825,25 +4061,26 @@ function renderAll(){
  if(intInRange(dv,1,memExtra.diceFaces)){ memFixed = memFixed + Number(dv); } else { memFixed = 0; prodReady = false; } 
  } 
  var extraManual = prodManual.roll;
+ var extraTracked = trackedEffectBonus(pg,"prod");
  if(!prodManual.valid){ prodReady = false; }
  var caldProdInfo = calderoneInfo(pg);
  var caldProdBonus = caldProdInfo.prodBonus;
  
- var total = tecBase + chimicoB + classB + memFixed + extraManual + caldProdBonus; 
+ var total = tecBase + chimicoB + classB + memFixed + extraManual + extraTracked + caldProdBonus; 
  if(total > 30){ total = 30; } 
  if(total < 0){ total = 0; } 
  
  var formulaEl = document.getElementById("prod-formula-" + pg.id); 
  if(formulaEl){ 
  formulaEl.textContent = "Tecnica effettiva " + tecBase + " + Voto/Chimico " + chimicoB + " + Classificazione " + classB + 
- " + Extra " + (memFixed+extraManual) + (caldProdBonus ? " + Calderone " + caldProdBonus : "") + " = " + total + " su 30"; 
+ " + Extra " + (memFixed+extraManual+extraTracked) + (caldProdBonus ? " + Calderone " + caldProdBonus : "") + " = " + total + " su 30"; 
  } 
  
  var codeEl = document.getElementById("prod-code-" + pg.id); 
  if(codeEl){ 
  codeEl.textContent = "[dice=1d30]Produzione Pozione - " + pg.nome + 
  " (Riesce se 1-" + total + ": Tecnica effettiva " + tecBase + " + Voto/Chimico " + chimicoB + 
- " + Classificazione " + classB + " + Extra " + (memFixed+extraManual) + (caldProdBonus ? " + Calderone " + caldProdBonus : "") + " = " + total + " su 30)[/dice]"; 
+ " + Classificazione " + classB + " + Extra " + (memFixed+extraManual+extraTracked) + (caldProdBonus ? " + Calderone " + caldProdBonus : "") + " = " + total + " su 30)[/dice]"; 
  } 
  
  var tagEl = document.getElementById("prod-tag-" + pg.id); 
@@ -4028,8 +4265,9 @@ function renderAll(){
  var tecnicaEffettiva = tecnicaGlobale + bonusTecnicaBac;
  var tecBase = tecnicaBaseBacchetta(tecnicaEffettiva); 
  var toccoB = levelNum(pg.toccoMagico); 
- var extraManual = bacManual.roll; 
- var totalRaw = tecBase + toccoB + extraManual;
+ var extraManual = bacManual.roll;
+ var extraTracked = trackedEffectBonus(pg,"bacchetta");
+ var totalRaw = tecBase + toccoB + extraManual + extraTracked;
  var total = totalRaw; 
  if(total > 15){ total = 15; } 
  if(total < 0){ total = 0; } 
@@ -4039,7 +4277,7 @@ function renderAll(){
  var tecTxt = "Tecnica " + tecnicaGlobale;
  if(bonusTecnicaBac){ tecTxt += " + bonus Tecnica " + bonusTecnicaBac + " = " + tecnicaEffettiva; }
  tecTxt += " → " + tecBase + " possibilità";
- formulaEl.textContent = tecTxt + " + Tocco Magico " + toccoB + " + possibilità extra " + extraManual + " = " + totalRaw + (totalRaw!==total ? " → massimo " + total : "") + " su 15"; 
+ formulaEl.textContent = tecTxt + " + Tocco Magico " + toccoB + " + possibilità extra " + (extraManual+extraTracked) + " = " + totalRaw + (totalRaw!==total ? " → massimo " + total : "") + " su 15"; 
  } 
  
  var codeEl = document.getElementById("bac-code-" + pg.id); 
@@ -4049,7 +4287,7 @@ function renderAll(){
  codeTec += " -> " + tecBase + " possibilità";
  codeEl.textContent = "[dice=1d15]Uso della Bacchetta - " + pg.nome + 
  " (Riesce se 1-" + total + ": " + codeTec + " + Tocco Magico " + toccoB + 
- " + possibilità extra " + extraManual + " = " + totalRaw + (totalRaw!==total ? ", massimo " + total : "") + " su 15)[/dice]"; 
+ " + possibilità extra " + (extraManual+extraTracked) + " = " + totalRaw + (totalRaw!==total ? ", massimo " + total : "") + " su 15)[/dice]"; 
  } 
  
  var tagEl = document.getElementById("bac-tag-" + pg.id); 
@@ -4661,7 +4899,7 @@ function renderImbottStep(container){
  if(tagEl){ 
    var resV = pgDataGet(pg, "imb_result", ""); 
    var imbBonusInfo = bonusInputInfo(pgDataGet(pg, "imb_extra", 0));
-   var extraB = imbBonusInfo.value;
+   var extraB = imbBonusInfo.value + trackedEffectBonus(pg,"imbott");
 
    if(!imbBonusInfo.valid){
      tagEl.textContent = "Bloccato"; tagEl.className = "out-tag out-neutral";
@@ -5152,14 +5390,14 @@ function renderImbottStep(container){
  } 
  
  function faticaFinoAllaPerdita(pg, terminale){
-  var totale = faticaFaseNumero(pg,"prep") + faticaExtraFaseNumero(pg,"prep");
-  var parti = ["Preparazione -" + fmtFatica(faticaFaseNumero(pg,"prep") + faticaExtraFaseNumero(pg,"prep"))];
+  var totale = faticaFaseNumero(pg,"prep") + faticaExtraFaseNumero(pg,"prep") + faticaTracciataFaseNumero(pg,"prep");
+  var parti = ["Preparazione -" + fmtFatica(faticaFaseNumero(pg,"prep") + faticaExtraFaseNumero(pg,"prep") + faticaTracciataFaseNumero(pg,"prep"))];
   if(terminale === "prod" || terminale === "imbott" || terminale === "distill"){
-    var p = faticaFaseNumero(pg,"prod") + faticaExtraFaseNumero(pg,"prod"); totale += p; parti.push("Produzione -" + fmtFatica(p));
+    var p = faticaFaseNumero(pg,"prod") + faticaExtraFaseNumero(pg,"prod") + faticaTracciataFaseNumero(pg,"prod"); totale += p; parti.push("Produzione -" + fmtFatica(p));
   }
   if(terminale === "imbott" || terminale === "distill"){
-    var b = faticaFaseNumero(pg,"bacchetta"); totale += b; parti.push("Bacchetta -" + fmtFatica(b));
-    var i = faticaFaseNumero(pg,"imbott") + faticaExtraFaseNumero(pg,"imbott"); totale += i; parti.push("Imbottigliamento -" + fmtFatica(i));
+    var b = faticaFaseNumero(pg,"bacchetta") + faticaTracciataFaseNumero(pg,"bacchetta"); totale += b; parti.push("Bacchetta -" + fmtFatica(b));
+    var i = faticaFaseNumero(pg,"imbott") + faticaExtraFaseNumero(pg,"imbott") + faticaTracciataFaseNumero(pg,"imbott"); totale += i; parti.push("Imbottigliamento -" + fmtFatica(i));
   }
   if(terminale === "distill"){
     var att = Number(pgDataGet(pg,"distill_attempts",0)); if(!isFinite(att)||att<0){att=0;}
@@ -5337,6 +5575,11 @@ function renderImbottStep(container){
  var faticaExtraPrep = faticaExtraFaseNumero(pg, "prep");
  var faticaExtraProd = faticaExtraFaseNumero(pg, "prod");
  var faticaExtraImb = faticaExtraFaseNumero(pg, "imbott");
+ var faticaTrackedPrep = faticaTracciataFaseNumero(pg,"prep");
+ var faticaTrackedProd = faticaTracciataFaseNumero(pg,"prod");
+ var faticaTrackedBac = faticaTracciataFaseNumero(pg,"bacchetta");
+ var faticaTrackedImb = faticaTracciataFaseNumero(pg,"imbott");
+ var faticaTrackedTot = faticaTracciataTotale(pg);
  var faticaObbl = faticaObbligatoriaTotale(pg);
  var distEffRiep = pgDataGet(pg, "distill_eff", "skip");
  var faticaDistTesto = "0 Fatica (Distillazione non svolta)";
@@ -5346,17 +5589,17 @@ function renderImbottStep(container){
    if(haSapienzaPozionistica25(pg)){ faticaDistTesto = "0 Fatica (Sapienza Pozionistica 25)"; }
    else { faticaDistTesto = "-" + distAttempts + " Fatica per la dose calcolata (" + distAttempts + (distAttempts === 1 ? " tentativo" : " tentativi") + ")"; }
  }
- var faticaFinaleVisual = "-" + fmtFatica(faticaObbl) + " Fatica (fasi + Conoscenze Extra+)";
+ var faticaFinaleVisual = "-" + fmtFatica(faticaObbl) + " Fatica (fasi + Conoscenze Extra+" + (faticaTrackedTot>0 ? " + Oggetti/Conoscenze" : "") + ")";
  if(distEffRiep !== "skip" && !haSapienzaPozionistica25(pg)){
    faticaFinaleVisual += " + " + distAttempts + " Distillazione dose calcolata";
  } 
  
  var incompleto = false; 
  var noteRighe = [];
- noteRighe.push("Fatica Preparazione Ingredienti: -" + fmtFatica(faticaPrep) + (faticaExtraPrep > 0 ? " + Manualità Tecnica+ -" + fmtFatica(faticaExtraPrep) : "") + ".");
- noteRighe.push("Fatica Produzione: " + (faticaProd === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaProd) + " base") + (faticaExtraProd > 0 ? " + Memoria Tecnica+ -" + fmtFatica(faticaExtraProd) : "") + ".");
- noteRighe.push("Fatica Uso della Bacchetta: " + (faticaBac === 0 ? "0 (Sapienza Pozionistica 25)." : "-" + fmtFatica(faticaBac) + "."));
- noteRighe.push("Fatica Imbottigliamento e Pulizia: " + (faticaImb === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaImb) + " base") + (faticaExtraImb > 0 ? " + Sintesi Tecnica+ -" + fmtFatica(faticaExtraImb) : "") + ".");
+ noteRighe.push("Fatica Preparazione Ingredienti: -" + fmtFatica(faticaPrep) + (faticaExtraPrep > 0 ? " + Manualità Tecnica+ -" + fmtFatica(faticaExtraPrep) : "") + (faticaTrackedPrep>0 ? " + Oggetti/Conoscenze -"+fmtFatica(faticaTrackedPrep) : "") + ".");
+ noteRighe.push("Fatica Produzione: " + (faticaProd === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaProd) + " base") + (faticaExtraProd > 0 ? " + Memoria Tecnica+ -" + fmtFatica(faticaExtraProd) : "") + (faticaTrackedProd>0 ? " + Oggetti/Conoscenze -"+fmtFatica(faticaTrackedProd) : "") + ".");
+ noteRighe.push("Fatica Uso della Bacchetta: " + (faticaBac === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaBac) + " base") + (faticaTrackedBac>0 ? " + Oggetti/Conoscenze -"+fmtFatica(faticaTrackedBac) : "") + ".");
+ noteRighe.push("Fatica Imbottigliamento e Pulizia: " + (faticaImb === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaImb) + " base") + (faticaExtraImb > 0 ? " + Sintesi Tecnica+ -" + fmtFatica(faticaExtraImb) : "") + (faticaTrackedImb>0 ? " + Oggetti/Conoscenze -"+fmtFatica(faticaTrackedImb) : "") + ".");
  noteRighe.push("Fatica Distillazione: " + faticaDistTesto + ".");
  if(distEffRiep!=="skip" && dosiInfo.finale!==null && dosiInfo.finale>1){
    if(distillDoseDestroyed){noteRighe.push("Distillazione: la singola dose calcolata è stata distrutta; le altre "+(dosiInfo.finale-1)+" dosi non sono state sottoposte a Distillazione in questo calcolo e restano a spazio standard.");}
@@ -5368,6 +5611,8 @@ function renderImbottStep(container){
  if(extraAuditManualita){ noteRighe.push(extraAuditManualita); }
  if(extraAuditMemoria){ noteRighe.push(extraAuditMemoria); }
  if(extraAuditSintesi){ noteRighe.push(extraAuditSintesi); }
+ var trackedAudit=trackedEffectAuditLines(pg);
+ for(var tai=0;tai<trackedAudit.length;tai++){noteRighe.push(trackedAudit[tai]);}
  if(pg.tipo==="studente"){
    var pozCount=pgDataGet(pg,"riep_student_potion_count","");
    if(pozCount!==""&&positiveInt(pozCount)&&Number(pozCount)%3===0){noteRighe.push("Promemoria Studente: questa è una Pozione ONGame n. "+pozCount+"; effettua 1d10 per il rischio di Acne Purulenta (con 1).");}
@@ -5625,6 +5870,14 @@ function renderImbottStep(container){
    " con " + effectiveTechnique(pg) + " Tecnica" + (globalTechniqueBonusInfo(pg).bonus ? " ("+pg.tecnica+" base +"+globalTechniqueBonusInfo(pg).bonus+" bonus)" : "") + roleInventario +
    " - " + spazioInventario);
 
+ var trackedLinesFinal=trackedEffectAuditLines(pg);
+ if(trackedLinesFinal.length){
+   var usageBox=el("div","usage-summary-box");
+   usageBox.appendChild(elText("div","usage-title","Oggetti/Conoscenze usati — aggiorna Fatica e usi"));
+   for(var uli=0;uli<trackedLinesFinal.length;uli++){usageBox.appendChild(elText("p",null,trackedLinesFinal[uli]));}
+   out.appendChild(usageBox);
+ }
+
  var inventoryBox = el("div", "inventory-box");
  inventoryBox.appendChild(el("span", "inventory-label", zeroDosiUtili ? "Inventario" : "Frase pronta per l’Inventario"));
  var cartCode = el("div", "inventory-sentence"); cartCode.id = "riep-cart-" + pg.id;
@@ -5650,7 +5903,7 @@ function renderImbottStep(container){
  var r4 = el("tr", null, "<th>Dosi finali disponibili</th><td>" + (dosiSopravvissute === null ? "da calcolare (vedi Step 5)" : dosiSopravvissute) + (distillDoseDestroyed ? " (1 dose distrutta in Distillazione)" : "") + "</td>"); 
  var r5 = el("tr", null, "<th>Post finali richiesti</th><td>" + (imbEsito === "" ? "da calcolare (vedi Step 6)" : (imbEsito === "0%" ? "non applicabili: processo fallito" : ((imbPosts === null || imbPosts === undefined) ? "da calcolare" : imbPosts))) + "</td>");
  var r6 = el("tr", null, "<th>Imbottigliamento/Calderone</th><td>" + (imbEsito === "" ? "da calcolare (vedi Step 6)" : (imbEsito === "0%" ? "Esploso" : (zeroDosiUtili ? "Pulizia conclusa, nessuna dose utile — esito " + imbEsito : "Pronta, esito " + imbEsito))) + "</td>"); 
- var r7 = el("tr", null, "<th>Fatica creazione + Extra+</th><td>-" + fmtFatica(faticaObbl) + " Fatica</td>");
+ var r7 = el("tr", null, "<th>Fatica creazione + Extra+ + Oggetti/Conoscenze</th><td>-" + fmtFatica(faticaObbl) + " Fatica</td>");
  var r8 = el("tr", null, "<th>Fatica Distillazione</th><td>" + faticaDistTesto + "</td>");
  var r9=el("tr",null,"<th>Ingredienti da rimuovere dalla Dispensa</th><td>"+(dispensaInfo.complete?(dispensaInfo.total+" unità/dosi numeriche ("+dispensaInfo.base+" ricetta"+(dispensaInfo.extra>0?" + "+dispensaInfo.extra+" sostituzioni":"")+")"+(((dispensaInfo.externalNumeric&&dispensaInfo.externalNumeric.length)||dispensaInfo.nonNumerici.length)?" + voci separate":"")):"da completare")+"</td>");
  tbl.appendChild(r1); tbl.appendChild(r2); tbl.appendChild(r3); tbl.appendChild(r4); tbl.appendChild(r5); tbl.appendChild(r6); tbl.appendChild(r7); tbl.appendChild(r8);tbl.appendChild(r9); 
