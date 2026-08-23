@@ -1,4 +1,6 @@
-<!-- Revisione regolamento v51: bonus multipli Oggetti/Conoscenze con destinazione esplicita; refresh = nuova creazione vuota -->
+<!-- Revisione v54: Uso della Bacchetta separa i bonus che aumentano Tecnica dai bonus che aggiungono direttamente possibilità al d15 -->
+<!-- Revisione v53: Categoria Standard/OOP/E calcolata sulla Forza complessiva effettiva, incluso il bonus di Preparazione -->
+<!-- Revisione regolamento v52: bonus Tecnica centralizzati nello Step 2 e applicati alla Tecnica effettiva prima di tutte le formule; refresh = nuova creazione vuota -->
 <div id="creazione-pozione" class="foglio"> 
 <style>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css');
@@ -1090,7 +1092,8 @@
  var currentStep = "info";
  
  /* ---------- SALVATAGGIO LOCALE ---------- */
- /* v51: i bonus manuali da Oggetti/Conoscenze possono essere registrati in più righe, con fonte e destinazione; dove previsto, “Tecnica” modifica il valore di Tecnica prima della conversione della fase. */
+ /* v52: i bonus che aumentano Tecnica vengono registrati una sola volta nello Step 2. Il tool calcola una Tecnica effettiva (Tecnica base + bonus da Oggetti/Conoscenze) e usa quel valore in tutte le formule che dipendono da Tecnica. I bonus delle singole fasi restano invece bonus diretti della fase. */
+ /* v51: i bonus manuali da Oggetti/Conoscenze possono essere registrati in più righe, con fonte e destinazione. */
  /* v50: ogni nuovo caricamento parte da una creazione vuota; i vecchi salvataggi locali vengono eliminati invece di essere ripristinati. Passando da una voce del Pozionario a “inserimento manuale”, vengono anche svuotati i dati compilati automaticamente dalla voce precedente.
      v49: quando Sintesi Tecnica+ e un Calderone/manufatto con riduzione “per difetto” sono entrambi attivi, il materiale non stabilisce quale riduzione applicare per prima; il tool richiede di scegliere esplicitamente l’ordine, perché l’arrotondamento rende i risultati potenzialmente diversi. I salvataggi v48 interessati conservano i dadi ma invalidano i post/Distillazione finché l’ordine non viene scelto.
      v48: nei Calderoni illegali con “post per difetto”, si arrotonda per difetto la quantità di post da sottrarre; i salvataggi precedenti vengono ricalcolati senza ritirare il d10 di Imbottigliamento e con invalidazione della sola Distillazione successiva.
@@ -1153,7 +1156,7 @@
     - se cambia l'Ingrediente o la quantità sostituita nel rimedio di Preparazione, il vecchio d14 di rimedio
       viene invalidato perché era stato eseguito dopo una sostituzione diversa. */
  var STORAGE_KEY="creazionePozione_v11";
- var SAVE_SCHEMA_VERSION=50;
+ var SAVE_SCHEMA_VERSION=54;
  var saveTimer=null;
  function saveState(){
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
@@ -1528,6 +1531,22 @@
   return wrap;
  }
 
+ function globalTechniqueBonusInfo(pg){
+  var info=manualBonusTotals(pg,"tecnica_global",false);
+  var base=intInRange(pg.tecnica,1,20)?Number(pg.tecnica):0;
+  return {valid:info.valid,bonus:info.roll,effective:base+info.roll};
+ }
+
+ function effectiveTechnique(pg){
+  return globalTechniqueBonusInfo(pg).effective;
+ }
+
+ function effectiveTechniqueLabel(pg){
+  var info=globalTechniqueBonusInfo(pg);
+  if(!intInRange(pg.tecnica,1,20)){return "Tecnica effettiva: completa prima la Tecnica base.";}
+  return "Tecnica effettiva: "+info.effective+" ("+Number(pg.tecnica)+" base"+(info.bonus?" + "+info.bonus+" bonus":"")+").";
+ }
+
  function positiveInt(v){
   if(v === "" || v === null || v === undefined){ return false; }
   var n = Number(v);
@@ -1544,6 +1563,7 @@
   var pg = pgs[0];
   if(pg.tipo !== "studente" && pg.tipo !== "adulto"){ return "Seleziona se il Personaggio è Studente o Adulto nello Step 2."; }
   if(!intInRange(pg.tecnica, 1, 20)){ return "Inserisci la Tecnica come intero da 1 a 20 nello Step 2."; }
+  if(!globalTechniqueBonusInfo(pg).valid){ return "Nei bonus alla Tecnica dello Step 2 inserisci solo numeri interi da 0 in su."; }
   var setupCald=calderoneInfo(pg);
   if(setupCald.foldRisk){
    var setupRisk=pgDataGet(pg,"calderone_pieghevole_risk","");
@@ -1648,8 +1668,8 @@
     restano validi i parametri indipendenti e il dado dell'effetto di Memoria Tecnica+, che
     dipende soltanto dall'Efficacia della Extra+ e non dalla Preparazione.
     (v33 aveva già introdotto la conservazione dei parametri manuali indipendenti.) */
- function clearAfterPrep(pg){clearDataByPrefixesPreserving(pg,["prod_","bac_","dosi_","imb_","distill_"],["prod_extra","prod_extra_entries","prod_mem_dice","bac_extra","bac_extra_entries","dosi_extra_oggetti","dosi_extra_oggetti_entries","imb_extra","imb_extra_entries","imb_stack_order"]);}
- function clearAfterProd(pg){clearDataByPrefixesPreserving(pg,["bac_","dosi_","imb_","distill_"],["bac_extra","bac_extra_entries","dosi_extra_oggetti","dosi_extra_oggetti_entries","imb_extra","imb_extra_entries","imb_stack_order"]);}
+ function clearAfterPrep(pg){clearDataByPrefixesPreserving(pg,["prod_","bac_","dosi_","imb_","distill_"],["prod_extra","prod_extra_entries","prod_mem_dice","bac_tecnica_extra","bac_tecnica_extra_entries","bac_extra","bac_extra_entries","dosi_extra_oggetti","dosi_extra_oggetti_entries","imb_extra","imb_extra_entries","imb_stack_order"]);}
+ function clearAfterProd(pg){clearDataByPrefixesPreserving(pg,["bac_","dosi_","imb_","distill_"],["bac_tecnica_extra","bac_tecnica_extra_entries","bac_extra","bac_extra_entries","dosi_extra_oggetti","dosi_extra_oggetti_entries","imb_extra","imb_extra_entries","imb_stack_order"]);}
  function clearAfterBac(pg){clearDataByPrefixesPreserving(pg,["imb_","distill_"],["imb_extra","imb_extra_entries","imb_stack_order"]);}
  /* v40: il d2 delle Dosi avviene dopo il d15 di Bacchetta. Se cambia il d15,
     il vecchio d2 non può essere riutilizzato. Le dosi extra da Oggetti restano
@@ -2044,7 +2064,7 @@ function renderNav(){
  ];
  if(pg){
   parts = parts.concat([
-   pg.tipo, pg.tecnica, pg.mediaPozioni, (levelNum(pg.chimico) > 0 ? "" : pg.votoPozione), pg.sapienzaPozionistica,
+   pg.tipo, pg.tecnica, globalTechniqueBonusInfo(pg).bonus, pg.mediaPozioni, (levelNum(pg.chimico) > 0 ? "" : pg.votoPozione), pg.sapienzaPozionistica,
    pg.speziale, pg.chimico, pg.toccoMagico, pg.calderaio, pg.distillatore
   ]);
  }
@@ -2063,6 +2083,9 @@ function resetDataPreservingCalderone(pg,preserveFoldingRisk){
  }else if(!hasLegacyAccel){
   kept["calderone_usato"]="none";
  }
+ if(Object.prototype.hasOwnProperty.call(oldData,"tecnica_global")){ kept["tecnica_global"]=oldData["tecnica_global"]; }
+ if(Object.prototype.hasOwnProperty.call(oldData,"tecnica_global_entries")){ kept["tecnica_global_entries"]=oldData["tecnica_global_entries"]; }
+ /* v52: il bonus globale alla Tecnica è un parametro del personaggio/degli Oggetti, non un esito di fase. */
  /* v47: nei salvataggi v42 la scelta Peltro/Ottone/Rame era ancora salvata come
     imb_accel_calderone. Il ripristino normalizza il profilo prima di eseguire la
     migrazione v43: se la chiave nuova non esiste, NON creiamo ancora "none"; conserviamo
@@ -2078,7 +2101,7 @@ function resetDataPreservingCalderone(pg,preserveFoldingRisk){
 function invalidateAllPhaseResultsNow(){
  var hadResults=false;
  for(var i=0;i<pgs.length;i++){
-  if(pgs[i].data&&Object.keys(pgs[i].data).some(function(k){return k!=="calderone_usato" && k!=="calderone_pieghevole_risk";})){hadResults=true;}
+  if(pgs[i].data&&Object.keys(pgs[i].data).some(function(k){return k!=="calderone_usato" && k!=="calderone_pieghevole_risk" && k!=="tecnica_global" && k!=="tecnica_global_entries";})){hadResults=true;}
   /* Cambio identità della Pozione = nuova creazione: conserva lo strumento, ma non il rischio d'uso del pieghevole Elfi. */
   resetDataPreservingCalderone(pgs[i],false);
  }
@@ -2474,11 +2497,24 @@ function renderAll(){
  var dTec = el("div"); 
  dTec.appendChild(el("label", null, "Tecnica")); 
  var inpTec = el("input"); inpTec.type="number"; inpTec.min="1"; inpTec.max="20"; inpTec.step="1"; inpTec.placeholder="1-20"; inpTec.value = (pg.tecnica === null ? "" : pg.tecnica); 
- inpTec.addEventListener("input", function(){ var nv=inpTec.value === "" ? null : Number(inpTec.value);if(pg.tecnica!==nv){pg.tecnica=nv;invalidateFromTechniqueNow(pg);} }); 
+ inpTec.addEventListener("input", function(){ var nv=inpTec.value === "" ? null : Number(inpTec.value);if(pg.tecnica!==nv){pg.tecnica=nv;invalidateFromTechniqueNow(pg);aggiornaTecnicaEffettiva();} }); 
  dTec.appendChild(inpTec); 
  row1.appendChild(dTec); 
  
  card.appendChild(row1); 
+
+ var tecEffId="tecnica-effettiva-"+pg.id;
+ function aggiornaTecnicaEffettiva(){
+  var tecEl=document.getElementById(tecEffId);
+  if(tecEl){tecEl.textContent=effectiveTechniqueLabel(pg);}
+ }
+ card.appendChild(buildManualBonusEditor(pg,"tecnica_global",{
+  title:"Bonus alla Tecnica — Oggetti/Conoscenze",
+  fixedTarget:"Tecnica",
+  note:"Inserisci qui una sola volta tutti i bonus che aumentano la Tecnica del PG. Il tool li somma alla Tecnica base prima di applicare le tabelle e le formule di Preparazione, Produzione, Uso della Bacchetta, Imbottigliamento/Pulizia e conseguenze collegate. Non reinserirli nelle singole fasi.",
+  onChange:function(){invalidateFromTechniqueNow(pg);aggiornaTecnicaEffettiva();}
+ }));
+ var tecEffBox=elText("div","guide-text",effectiveTechniqueLabel(pg));tecEffBox.id=tecEffId;card.appendChild(tecEffBox);
 
  var caldBox = el("div", "guide-text");
  var caldLabel = el("label", null, "Calderone / strumento utilizzato per la Pozione");
@@ -2895,9 +2931,10 @@ function renderAll(){
  
  function prepMalusPercent(pg){ 
  var base; 
- if(pg.tecnica <= 5){ base = 65; } 
- else if(pg.tecnica <= 10){ base = 60; } 
- else if(pg.tecnica <= 15){ base = 55; } 
+ var tecEff=effectiveTechnique(pg);
+ if(tecEff <= 5){ base = 65; } 
+ else if(tecEff <= 10){ base = 60; } 
+ else if(tecEff <= 15){ base = 55; } 
  else { base = 50; } 
  var reduction = 0; 
  var map = { I:5, II:10, III:15, IV:20, V:25 }; 
@@ -2943,9 +2980,10 @@ function renderAll(){
  
  function prodMalusPercent(pg){ 
  var base; 
- if(pg.tecnica <= 5){ base = 80; } 
- else if(pg.tecnica <= 10){ base = 70; } 
- else if(pg.tecnica <= 15){ base = 60; } 
+ var tecEff=effectiveTechnique(pg);
+ if(tecEff <= 5){ base = 80; } 
+ else if(tecEff <= 10){ base = 70; } 
+ else if(tecEff <= 15){ base = 60; } 
  else { base = 50; } 
  var reduction = 0; 
  var map = { I:5, II:10, III:15, IV:20, V:25 }; 
@@ -3181,8 +3219,8 @@ function renderAll(){
  } 
  
  function calcPrepTier(pg, tier){
- var prepManual = manualBonusTotals(pg, "prep_extra_" + tier.key, true);
- var tecnicaEffettiva = Number(pg.tecnica) + prepManual.technique;
+ var prepManual = manualBonusTotals(pg, "prep_extra_" + tier.key, false);
+ var tecnicaEffettiva = effectiveTechnique(pg);
  var tecBase = tecnicaBasePrep(tecnicaEffettiva);
  var d6 = pgDataGet(pg, "prep_d6", "");
  var competenzaB = 0;
@@ -3226,7 +3264,7 @@ function renderAll(){
 
  return {
    tecBase: tecBase,
-   tecnicaBonus: prepManual.technique,
+   tecnicaEffettiva: tecnicaEffettiva,
    votoTotale: votoTotale,
    classB: classB,
    extraTotale: extraTotale,
@@ -3240,7 +3278,7 @@ function renderAll(){
  if(calc.ready === false){ return "Completa prima: " + calc.waiting.join(", ") + "."; }
  return "[dice=1d14]Preparazione Ingredienti " + tier.label + " - " + pg.nome +
  " (Riesce se 1-" + calc.total +
- ": Tecnica " + calc.tecBase + (calc.tecnicaBonus ? " (bonus su Tecnica +" + calc.tecnicaBonus + ")" : "") +
+ ": Tecnica effettiva " + calc.tecnicaEffettiva + " -> " + calc.tecBase + " possibilità" +
  " + Voto/Speziale " + calc.votoTotale +
  " + Classificazione " + calc.classB +
  " + Extra " + calc.extraTotale +
@@ -3252,10 +3290,10 @@ function renderAll(){
  block.appendChild(el("p", null, "<b>" + tier.label + "</b>")); 
 
  block.appendChild(buildManualBonusEditor(pg,"prep_extra_"+tier.key,{
-  allowTechnique:true,
+  allowTechnique:false,
   title:"Altri bonus — Oggetti/Conoscenze",
   rollLabel:"Possibilità del d14",
-  note:"NON includere Manualità Tecnica+ già calcolata sopra. Se il bonus modifica Tecnica, seleziona ‘Tecnica’: il tool lo applica prima della conversione della fase.",
+  note:"NON includere Manualità Tecnica+ già calcolata sopra. I bonus che aumentano Tecnica vanno inseriti una sola volta nello Step 2; qui registra soltanto bonus diretti alla Preparazione.",
   onChange:function(){clearPrepTierOutcome(pg,tier.key);clearAfterPrep(pg);recomputePrepTier(pg,tier);}
  }));
 
@@ -3560,7 +3598,7 @@ function renderAll(){
  var calc = calcPrepTier(pg, tier);
  var tecBase = calc.tecBase, votoTotale = calc.votoTotale, classB = calc.classB, extraTotale = calc.extraTotale, total = calc.total;
  var formulaEl = document.getElementById("prep-formula-" + tier.key + "-" + pg.id); 
- if(formulaEl){ formulaEl.textContent = "Tecnica " + tecBase + (calc.tecnicaBonus ? " (bonus su Tecnica +" + calc.tecnicaBonus + ")" : "") + " + Voto/Speziale " + votoTotale + " + Classificazione " + classB + " + Extra " + extraTotale + " = " + total + " su 14"; } 
+ if(formulaEl){ formulaEl.textContent = "Tecnica effettiva " + calc.tecnicaEffettiva + " → " + tecBase + " possibilità + Voto/Speziale " + votoTotale + " + Classificazione " + classB + " + Extra " + extraTotale + " = " + total + " su 14"; } 
  var codeEl = document.getElementById("prep-code-" + tier.key + "-" + pg.id); if(codeEl){ codeEl.textContent = prepDiceText(pg, tier, calc); }
  var tagEl = document.getElementById("prep-tag-" + tier.key + "-" + pg.id); 
  var conseqEl = document.getElementById("prep-conseq-" + tier.key + "-" + pg.id); 
@@ -3732,10 +3770,10 @@ function renderAll(){
  } 
  
  card.appendChild(buildManualBonusEditor(pg,"prod_extra",{
-  allowTechnique:true,
+  allowTechnique:false,
   title:"Altri bonus — Oggetti/Conoscenze",
   rollLabel:"Possibilità del d30",
-  note:"NON includere Memoria Tecnica+ né il Calderone selezionato. Se il bonus modifica Tecnica, seleziona ‘Tecnica’.",
+  note:"NON includere Memoria Tecnica+ né il Calderone selezionato. I bonus che aumentano Tecnica vanno inseriti nello Step 2; qui registra soltanto bonus diretti alla Produzione.",
   onChange:function(){clearProdOutcome(pg);recomputeProd(pg);}
  }));
  
@@ -3775,8 +3813,8 @@ function renderAll(){
  function renderProdFailureDecision(pg,malusP){var wrap=document.getElementById("prod-decision-wrap-"+pg.id);if(!wrap){return "";}wrap.innerHTML="";wrap.style.display="block";wrap.appendChild(elText("p","small-note","La Produzione è fallita e l'errore è irrimediabile. Puoi continuare la creazione accettando il malus di Forza oppure buttare il contenuto del calderone e liberare la postazione."));var id="prod-decision-"+pg.id;var lbl=elText("label",null,"Come procede il PG?");lbl.htmlFor=id;wrap.appendChild(lbl);var sel=el("select");sel.id=id;var opts=[["","— scegli —"],["continue","Continua la creazione con -"+malusP+"% Forza"],["discard","Butta la Pozione e libera la postazione"]];for(var i=0;i<opts.length;i++){var o=elText("option",null,opts[i][1]);o.value=opts[i][0];sel.appendChild(o);}sel.value=pgDataGet(pg,"prod_decision","");sel.addEventListener("change",function(){pg.data["prod_decision"]=sel.value;clearAfterProd(pg);recomputeProd(pg);});wrap.appendChild(sel);return sel.value;}
 
  function recomputeProd(pg){ 
- var prodManual = manualBonusTotals(pg,"prod_extra",true);
- var tecBase = Number(pg.tecnica) + prodManual.technique; 
+ var prodManual = manualBonusTotals(pg,"prod_extra",false);
+ var tecBase = effectiveTechnique(pg); 
  var chimicoB = chimicoBonusFixed(pg); 
  var classB = classBonusProd(POZ.classificazione); 
  var memExtra = extraBonusStatic(pg, "memoria", pg.memoria); 
@@ -3797,14 +3835,14 @@ function renderAll(){
  
  var formulaEl = document.getElementById("prod-formula-" + pg.id); 
  if(formulaEl){ 
- formulaEl.textContent = "Tecnica " + tecBase + (prodManual.technique ? " (bonus +" + prodManual.technique + ")" : "") + " + Voto/Chimico " + chimicoB + " + Classificazione " + classB + 
+ formulaEl.textContent = "Tecnica effettiva " + tecBase + " + Voto/Chimico " + chimicoB + " + Classificazione " + classB + 
  " + Extra " + (memFixed+extraManual) + (caldProdBonus ? " + Calderone " + caldProdBonus : "") + " = " + total + " su 30"; 
  } 
  
  var codeEl = document.getElementById("prod-code-" + pg.id); 
  if(codeEl){ 
  codeEl.textContent = "[dice=1d30]Produzione Pozione - " + pg.nome + 
- " (Riesce se 1-" + total + ": Tecnica " + tecBase + (prodManual.technique ? " (bonus +" + prodManual.technique + ")" : "") + " + Voto/Chimico " + chimicoB + 
+ " (Riesce se 1-" + total + ": Tecnica effettiva " + tecBase + " + Voto/Chimico " + chimicoB + 
  " + Classificazione " + classB + " + Extra " + (memFixed+extraManual) + (caldProdBonus ? " + Calderone " + caldProdBonus : "") + " = " + total + " su 30)[/dice]"; 
  } 
  
@@ -3931,11 +3969,19 @@ function renderAll(){
  var card = el("div", "pg-card"); 
  card.appendChild(elText("h3", null, pg.nome)); 
  
+ card.appendChild(buildManualBonusEditor(pg,"bac_tecnica_extra",{
+  allowTechnique:false,
+  fixedTarget:"Tecnica",
+  title:"Bonus alla Tecnica — solo Uso della Bacchetta",
+  note:"Usa queste righe soltanto per Oggetti/Conoscenze che aumentano la Tecnica specificamente in questa fase. Il bonus viene sommato alla Tecnica effettiva PRIMA di convertirla in possibilità sul d15. Se lo stesso bonus è già stato inserito nello Step 2 come bonus globale alla Tecnica, non reinserirlo qui.",
+  onChange:function(){clearBacOutcome(pg);recomputeBacchetta(pg);}
+ }));
+
  card.appendChild(buildManualBonusEditor(pg,"bac_extra",{
-  allowTechnique:true,
-  title:"Altri bonus — Oggetti/Conoscenze",
-  rollLabel:"Possibilità del d15",
-  note:"Indica separatamente ogni bonus. Se modifica Tecnica, seleziona ‘Tecnica’: il valore viene applicato prima della conversione prevista per Uso della Bacchetta.",
+  allowTechnique:false,
+  fixedTarget:"Possibilità del d15",
+  title:"Possibilità extra — Uso della Bacchetta",
+  note:"Usa queste righe per bonus che concedono direttamente +X possibilità al d15, per esempio un Oggetto o una Conoscenza. Questi bonus vengono aggiunti DOPO la conversione della Tecnica e dopo Tocco Magico.",
   onChange:function(){clearBacOutcome(pg);recomputeBacchetta(pg);}
  }));
  
@@ -3975,34 +4021,45 @@ function renderAll(){
  } 
  
  function recomputeBacchetta(pg){ 
- var bacManual = manualBonusTotals(pg,"bac_extra",true);
- var tecnicaEffettiva = Number(pg.tecnica) + bacManual.technique;
+ var bacTechManual = manualBonusTotals(pg,"bac_tecnica_extra",false);
+ var bacManual = manualBonusTotals(pg,"bac_extra",false);
+ var tecnicaGlobale = effectiveTechnique(pg);
+ var bonusTecnicaBac = bacTechManual.roll;
+ var tecnicaEffettiva = tecnicaGlobale + bonusTecnicaBac;
  var tecBase = tecnicaBaseBacchetta(tecnicaEffettiva); 
  var toccoB = levelNum(pg.toccoMagico); 
  var extraManual = bacManual.roll; 
- var total = tecBase + toccoB + extraManual; 
+ var totalRaw = tecBase + toccoB + extraManual;
+ var total = totalRaw; 
  if(total > 15){ total = 15; } 
  if(total < 0){ total = 0; } 
  
  var formulaEl = document.getElementById("bac-formula-" + pg.id); 
  if(formulaEl){ 
- formulaEl.textContent = "Tecnica " + tecBase + (bacManual.technique ? " (bonus su Tecnica +" + bacManual.technique + ")" : "") + " + Tocco Magico " + toccoB + " + Extra " + extraManual + " = " + total + " su 15"; 
+ var tecTxt = "Tecnica " + tecnicaGlobale;
+ if(bonusTecnicaBac){ tecTxt += " + bonus Tecnica " + bonusTecnicaBac + " = " + tecnicaEffettiva; }
+ tecTxt += " → " + tecBase + " possibilità";
+ formulaEl.textContent = tecTxt + " + Tocco Magico " + toccoB + " + possibilità extra " + extraManual + " = " + totalRaw + (totalRaw!==total ? " → massimo " + total : "") + " su 15"; 
  } 
  
  var codeEl = document.getElementById("bac-code-" + pg.id); 
  if(codeEl){ 
+ var codeTec = "Tecnica " + tecnicaGlobale;
+ if(bonusTecnicaBac){ codeTec += " + bonus Tecnica " + bonusTecnicaBac + " = " + tecnicaEffettiva; }
+ codeTec += " -> " + tecBase + " possibilità";
  codeEl.textContent = "[dice=1d15]Uso della Bacchetta - " + pg.nome + 
- " (Riesce se 1-" + total + ": Tecnica " + tecBase + (bacManual.technique ? " (bonus su Tecnica +" + bacManual.technique + ")" : "") + " + Tocco Magico " + toccoB + 
- " + Extra " + extraManual + " = " + total + " su 15)[/dice]"; 
+ " (Riesce se 1-" + total + ": " + codeTec + " + Tocco Magico " + toccoB + 
+ " + possibilità extra " + extraManual + " = " + totalRaw + (totalRaw!==total ? ", massimo " + total : "") + " su 15)[/dice]"; 
  } 
  
  var tagEl = document.getElementById("bac-tag-" + pg.id); 
  var bacStatus = "pending";
  var bacCopyBtn = document.getElementById("bac-copy-" + pg.id);
  var bacResultInput = document.getElementById("bac-result-" + pg.id);
- if(!bacManual.valid){
-   if(formulaEl){ formulaEl.textContent = "Correggi Altri bonus: inserisci solo numeri interi da 0 in su."; }
-   if(codeEl){ codeEl.textContent = "Correggi Altri bonus: inserisci solo numeri interi da 0 in su."; }
+ if(!bacTechManual.valid || !bacManual.valid){
+   var errBonus = !bacTechManual.valid ? "Bonus alla Tecnica" : "Possibilità extra";
+   if(formulaEl){ formulaEl.textContent = "Correggi " + errBonus + ": inserisci solo numeri interi da 0 in su."; }
+   if(codeEl){ codeEl.textContent = "Correggi " + errBonus + ": inserisci solo numeri interi da 0 in su."; }
    if(tagEl){ tagEl.textContent = "Bloccato"; tagEl.className = "out-tag out-neutral"; }
    if(bacCopyBtn){ bacCopyBtn.disabled = true; }
    if(bacResultInput){ bacResultInput.disabled = true; }
@@ -4533,7 +4590,8 @@ function renderImbottStep(container){
   var d6v = pgDataGet(pg, "imb_d6", "");
   if(intInRange(d6v,1,6)){ votoC = Number(d6v); } else { votoC = 0; imbAuxReady = false; }
  } 
- var x = votoC + pg.tecnica;
+ var tecnicaEffImb = effectiveTechnique(pg);
+ var x = votoC + tecnicaEffImb;
  var imbCopyBtn = document.getElementById("imb-copy-" + pg.id);
  var imbResultInp = document.getElementById("imb-result-" + pg.id);
  var imbBonusReady = bonusInputInfo(pgDataGet(pg, "imb_extra", 0)).valid;
@@ -4546,9 +4604,9 @@ function renderImbottStep(container){
    var votoBaseMap = { T:1, D:2, S:3, A:4, O:5, E:6 };
    var votoBase = votoBaseMap[pg.mediaPozioni];
    var caldBonus = levelNum(pg.calderaio);
-   formulaEl.innerHTML = "Studente: <b>Media scolastica</b> (" + votoBase + ")" + (caldBonus ? " + <b>Calderaio I</b> (+1)" : "") + " + <b>Tecnica</b> (" + pg.tecnica + ") = X <b>" + x + "</b>.";
+   formulaEl.innerHTML = "Studente: <b>Media scolastica</b> (" + votoBase + ")" + (caldBonus ? " + <b>Calderaio I</b> (+1)" : "") + " + <b>Tecnica</b> (" + tecnicaEffImb + ") = X <b>" + x + "</b>.";
   } else {
-   formulaEl.innerHTML = "A questo punto si sommano <b>Voto/Calderaio</b> (" + votoC + ") e <b>Tecnica</b> (" + pg.tecnica + "): X = " + votoC + " + " + pg.tecnica + " = <b>" + x + "</b>.";
+   formulaEl.innerHTML = "A questo punto si sommano <b>Voto/Calderaio</b> (" + votoC + ") e <b>Tecnica</b> (" + tecnicaEffImb + "): X = " + votoC + " + " + tecnicaEffImb + " = <b>" + x + "</b>.";
   } 
  } 
  
@@ -4577,10 +4635,10 @@ function renderImbottStep(container){
    var votoBase2 = votoBaseMap2[pg.mediaPozioni];
    var caldBonus2 = levelNum(pg.calderaio);
    codeEl.textContent = "[dice=1d10]Imbottigliamento e Pulizia del Calderone - " + pg.nome +
-   " (X = Media scolastica " + votoBase2 + (caldBonus2 ? " + Calderaio I +1" : "") + " + Tecnica " + pg.tecnica + " = " + x + ")[/dice]";
+   " (X = Media scolastica " + votoBase2 + (caldBonus2 ? " + Calderaio I +1" : "") + " + Tecnica " + tecnicaEffImb + " = " + x + ")[/dice]";
   } else {
    codeEl.textContent = "[dice=1d10]Imbottigliamento e Pulizia del Calderone - " + pg.nome +
-   " (X = Voto/Calderaio " + votoC + " + Tecnica " + pg.tecnica + " = " + x + ")[/dice]";
+   " (X = Voto/Calderaio " + votoC + " + Tecnica " + tecnicaEffImb + " = " + x + ")[/dice]";
   } 
  } 
  
@@ -5373,10 +5431,11 @@ function renderImbottStep(container){
  } 
  
  var forzaPercentTotal = prepAcc.forza + prodAcc.forza + forzaPercentExtra;
- /* Regola specifica: il bonus di Preparazione modifica la Forza finale, ma non concorre
-    alla Categoria Standard/OOP/E. La Categoria considera quindi gli altri modificatori
-    di Forza (Produzione, Ingredienti ONGame, +10 fisso della role e Valigetta). */
- var categoriaForcePercent = prodAcc.forza + forzaPercentExtra;
+ /* v53: la Categoria Standard/OOP/E deve riflettere la Forza complessiva effettiva
+    della Pozione. Anche il bonus di Forza ottenuto in Preparazione concorre quindi
+    alla soglia di Categoria, insieme a Produzione, Ingredienti ONGame, +10 fisso
+    della role e all'eventuale dimezzamento della Valigetta Adduco Maxima. */
+ var categoriaForcePercent = forzaPercentTotal;
  var valigettaFactor = POZ.valigettaAdduco ? 0.5 : 1;
  if(POZ.valigettaAdduco){ noteRighe.push("Valigetta creata con Adduco Maxima: -50% della Forza finale (la Forza viene dimezzata dopo gli altri modificatori)."); }
  var durataPercent = prepAcc.durata; 
@@ -5389,7 +5448,7 @@ function renderImbottStep(container){
    noteRighe.push("Categoria OOP/E non determinabile senza Forza Standard: il +10 fisso della role va rapportato alla Forza base.");
    incompleto = true;
  }
- noteRighe.push("Categoria Standard/OOP/E: il bonus di Forza della Preparazione non concorre alla soglia di Categoria; resta comunque applicato alla Forza finale.");
+ noteRighe.push("Categoria Standard/OOP/E: calcolata sulla Forza complessiva effettiva della Pozione, compreso l’eventuale bonus di Forza ottenuto in Preparazione.");
 
  if(dosiInfo.finale === null){ incompleto = true; } 
  
@@ -5563,7 +5622,7 @@ function renderImbottStep(container){
    ("Nessuna dose utile di " + nomeP + " da registrare in Inventario: l’Uso della Bacchetta ha portato il totale finale a 0 dosi.") :
    ("- " + nomeP + " [" + dosiInventario + "] Forza " + categoriaInventario +
    " (" + forzaFormulaInventario + ") | Creata da " + pg.nome +
-   " con " + pg.tecnica + " Tecnica" + roleInventario +
+   " con " + effectiveTechnique(pg) + " Tecnica" + (globalTechniqueBonusInfo(pg).bonus ? " ("+pg.tecnica+" base +"+globalTechniqueBonusInfo(pg).bonus+" bonus)" : "") + roleInventario +
    " - " + spazioInventario);
 
  var inventoryBox = el("div", "inventory-box");
@@ -5641,7 +5700,7 @@ function renderImbottStep(container){
  window.addEventListener("beforeunload",flushSave);
  
  /* ---------- INIT ---------- */
- /* v51: un refresh deve sempre aprire una creazione nuova e vuota.
+ /* v52: un refresh deve sempre aprire una creazione nuova e vuota.
     Eliminiamo anche eventuali salvataggi lasciati dalle versioni precedenti. */
  try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}
  renderAll(); 
