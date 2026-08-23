@@ -1,4 +1,4 @@
-<!-- Revisione regolamento v49: gestione esplicita dell’ordine di cumulo tra Sintesi Tecnica+ e Calderoni illegali con riduzione “per difetto” -->
+<!-- Revisione regolamento v50: refresh = nuova creazione vuota; uscita dal Pozionario pulisce i dati automatici -->
 <div id="creazione-pozione" class="foglio"> 
 <style>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css');
@@ -1042,7 +1042,8 @@
  var currentStep = "info";
  
  /* ---------- SALVATAGGIO LOCALE ---------- */
- /* v49: quando Sintesi Tecnica+ e un Calderone/manufatto con riduzione “per difetto” sono entrambi attivi, il materiale non stabilisce quale riduzione applicare per prima; il tool richiede di scegliere esplicitamente l’ordine, perché l’arrotondamento rende i risultati potenzialmente diversi. I salvataggi v48 interessati conservano i dadi ma invalidano i post/Distillazione finché l’ordine non viene scelto.
+ /* v50: ogni nuovo caricamento parte da una creazione vuota; i vecchi salvataggi locali vengono eliminati invece di essere ripristinati. Passando da una voce del Pozionario a “inserimento manuale”, vengono anche svuotati i dati compilati automaticamente dalla voce precedente.
+     v49: quando Sintesi Tecnica+ e un Calderone/manufatto con riduzione “per difetto” sono entrambi attivi, il materiale non stabilisce quale riduzione applicare per prima; il tool richiede di scegliere esplicitamente l’ordine, perché l’arrotondamento rende i risultati potenzialmente diversi. I salvataggi v48 interessati conservano i dadi ma invalidano i post/Distillazione finché l’ordine non viene scelto.
      v48: nei Calderoni illegali con “post per difetto”, si arrotonda per difetto la quantità di post da sottrarre; i salvataggi precedenti vengono ricalcolati senza ritirare il d10 di Imbottigliamento e con invalidazione della sola Distillazione successiva.
      v47: durante il ripristino di salvataggi precedenti alla v43, una normalizzazione del profilo non deve cancellare la vecchia chiave imb_accel_calderone prima che la migrazione possa convertirla nel nuovo calderone_usato.
     v46: il Calderone/strumento scelto nello Step 2 è un parametro indipendente del creatore e non un esito di fase:
@@ -1103,7 +1104,7 @@
     - se cambia l'Ingrediente o la quantità sostituita nel rimedio di Preparazione, il vecchio d14 di rimedio
       viene invalidato perché era stato eseguito dopo una sostituzione diversa. */
  var STORAGE_KEY="creazionePozione_v11";
- var SAVE_SCHEMA_VERSION=49;
+ var SAVE_SCHEMA_VERSION=50;
  var saveTimer=null;
  function saveState(){
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
@@ -2171,7 +2172,7 @@ function renderAll(){
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Per prima cosa: che Pozione vuoi creare?")); 
  p.appendChild(el("div","guide-text","Puoi scegliere una Pozione dal Pozionario allegato: Nome, Classificazione, Forza Standard e fasce di Ingredienti vengono compilati automaticamente. In alternativa scegli l'inserimento manuale e compila i dati direttamente."));
- var pozSelWrap=el("div");var pozSelLabel=elText("label",null,"Pozione dal Pozionario");pozSelLabel.htmlFor="pozionario-select";pozSelWrap.appendChild(pozSelLabel);var pozSel=el("select");pozSel.id="pozionario-select";var pozManual=elText("option",null,"— inserimento manuale —");pozManual.value="";pozSel.appendChild(pozManual);for(var pzix=0;pzix<POZIONARIO.length;pzix++){var pzo=elText("option",null,POZIONARIO[pzix].n);pzo.value=POZIONARIO[pzix].n;if(POZ.pozionarioNome===pzo.value){pzo.selected=true;}pozSel.appendChild(pzo);}pozSel.addEventListener("change",function(){var oldPoz=POZ.pozionarioNome;var newPoz=pozSel.value;var changed=oldPoz!==newPoz;POZ.pozionarioNome=newPoz;if(newPoz&&POZIONARIO_BY_NAME[newPoz]){var entry=POZIONARIO_BY_NAME[newPoz];POZ.nome=entry.n;POZ.classificazione=entry.c;POZ.forzaStandard=entry.f;if(entry.i){POZ.tierBase=!!entry.b;POZ.tierIV=!!entry.iv;POZ.tierV=!!entry.v;}else{POZ.tierBase=false;POZ.tierIV=false;POZ.tierV=false;}}if(changed){invalidatePotionIdentityConfirmation();}renderAll();});pozSelWrap.appendChild(pozSel);p.appendChild(pozSelWrap);if(POZ.pozionarioNome&&POZIONARIO_BY_NAME[POZ.pozionarioNome]&&!POZIONARIO_BY_NAME[POZ.pozionarioNome].i){p.appendChild(el("p","small-note","Per questa voce il Pozionario allegato non contiene una sezione Ingredienti e dosi leggibile: seleziona manualmente le fasce di Ingredienti."));}
+ var pozSelWrap=el("div");var pozSelLabel=elText("label",null,"Pozione dal Pozionario");pozSelLabel.htmlFor="pozionario-select";pozSelWrap.appendChild(pozSelLabel);var pozSel=el("select");pozSel.id="pozionario-select";var pozManual=elText("option",null,"— inserimento manuale —");pozManual.value="";pozSel.appendChild(pozManual);for(var pzix=0;pzix<POZIONARIO.length;pzix++){var pzo=elText("option",null,POZIONARIO[pzix].n);pzo.value=POZIONARIO[pzix].n;if(POZ.pozionarioNome===pzo.value){pzo.selected=true;}pozSel.appendChild(pzo);}pozSel.addEventListener("change",function(){var oldPoz=POZ.pozionarioNome;var newPoz=pozSel.value;var changed=oldPoz!==newPoz;POZ.pozionarioNome=newPoz;if(newPoz&&POZIONARIO_BY_NAME[newPoz]){var entry=POZIONARIO_BY_NAME[newPoz];POZ.nome=entry.n;POZ.classificazione=entry.c;POZ.forzaStandard=entry.f;if(entry.i){POZ.tierBase=!!entry.b;POZ.tierIV=!!entry.iv;POZ.tierV=!!entry.v;}else{POZ.tierBase=false;POZ.tierIV=false;POZ.tierV=false;}}else if(oldPoz){POZ.nome="";POZ.classificazione="";POZ.forzaStandard="";POZ.tierBase=false;POZ.tierIV=false;POZ.tierV=false;}if(changed){invalidatePotionIdentityConfirmation();}renderAll();});pozSelWrap.appendChild(pozSel);p.appendChild(pozSelWrap);if(POZ.pozionarioNome&&POZIONARIO_BY_NAME[POZ.pozionarioNome]&&!POZIONARIO_BY_NAME[POZ.pozionarioNome].i){p.appendChild(el("p","small-note","Per questa voce il Pozionario allegato non contiene una sezione Ingredienti e dosi leggibile: seleziona manualmente le fasce di Ingredienti."));}
  var pozionarioLocked=!!currentPozionarioEntry();
  if(pozionarioLocked){p.appendChild(elText("p","small-note","I dati compilati dal Pozionario sono bloccati per evitare di scollegare accidentalmente la ricetta dai suoi Ingredienti. Per modificarli, scegli prima “inserimento manuale”."));}
  var row=el("div","row"); 
@@ -2239,7 +2240,7 @@ function renderAll(){
   if(["X","XX","XXX","XXXX","XXXXX"].indexOf(POZ.classificazione)===-1||(!POZ.tierBase&&!POZ.tierIV&&!POZ.tierV)){window.alert("Seleziona la Classificazione e almeno una fascia di Ingredienti prima di proseguire.");return;}if(!positiveInt(POZ.forzaStandard)){window.alert("Inserisci la Forza Standard della Pozione.");return;}if(!POZ.conoscenzaPosseduta){window.alert("Conferma che il creatore possiede la Conoscenza della Pozione.");return;}
   currentStep = "pg"; renderAll();
  }); 
- p.appendChild(nextBtn);var resetBtn=el("button","action danger","Nuova Pozione — azzera tutto");resetBtn.addEventListener(EV,function(){if(window.confirm("Vuoi davvero azzerare tutti i dati e iniziare una nuova Pozione?")){resetAllState();}});p.appendChild(resetBtn);p.appendChild(el("p","small-note","I dati vengono salvati automaticamente in questo browser e ripristinati dopo un refresh."));
+ p.appendChild(nextBtn);var resetBtn=el("button","action danger","Nuova Pozione — azzera tutto");resetBtn.addEventListener(EV,function(){if(window.confirm("Vuoi davvero azzerare tutti i dati e iniziare una nuova Pozione?")){resetAllState();}});p.appendChild(resetBtn);p.appendChild(el("p","small-note","I dati restano disponibili finché questa pagina rimane aperta. Ricaricando la pagina, la creazione viene azzerata e si riparte da zero."));
  container.appendChild(p);
  }
  
@@ -5492,7 +5493,9 @@ function renderImbottStep(container){
  window.addEventListener("beforeunload",flushSave);
  
  /* ---------- INIT ---------- */
- restoreSavedState();
+ /* v50: un refresh deve sempre aprire una creazione nuova e vuota.
+    Eliminiamo anche eventuali salvataggi lasciati dalle versioni precedenti. */
+ try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}
  renderAll(); 
  
 })(); 
