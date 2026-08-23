@@ -5760,7 +5760,7 @@ function renderImbottStep(container){
    forzaFinaleVisual = "Standard " + fmtPct(forzaPercentTotal) + (forzaFlatBonus > 0 ? " + " + forzaFlatBonus + " fissi" : "") + (POZ.valigettaAdduco ? "; poi -50% Valigetta Adduco Maxima" : "");
  }
 
- var durataFinaleVisual = durataPercent === 0 ? "Standard" : ("Standard " + fmtPct(durataPercent));
+ var durataFinaleVisual = durataPercent === 0 ? "" : fmtPct(durataPercent);
  var dosiSopravvissute = dosiInfo.finale;
  if(dosiSopravvissute !== null && distillDoseDestroyed){ dosiSopravvissute = Math.max(0,dosiSopravvissute-1); }
  var dosiFinaleVisual = dosiSopravvissute === null ? "Da calcolare" : (dosiSopravvissute + (dosiSopravvissute === 1 ? " dose" : " dosi") + (distillDoseDestroyed ? " (1 dose persa in Distillazione)" : ""));
@@ -5785,7 +5785,7 @@ function renderImbottStep(container){
 
  addSummaryStat("Forza finale", forzaFinaleVisual, true);
  addSummaryStat("Categoria", categoria, true);
- addSummaryStat("Durata", durataFinaleVisual, false);
+ if(durataPercent !== 0){ addSummaryStat("Durata", durataFinaleVisual, false); }
  addSummaryStat("Dosi", dosiFinaleVisual, false);
  var zeroDosiUtili = (dosiSopravvissute === 0);
  if(zeroDosiUtili){ noteRighe.push("Uso della Bacchetta: il totale finale è 0 dosi utili. La Pulizia del Calderone viene comunque conclusa, ma non esiste alcuna dose da registrare o distillare."); }
@@ -5809,7 +5809,7 @@ function renderImbottStep(container){
  out.appendChild(summaryBox);
 
  /* --- valori testuali usati anche nel dettaglio tecnico --- */
- var durataTesto = durataPercent === 0 ? "standard" : fmtPct(durataPercent);
+ var durataTesto = durataPercent === 0 ? "" : fmtPct(durataPercent);
  var dosiTesto = dosiInfo.finale === null ? "? dosi" : (dosiInfo.finale + " dosi");
  var forzaTesto = fmtPct(forzaPercentTotal) + (forzaFlatBonus > 0 ? " e +" + forzaFlatBonus + " fissi" : "") + (POZ.valigettaAdduco ? ", poi -50% Valigetta Adduco Maxima" : "") + forzaAssolutaTesto;
 
@@ -5906,7 +5906,7 @@ function renderImbottStep(container){
  var r7 = el("tr", null, "<th>Fatica creazione + Extra+ + Oggetti/Conoscenze</th><td>-" + fmtFatica(faticaObbl) + " Fatica</td>");
  var r8 = el("tr", null, "<th>Fatica Distillazione</th><td>" + faticaDistTesto + "</td>");
  var r9=el("tr",null,"<th>Ingredienti da rimuovere dalla Dispensa</th><td>"+(dispensaInfo.complete?(dispensaInfo.total+" unità/dosi numeriche ("+dispensaInfo.base+" ricetta"+(dispensaInfo.extra>0?" + "+dispensaInfo.extra+" sostituzioni":"")+")"+(((dispensaInfo.externalNumeric&&dispensaInfo.externalNumeric.length)||dispensaInfo.nonNumerici.length)?" + voci separate":"")):"da completare")+"</td>");
- tbl.appendChild(r1); tbl.appendChild(r2); tbl.appendChild(r3); tbl.appendChild(r4); tbl.appendChild(r5); tbl.appendChild(r6); tbl.appendChild(r7); tbl.appendChild(r8);tbl.appendChild(r9); 
+ tbl.appendChild(r1); tbl.appendChild(r2); if(durataPercent !== 0){ tbl.appendChild(r3); } tbl.appendChild(r4); tbl.appendChild(r5); tbl.appendChild(r6); tbl.appendChild(r7); tbl.appendChild(r8);tbl.appendChild(r9); 
  out.appendChild(tbl); 
  
  var detTitle = el("p", null, "<b>Dettaglio conseguenze</b>"); 
