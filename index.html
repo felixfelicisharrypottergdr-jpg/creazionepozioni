@@ -1251,7 +1251,7 @@
     - se cambia l'Ingrediente o la quantità sostituita nel rimedio di Preparazione, il vecchio d14 di rimedio
       viene invalidato perché era stato eseguito dopo una sostituzione diversa. */
  var STORAGE_KEY="creazionePozione_v11";
- var SAVE_SCHEMA_VERSION=54;
+ var SAVE_SCHEMA_VERSION=55;
  var saveTimer=null;
  function saveState(){
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
@@ -1846,7 +1846,7 @@
   }
   if(step === "distill"){
     var dosiDist = computeDosiFinali(pg);
-    if(dosiDist.finale === null || !positiveInt(dosiDist.finale)){ return "Determina prima il numero finale di dosi: la Distillazione si esegue su una singola dose di Pozione."; }
+    if(dosiDist.finale === null || !positiveInt(dosiDist.finale)){ return "Determina prima il numero finale di dosi: la Distillazione si esegue sulle singole dosi di Pozione che vuoi trattare."; }
     var ie = pgDataGet(pg, "imb_esito", "");
     var ist = pgDataGet(pg, "imb_status", "pending");
     if(ist !== "done" || (ie !== "33%" && ie !== "66%" && ie !== "100%")){
@@ -2141,12 +2141,13 @@ function fmtFatica(n){
 
 function faticaFaseTesto(pg, fase){
  if(fase === "distill"){
-   var eff = pgDataGet(pg, "distill_eff", "skip");
-   if(eff === "skip"){ return "0 Fatica — Distillazione non svolta."; }
+   var doseCount = Number(pgDataGet(pg, "distill_dose_count", 0));
+   if(!isFinite(doseCount) || doseCount < 0){ doseCount = 0; }
+   if(doseCount === 0){ return "0 Fatica — Distillazione non svolta."; }
    if(haSapienzaPozionistica25(pg)){ return "0 Fatica — Sapienza Pozionistica 25."; }
-   var att = Number(pgDataGet(pg, "distill_attempts", 1));
-   if(!isFinite(att) || att < 1){ att = 1; }
-   return "-" + att + " Fatica per la dose calcolata (" + att + (att === 1 ? " tentativo" : " tentativi") + ").";
+   var att = Number(pgDataGet(pg, "distill_attempts", doseCount));
+   if(!isFinite(att) || att < 1){ att = doseCount; }
+   return "-" + att + " Fatica per " + doseCount + " " + (doseCount === 1 ? "dose distillata" : "dosi distillate") + " (" + att + " " + (att === 1 ? "tentativo complessivo" : "tentativi complessivi") + ").";
  }
  var base = faticaFaseNumero(pg, fase);
  var extra = faticaExtraFaseNumero(pg, fase);
@@ -5041,80 +5042,120 @@ function renderImbottStep(container){
  /* ==================================================== */ 
  /* STEP 7 - DISTILLAZIONE */ 
  /* ==================================================== */ 
+ function distillDefaultEntry(){
+ return {eff:"skip",roll:"",retry_risk:"",retry_eff:"none",retry_roll:""};
+ }
+ 
+ function normalizeDistillEntries(pg){
+ var entries = pg.data["distill_entries"];
+ if(!Array.isArray(entries)){
+   entries = [];
+   var oldEff = pgDataGet(pg, "distill_eff", "skip");
+   var oldRoll = pgDataGet(pg, "distill_roll", "");
+   var oldRisk = pgDataGet(pg, "distill_retry_risk", "");
+   var oldRetryEff = pgDataGet(pg, "distill_retry_eff", "none");
+   var oldRetryRoll = pgDataGet(pg, "distill_retry_roll", "");
+   if(oldEff !== "skip" || oldRoll !== "" || oldRisk !== "" || oldRetryEff !== "none" || oldRetryRoll !== ""){
+     entries.push({eff:oldEff,roll:oldRoll,retry_risk:oldRisk,retry_eff:oldRetryEff,retry_roll:oldRetryRoll});
+   }
+ }
+ var maxDosi = computeDosiFinali(pg).finale;
+ if(!isFinite(maxDosi) || maxDosi < 0){ maxDosi = 0; }
+ if(entries.length > maxDosi){ entries = entries.slice(0, maxDosi); }
+ for(var i=0;i<entries.length;i++){
+   var e = entries[i] || {};
+   entries[i] = {
+     eff: (e.eff === undefined ? "skip" : String(e.eff)),
+     roll: (e.roll === undefined ? "" : String(e.roll)),
+     retry_risk: (e.retry_risk === undefined ? "" : String(e.retry_risk)),
+     retry_eff: (e.retry_eff === undefined ? "none" : String(e.retry_eff)),
+     retry_roll: (e.retry_roll === undefined ? "" : String(e.retry_roll))
+   };
+ }
+ pg.data["distill_entries"] = entries;
+ return entries;
+ }
+ 
  function renderDistillStep(container){ 
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Fase Facoltativa: Distillazione")); 
  p.appendChild(el("div", "guide-text", 
  "Disponibile solo a chi possiede la Conoscenza Avanzata Distillatore. In questo calcolatore viene resa disponibile solo dopo la conclusione delle quattro fasi di creazione e un Imbottigliamento/Pulizia diverso da 0%. " + 
- "Va eseguita per ogni dose che si vuole distillare: <b>questo pannello calcola una singola dose alla volta</b>. Se la Pozione ha più dosi, l'esito qui inserito riguarda soltanto una di esse; le altre restano a spazio standard in questo calcolo e, se vuoi distillarle, devi ripetere la procedura per ciascuna annotandone separatamente l'esito. Ogni esecuzione della Distillazione costa -1 Fatica per la dose (0 con Sapienza Pozionistica 25); un secondo tentativo è quindi conteggiato come una nuova esecuzione. " + 
- "Il regolamento nomina un tiro di Distillazione 1d10 ma nel testo fornito non riporta la tabella che converte quel tiro in 0%/33%/66%/100%: per questo l'Efficacia resta da selezionare manualmente.")); 
+ "Ora puoi aggiungere <b>una scheda per ogni dose che vuoi distillare</b>, fino al numero di dosi disponibili. Ogni scheda gestisce un’eventuale seconda Distillazione sulla stessa dose e calcola lo spazio finale di quella singola dose. " + 
+ "Ogni esecuzione della Distillazione costa -1 Fatica per la dose (0 con Sapienza Pozionistica 25); un secondo tentativo sulla stessa dose conta come una nuova esecuzione. " + 
+ "Il regolamento nomina un tiro di Distillazione 1d10 ma nel testo fornito non riporta la tabella che converte quel tiro in 0%/33%/66%/100%: per questo l’Efficacia resta da selezionare manualmente.")); 
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
  if(appendDependencyGate(p, "distill")){ container.appendChild(p); return; }
 
- for(var i=0;i<pgs.length;i++){ 
- if(levelNum(pgs[i].distillatore) > 0){ 
- p.appendChild(buildDistillCard(pgs[i])); 
- } 
- } 
+ for(var i=0;i<pgs.length;i++){
+   if(levelNum(pgs[i].distillatore) > 0){
+     p.appendChild(buildDistillCard(pgs[i]));
+   }
+ }
 
- var anyDistill = false; 
- for(var j=0;j<pgs.length;j++){ 
- if(levelNum(pgs[j].distillatore) > 0){ anyDistill = true; } 
- } 
- if(!anyDistill){ 
- p.appendChild(el("div", "guide-text", "Nessun Personaggio possiede la Conoscenza Distillatore: questa fase non è disponibile per il Personaggio attuale.")); 
- } 
+ var anyDistill = false;
+ for(var j=0;j<pgs.length;j++){
+   if(levelNum(pgs[j].distillatore) > 0){ anyDistill = true; }
+ }
+ if(!anyDistill){
+   p.appendChild(el("div", "guide-text", "Nessun Personaggio possiede la Conoscenza Distillatore: questa fase non è disponibile per il Personaggio attuale."));
+ }
 
  if(pgs.length > 0){ p.appendChild(buildFaticaBox(pgs[0], "distill")); }
 
- p.appendChild(el("div", "divider")); 
- var nextBtn = el("button", "action", "Vai a: Riepilogo Finale &#8594;"); 
- nextBtn.addEventListener(EV, function(){ currentStep = "riepilogo"; renderAll(); }); 
- p.appendChild(nextBtn); 
+ p.appendChild(el("div", "divider"));
+ var nextBtn = el("button", "action", "Vai a: Riepilogo Finale &#8594;");
+ nextBtn.addEventListener(EV, function(){ currentStep = "riepilogo"; renderAll(); });
+ p.appendChild(nextBtn);
 
- container.appendChild(p); 
- } 
+ container.appendChild(p);
+ }
  
- function buildDistillCard(pg){ 
- var card = el("div", "pg-card"); 
- card.appendChild(elText("h3", null, pg.nome)); 
+ function buildDistillCard(pg){
+ var card = el("div", "pg-card");
+ card.appendChild(elText("h3", null, pg.nome));
  
- var imbEsitoCheck = pgDataGet(pg, "imb_esito", ""); 
- if(imbEsitoCheck === "0%"){ 
- card.appendChild(el("div", "guide-text", "Il calderone di questo Personaggio è esploso durante l'Imbottigliamento e Pulizia: la Pozione è persa, la Distillazione non è applicabile.")); 
- return card; 
- } 
+ var imbEsitoCheck = pgDataGet(pg, "imb_esito", "");
+ if(imbEsitoCheck === "0%"){
+   card.appendChild(el("div", "guide-text", "Il calderone di questo Personaggio è esploso durante l'Imbottigliamento e Pulizia: la Pozione è persa, la Distillazione non è applicabile."));
+   return card;
+ }
  
- card.appendChild(el("p", null, "Determina prima l'Efficacia della Distillazione (0% / 33% / 66% / 100%) come da regolamento, poi seleziona qui il risultato per ottenere l'eventuale dado sulla dimensione della dose. Il pannello gestisce anche un eventuale secondo tentativo sulla stessa dose.")); 
+ var dosiInfo = computeDosiFinali(pg);
+ var maxDosi = Number(dosiInfo.finale || 0);
+ if(!isFinite(maxDosi) || maxDosi < 0){ maxDosi = 0; }
+ var entries = normalizeDistillEntries(pg);
  
- var effRow = el("div"); 
- effRow.appendChild(el("label", null, "Efficacia ottenuta — 1° tentativo")); 
- var sel = el("select"); 
- var opts = [["skip","Non svolgere la Distillazione"],["0","0% (fallita)"],["33","33%"],["66","66%"],["100","100%"]]; 
- for(var i=0;i<opts.length;i++){ 
- var o = el("option", null, opts[i][1]); o.value = opts[i][0]; 
- sel.appendChild(o); 
- } 
- sel.value = pgDataGet(pg, "distill_eff", "skip"); 
- sel.addEventListener("change", function(){
-   pg.data["distill_eff"] = sel.value;
-   pg.data["distill_roll"] = "";
-   pg.data["distill_retry_risk"] = "";
-   pg.data["distill_retry_eff"] = "none";
-   pg.data["distill_retry_roll"] = "";
-   pg.data["distill_destroyed"] = false;
-   recomputeDistill(pg);
- }); 
- effRow.appendChild(sel); 
- card.appendChild(effRow); 
+ card.appendChild(el("p", null, "Aggiungi una scheda per ogni dose che vuoi distillare in questa pagina. Se distilli tutte le dosi disponibili, il riepilogo finale e la frase per l’Inventario verranno aggiornati dose per dose senza lasciare in automatico le altre a spazio standard."));
+ var status = el("div", "guide-text", "<b>Dosi utili disponibili dopo Imbottigliamento:</b> " + maxDosi + ". <b>Schede di Distillazione attive:</b> " + entries.length + ".");
+ card.appendChild(status);
  
- var out = el("div"); out.id = "distill-out-" + pg.id; 
- card.appendChild(out); 
+ var actionWrap = el("div");
+ var addBtn = el("button", "action", "+ Aggiungi dose da distillare");
+ if(entries.length >= maxDosi){ addBtn.disabled = true; }
+ addBtn.addEventListener(EV, function(){
+   var list = normalizeDistillEntries(pg);
+   if(list.length < maxDosi){ list.push(distillDefaultEntry()); }
+   renderAll();
+ });
+ actionWrap.appendChild(addBtn);
+ var remBtn = el("button", "secondary", "Rimuovi ultima dose");
+ if(entries.length === 0){ remBtn.disabled = true; }
+ remBtn.addEventListener(EV, function(){
+   var list = normalizeDistillEntries(pg);
+   if(list.length > 0){ list.pop(); }
+   renderAll();
+ });
+ actionWrap.appendChild(remBtn);
+ card.appendChild(actionWrap);
  
- setTimeout(function(){ recomputeDistill(pg); }, 0); 
- return card; 
- } 
+ var out = el("div"); out.id = "distill-out-" + pg.id;
+ card.appendChild(out);
+ 
+ setTimeout(function(){ recomputeDistill(pg); }, 0);
+ return card;
+ }
  
  function distillSpaceFrom(pg, eff, roll){
  if(eff === "skip" || eff === "0"){ return "standard"; }
@@ -5155,141 +5196,206 @@ function renderImbottStep(container){
   }
   return {fixed:null, faces:0, desc:"Esito non riconosciuto."};
  }
-
- function renderDistillAttemptOutcome(out, pg, eff, prefix, label){
+ 
+ function renderDistillEntryAttemptOutcome(out, pg, entry, idx, eff, keyPrefix, label){
   var spec = distillOutcomeSpec(pg, eff);
-  var heading = el("p", "small-note", "<b>" + label + ":</b> " + spec.desc);
-  out.appendChild(heading);
+  out.appendChild(el("p", "small-note", "<b>" + label + ":</b> " + spec.desc));
   if(spec.fixed !== null){ return spec.fixed; }
   if(spec.faces <= 0){ return null; }
-
+ 
   var box = el("div", "result-line");
-  var codeId = prefix + "-code-" + pg.id;
+  var codeId = "distill-" + pg.id + "-" + idx + "-" + keyPrefix + "-code";
   var code = el("div", "dice-code"); code.id = codeId;
-  code.textContent = "[dice=1d" + spec.faces + "]" + label + " - " + pg.nome + " (" + spec.desc + ")[/dice]";
+  code.textContent = "[dice=1d" + spec.faces + "]" + label + " - " + pg.nome + " (Dose " + (idx+1) + "; " + spec.desc + ")[/dice]";
   box.appendChild(code);
-  var copy = el("button", "copy-btn", "Copia"); copy.id = prefix + "-copy-" + pg.id; box.appendChild(copy);
+  var copy = el("button", "copy-btn", "Copia"); copy.id = codeId + "-copy"; box.appendChild(copy);
   out.appendChild(box);
-  setTimeout(function(){ attachCopy(prefix + "-copy-" + pg.id, codeId); }, 0);
-
+  setTimeout(function(){ attachCopy(codeId + "-copy", codeId); }, 0);
+ 
   var line = el("div", "result-line");
   line.appendChild(el("span", null, "Risultato ottenuto:"));
   var inp = el("input"); inp.type="number"; inp.min="1"; inp.max=""+spec.faces; inp.step="1"; inp.placeholder="1-"+spec.faces;
-  var key = prefix === "distill" ? "distill_roll" : "distill_retry_roll";
-  inp.value = pgDataGet(pg, key, "");
+  var field = keyPrefix === "first" ? "roll" : "retry_roll";
+  inp.value = entry[field] || "";
   line.appendChild(inp);
   var tag = el("span", "out-tag out-neutral", "in attesa"); line.appendChild(tag); out.appendChild(line);
   var val = inp.value;
   var space = null;
   if(val === ""){
-    tag.textContent="in attesa";
+    tag.textContent = "in attesa";
   } else if(!intInRange(val,1,spec.faces)){
-    tag.textContent="Risultato impossibile"; tag.className="out-tag out-fail";
+    tag.textContent = "Risultato impossibile"; tag.className = "out-tag out-fail";
   } else {
-    space=distillSpaceFrom(pg,eff,Number(val));
-    tag.textContent=space+" spazio"; tag.className="out-tag out-ok";
+    space = distillSpaceFrom(pg, eff, Number(val));
+    tag.textContent = space + " spazio"; tag.className = "out-tag out-ok";
   }
   inp.addEventListener("input", function(){
-   var oldVal=pgDataGet(pg,key,"");
-   pg.data[key]=inp.value;
-   if(prefix === "distill" && oldVal !== inp.value){
-    pg.data["distill_retry_risk"] = "";
-    pg.data["distill_retry_eff"] = "none";
-    pg.data["distill_retry_roll"] = "";
-    pg.data["distill_destroyed"] = false;
-   }
-   recomputeDistill(pg);
+    entry[field] = inp.value;
+    if(keyPrefix === "first"){
+      entry.retry_risk = "";
+      entry.retry_eff = "none";
+      entry.retry_roll = "";
+    }
+    recomputeDistill(pg);
   });
   return space;
  }
-
- function appendDistillRetryFlow(out, pg, firstEff, firstSpace){
-  if(firstEff !== "0" && firstEff !== "33" && firstEff !== "66"){ return {space:firstSpace, attempts:1, destroyed:false}; }
-
-  /* Il secondo tentativo può iniziare soltanto dopo aver risolto completamente il primo.
-     Con Efficacia 66% il regolamento richiede prima il relativo 1d2 sullo spazio occupato. */
+ 
+ function appendDistillEntryRetryFlow(out, pg, entry, idx, firstEff, firstSpace){
+  if(firstEff !== "0" && firstEff !== "33" && firstEff !== "66"){
+    return {space:firstSpace, attempts:1, destroyed:false, processed:true};
+  }
   if(firstEff === "66" && firstSpace === null){
-    pg.data["distill_retry_risk"] = "";
-    pg.data["distill_retry_eff"] = "none";
-    pg.data["distill_retry_roll"] = "";
+    entry.retry_risk = "";
+    entry.retry_eff = "none";
+    entry.retry_roll = "";
     out.appendChild(el("div", "divider"));
     out.appendChild(el("p", "small-note", "Completa prima il <b>1d2 del 1° tentativo al 66%</b>. Il controllo di rischio e l’eventuale 2° tentativo saranno disponibili solo dopo che il primo tentativo avrà un esito completo."));
-    return {space:null, attempts:1, destroyed:false};
+    return {space:null, attempts:1, destroyed:false, processed:true, invalid:true};
   }
-
+ 
   out.appendChild(el("div", "divider"));
-  out.appendChild(el("p", "small-note", "Dopo un fallimento o un effetto ridotto puoi scegliere di tentare una seconda Distillazione sulla stessa dose. Prima del 2° tentativo tira 1d2: con 1 puoi procedere, con 2 la Pozione esplode. Un eventuale 3° tentativo farebbe esplodere automaticamente la Pozione, quindi il calcolatore non lo propone."));
+  out.appendChild(el("p", "small-note", "Se questa dose ha fallito o ha avuto un effetto ridotto, puoi tentare una seconda Distillazione sulla stessa dose. Prima del 2° tentativo tira 1d2: con 1 puoi procedere, con 2 la Pozione esplode. Un eventuale 3° tentativo farebbe esplodere automaticamente la Pozione, quindi il calcolatore non lo propone."));
   var risk = el("div", "result-line");
-  var cid="distill-retry-risk-code-"+pg.id;
-  var code=el("div","dice-code"); code.id=cid; code.textContent="[dice=1d2]Rischio prima del 2° tentativo di Distillazione - "+pg.nome+" (1 = puoi procedere; 2 = Pozione esplosa)[/dice]"; risk.appendChild(code);
-  var cp=el("button","copy-btn","Copia"); cp.id="distill-retry-risk-copy-"+pg.id; risk.appendChild(cp);
-  var rinp=el("input"); rinp.type="number"; rinp.min="1"; rinp.max="2"; rinp.step="1"; rinp.placeholder="facoltativo 1-2"; rinp.value=pgDataGet(pg,"distill_retry_risk",""); risk.appendChild(rinp);
-  var rtag=el("span","out-tag out-neutral","non ritentata"); risk.appendChild(rtag); out.appendChild(risk);
-  setTimeout(function(){attachCopy("distill-retry-risk-copy-"+pg.id,cid);},0);
-  rinp.addEventListener("input",function(){ pg.data["distill_retry_risk"]=rinp.value; if(rinp.value!=="1"){ pg.data["distill_retry_eff"]="none"; pg.data["distill_retry_roll"]=""; } recomputeDistill(pg); });
-
-  if(rinp.value === ""){ return {space:firstSpace, attempts:1, destroyed:false}; }
+  var cid = "distill-" + pg.id + "-" + idx + "-risk-code";
+  var code = el("div", "dice-code"); code.id = cid; code.textContent = "[dice=1d2]Rischio prima del 2° tentativo di Distillazione - " + pg.nome + " (Dose " + (idx+1) + "; 1 = puoi procedere, 2 = Pozione esplosa)[/dice]"; risk.appendChild(code);
+  var cp = el("button", "copy-btn", "Copia"); cp.id = cid + "-copy"; risk.appendChild(cp);
+  var rinp = el("input"); rinp.type="number"; rinp.min="1"; rinp.max="2"; rinp.step="1"; rinp.placeholder="1-2"; rinp.value = entry.retry_risk || ""; risk.appendChild(rinp);
+  var rtag = el("span", "out-tag out-neutral", "non ritentata"); risk.appendChild(rtag); out.appendChild(risk);
+  setTimeout(function(){ attachCopy(cid + "-copy", cid); }, 0);
+  rinp.addEventListener("input", function(){
+    entry.retry_risk = rinp.value;
+    if(rinp.value !== "1"){
+      entry.retry_eff = "none";
+      entry.retry_roll = "";
+    }
+    recomputeDistill(pg);
+  });
+ 
+  if(rinp.value === ""){
+    return {space:firstSpace, attempts:1, destroyed:false, processed:true};
+  }
   if(!intInRange(rinp.value,1,2)){
-    rtag.textContent="Risultato impossibile"; rtag.className="out-tag out-fail";
-    out.appendChild(el("p","small-note","Correggi il controllo di rischio: finché il 1d2 non contiene 1 oppure 2 non è possibile stabilire se la dose sopravvive. Il Riepilogo Finale resterà incompleto."));
-    return {space:null, attempts:1, destroyed:false, invalid:true};
+    rtag.textContent = "Risultato impossibile"; rtag.className = "out-tag out-fail";
+    out.appendChild(el("p", "small-note", "Correggi il controllo di rischio: finché il 1d2 non contiene 1 oppure 2 non è possibile stabilire se la dose sopravvive. Il Riepilogo Finale resterà incompleto."));
+    return {space:null, attempts:1, destroyed:false, processed:true, invalid:true};
   }
-  if(Number(rinp.value)===2){
-    rtag.textContent="Pozione esplosa"; rtag.className="out-tag out-fail";
-    var dLost=computeDosiFinali(pg);out.appendChild(el("div","guide-text",dLost.finale!==null&&dLost.finale>1?"<b>La dose sottoposta a Distillazione è persa.</b> Il d2 di rischio ha dato 2 prima del secondo tentativo; le altre dosi della stessa preparazione restano disponibili e il Riepilogo ne terrà conto.":"<b>La singola dose disponibile è persa.</b> Il d2 di rischio ha dato 2 prima del secondo tentativo; il Riepilogo resta disponibile per registrare gli Ingredienti già consumati."));
-    return {space:null, attempts:1, destroyed:true};
+  if(Number(rinp.value) === 2){
+    rtag.textContent = "Dose esplosa"; rtag.className = "out-tag out-fail";
+    out.appendChild(el("div", "guide-text", "<b>La dose distillata è persa.</b> Il d2 di rischio ha dato 2 prima del secondo tentativo."));
+    return {space:null, attempts:1, destroyed:true, processed:true};
   }
-  rtag.textContent="2° tentativo consentito"; rtag.className="out-tag out-ok";
-
-  var erow=el("div"); erow.appendChild(el("label",null,"Efficacia ottenuta — 2° tentativo (facoltativo)"));
-  var esel=el("select");
-  var ops=[["none","— non effettuato —"],["0","0% (fallita)"],["33","33%"],["66","66%"],["100","100%"]];
-  for(var i=0;i<ops.length;i++){var o=el("option",null,ops[i][1]);o.value=ops[i][0];esel.appendChild(o);}
-  esel.value=pgDataGet(pg,"distill_retry_eff","none"); erow.appendChild(esel); out.appendChild(erow);
-  esel.addEventListener("change",function(){pg.data["distill_retry_eff"]=esel.value;pg.data["distill_retry_roll"]="";recomputeDistill(pg);});
-  if(esel.value === "none"){ return {space:firstSpace, attempts:1, destroyed:false}; }
-
-  var secondSpace=renderDistillAttemptOutcome(out,pg,esel.value,"distill-retry","2° tentativo di Distillazione");
-  out.appendChild(el("p","small-note","Dopo questo 2° tentativo non viene proposto un ulteriore tentativo: il regolamento stabilisce che ripetere la Distillazione più di due volte fa esplodere la Pozione."));
-  return {space:secondSpace, attempts:2, destroyed:false};
+  rtag.textContent = "2° tentativo consentito"; rtag.className = "out-tag out-ok";
+ 
+  var erow = el("div"); erow.appendChild(el("label", null, "Efficacia ottenuta — 2° tentativo"));
+  var esel = el("select");
+  var ops = [["none","— non effettuato —"],["0","0% (fallita)"],["33","33%"],["66","66%"],["100","100%"]];
+  for(var i=0;i<ops.length;i++){
+    var o = el("option", null, ops[i][1]); o.value = ops[i][0]; esel.appendChild(o);
+  }
+  esel.value = entry.retry_eff || "none"; erow.appendChild(esel); out.appendChild(erow);
+  esel.addEventListener("change", function(){ entry.retry_eff = esel.value; entry.retry_roll = ""; recomputeDistill(pg); });
+  if(esel.value === "none"){
+    return {space:firstSpace, attempts:1, destroyed:false, processed:true};
+  }
+ 
+  var secondSpace = renderDistillEntryAttemptOutcome(out, pg, entry, idx, esel.value, "retry", "2° tentativo di Distillazione");
+  out.appendChild(el("p", "small-note", "Dopo questo 2° tentativo non viene proposto un ulteriore tentativo: il regolamento stabilisce che ripetere la Distillazione più di due volte fa esplodere la Pozione."));
+  return {space:secondSpace, attempts:2, destroyed:false, processed:true, invalid:(secondSpace===null && esel.value !== "0")};
  }
-
+ 
+ function renderSingleDistillDose(out, pg, entry, idx){
+  var wrap = el("div", "pg-card");
+  wrap.appendChild(elText("h3", null, "Dose " + (idx + 1)));
+ 
+  var effRow = el("div");
+  effRow.appendChild(el("label", null, "Efficacia ottenuta — 1° tentativo"));
+  var sel = el("select");
+  var opts = [["skip","— seleziona / non distillare questa dose —"],["0","0% (fallita)"],["33","33%"],["66","66%"],["100","100%"]];
+  for(var i=0;i<opts.length;i++){
+    var o = el("option", null, opts[i][1]); o.value = opts[i][0]; sel.appendChild(o);
+  }
+  sel.value = entry.eff || "skip";
+  sel.addEventListener("change", function(){
+    entry.eff = sel.value;
+    entry.roll = "";
+    entry.retry_risk = "";
+    entry.retry_eff = "none";
+    entry.retry_roll = "";
+    recomputeDistill(pg);
+  });
+  effRow.appendChild(sel);
+  wrap.appendChild(effRow);
+ 
+  if(sel.value === "skip"){
+    wrap.appendChild(el("div", "guide-text", "Questa scheda non sta ancora distillando nessuna dose. Seleziona un’Efficacia oppure rimuovi la scheda."));
+    out.appendChild(wrap);
+    return {processed:false, attempts:0, destroyed:false, invalid:false, space:"standard"};
+  }
+ 
+  var firstSpace = renderDistillEntryAttemptOutcome(wrap, pg, entry, idx, sel.value, "first", "1° tentativo di Distillazione");
+  var result = appendDistillEntryRetryFlow(wrap, pg, entry, idx, sel.value, firstSpace);
+  var finalLabel = "Esito finale della dose: da completare";
+  var finalClass = "guide-text";
+  if(result.destroyed){
+    finalLabel = "<b>Esito finale della dose:</b> Dose distrutta in Distillazione.";
+  } else if(result.space === null){
+    finalLabel = "<b>Esito finale della dose:</b> ancora da determinare.";
+  } else {
+    finalLabel = "<b>Esito finale della dose:</b> " + (result.space === "standard" ? "spazio standard" : result.space + " spazio") + ".";
+  }
+  wrap.appendChild(el("div", finalClass, finalLabel));
+  out.appendChild(wrap);
+  return result;
+ }
+ 
  function recomputeDistill(pg){ 
- var eff = pgDataGet(pg, "distill_eff", "skip"); 
  var out = document.getElementById("distill-out-" + pg.id); 
  if(!out){ return; } 
  out.innerHTML = "";
  pg.data["distill_destroyed"] = false;
+ pg.data["distill_destroyed_count"] = 0;
  pg.data["distill_invalid"] = false;
  pg.data["distill_attempts"] = 0;
  pg.data["distill_space"] = "standard";
-
- if(eff === "skip"){ 
-   out.appendChild(el("p", "small-note", "Nessuna Distillazione: la dose mantiene lo spazio standard."));
+ pg.data["distill_spaces"] = [];
+ pg.data["distill_dose_count"] = 0;
+ 
+ var entries = normalizeDistillEntries(pg);
+ if(!entries.length){
+   out.appendChild(el("p", "small-note", "Nessuna dose selezionata per la Distillazione: tutte le dosi restano a spazio standard."));
    updateFaticaBox(pg, "distill");
-   return; 
+   return;
  }
-
- pg.data["distill_attempts"] = 1;
- var firstSpace = renderDistillAttemptOutcome(out, pg, eff, "distill", "1° tentativo di Distillazione");
- if(firstSpace === null && eff !== "0"){
-   pg.data["distill_space"] = null;
- } else {
-   pg.data["distill_space"] = firstSpace;
+ 
+ var spaces = [];
+ var attempts = 0;
+ var destroyed = 0;
+ var invalid = false;
+ var processed = 0;
+ for(var i=0;i<entries.length;i++){
+   var result = renderSingleDistillDose(out, pg, entries[i], i);
+   if(result.processed){
+     processed += 1;
+     attempts += result.attempts;
+     if(result.destroyed){ destroyed += 1; }
+     else if(result.space !== null){ spaces.push(result.space); }
+     if(result.invalid){ invalid = true; }
+   }
  }
-
- var retry = appendDistillRetryFlow(out, pg, eff, firstSpace);
- pg.data["distill_attempts"] = retry.attempts;
- pg.data["distill_destroyed"] = retry.destroyed;
- pg.data["distill_invalid"] = !!retry.invalid;
- if(retry.destroyed || retry.invalid){ pg.data["distill_space"] = null; }
- else if(retry.attempts === 2){ pg.data["distill_space"] = retry.space; }
- else if(firstSpace !== null){ pg.data["distill_space"] = firstSpace; }
-
+ 
+ pg.data["distill_attempts"] = attempts;
+ pg.data["distill_dose_count"] = processed;
+ pg.data["distill_destroyed_count"] = destroyed;
+ pg.data["distill_destroyed"] = destroyed > 0;
+ pg.data["distill_invalid"] = invalid;
+ pg.data["distill_spaces"] = spaces;
+ pg.data["distill_space"] = spaces.length ? spaces[0] : "standard";
+ pg.data["distill_eff"] = processed ? (entries[0] && entries[0].eff ? entries[0].eff : "skip") : "skip";
+ 
  updateFaticaBox(pg, "distill");
  } 
-
- function extraAuditText(pg, field, nome){
+  function extraAuditText(pg, field, nome){
   if(!extraIsUsed(pg,field)){ return ""; }
   var eff = normalizeExtraEfficacia(pg,field);
   var costo = field === "sintesi" ? "2" : "1,5";
@@ -5353,6 +5459,33 @@ function renderImbottStep(container){
    }
    var parts=[];if(entry){for(var j=0;j<order.length;j++){parts.push(order[j]+" ×"+map[order[j]]);}}
    return {complete:complete,base:base,extra:extra,total:base+extra,parts:parts,replacements:replacementNotes,nonNumerici:nonNumerici,esclusi:esclusi,automatic:!!entry,ongNonEligibleBase:ongNonEligibleBase,externalNumeric:externalNumeric,externalNumericTotal:externalNumericTotal};
+ }
+ 
+ function summarizeDistillationSpaces(spaces, standardCount, destroyedCount){
+   var order = ["1/5","1/4","1/3","1/2","standard"];
+   var counts = {"1/5":0,"1/4":0,"1/3":0,"1/2":0,"standard":0};
+   if(Array.isArray(spaces)){
+     for(var i=0;i<spaces.length;i++){
+       var s = String(spaces[i] || "standard");
+       if(!counts.hasOwnProperty(s)){ s = "standard"; }
+       counts[s] += 1;
+     }
+   }
+   if(standardCount > 0){ counts.standard += standardCount; }
+   var parts = [];
+   for(var j=0;j<order.length;j++){
+     var key = order[j];
+     var c = counts[key] || 0;
+     if(c <= 0){ continue; }
+     if(key === "standard"){
+       parts.push(c + " " + (c === 1 ? "dose a spazio standard" : "dosi a spazio standard"));
+     } else {
+       parts.push(c + " " + (c === 1 ? "dose da " : "dosi da ") + key + " spazio");
+     }
+   }
+   if(destroyedCount > 0){ parts.push(destroyedCount + " " + (destroyedCount === 1 ? "dose distrutta in Distillazione" : "dosi distrutte in Distillazione")); }
+   if(!parts.length){ return "Standard"; }
+   return parts.join("; ");
  }
  
  function ingredientiOngMaxKnown(dispensaInfo){
@@ -5566,8 +5699,14 @@ function renderImbottStep(container){
  if(ongDosiValid && ongMaxKnown!==null && ongDosi>ongMaxKnown){ ongDosiValid=false; }
  var dosiInfo = computeDosiFinali(pg);
  var distillDoseDestroyed = !!pgDataGet(pg,"distill_destroyed",false);
+ var distillDestroyedCount = Number(pgDataGet(pg,"distill_destroyed_count", distillDoseDestroyed ? 1 : 0));
+ if(!isFinite(distillDestroyedCount) || distillDestroyedCount < 0){ distillDestroyedCount = distillDoseDestroyed ? 1 : 0; }
  var distillInvalid = !!pgDataGet(pg,"distill_invalid",false);
  var spazioDose = pgDataGet(pg, "distill_space", "standard");
+ var distillSpaces = pgDataGet(pg, "distill_spaces", []);
+ if(!Array.isArray(distillSpaces)){ distillSpaces = []; }
+ var distillDoseCount = Number(pgDataGet(pg,"distill_dose_count", distillSpaces.length + distillDestroyedCount));
+ if(!isFinite(distillDoseCount) || distillDoseCount < 0){ distillDoseCount = distillSpaces.length + distillDestroyedCount; }
  var faticaPrep = faticaFaseNumero(pg, "prep");
  var faticaProd = faticaFaseNumero(pg, "prod");
  var faticaBac = faticaFaseNumero(pg, "bacchetta");
@@ -5581,17 +5720,17 @@ function renderImbottStep(container){
  var faticaTrackedImb = faticaTracciataFaseNumero(pg,"imbott");
  var faticaTrackedTot = faticaTracciataTotale(pg);
  var faticaObbl = faticaObbligatoriaTotale(pg);
- var distEffRiep = pgDataGet(pg, "distill_eff", "skip");
+ var distEffRiep = distillDoseCount > 0 ? "done" : "skip";
  var faticaDistTesto = "0 Fatica (Distillazione non svolta)";
- var distAttempts = Number(pgDataGet(pg, "distill_attempts", distEffRiep === "skip" ? 0 : 1));
+ var distAttempts = Number(pgDataGet(pg, "distill_attempts", distillDoseCount));
  if(!isFinite(distAttempts) || distAttempts < 0){ distAttempts = 0; }
- if(distEffRiep !== "skip"){
+ if(distillDoseCount > 0){
    if(haSapienzaPozionistica25(pg)){ faticaDistTesto = "0 Fatica (Sapienza Pozionistica 25)"; }
-   else { faticaDistTesto = "-" + distAttempts + " Fatica per la dose calcolata (" + distAttempts + (distAttempts === 1 ? " tentativo" : " tentativi") + ")"; }
+   else { faticaDistTesto = "-" + distAttempts + " Fatica per " + distillDoseCount + " " + (distillDoseCount === 1 ? "dose distillata" : "dosi distillate") + " (" + distAttempts + " " + (distAttempts === 1 ? "tentativo complessivo" : "tentativi complessivi") + ")"; }
  }
  var faticaFinaleVisual = "-" + fmtFatica(faticaObbl) + " Fatica (fasi + Conoscenze Extra+" + (faticaTrackedTot>0 ? " + Oggetti/Conoscenze" : "") + ")";
- if(distEffRiep !== "skip" && !haSapienzaPozionistica25(pg)){
-   faticaFinaleVisual += " + " + distAttempts + " Distillazione dose calcolata";
+ if(distillDoseCount > 0 && !haSapienzaPozionistica25(pg)){
+   faticaFinaleVisual += " + " + distAttempts + " Distillazione";
  } 
  
  var incompleto = false; 
@@ -5601,9 +5740,9 @@ function renderImbottStep(container){
  noteRighe.push("Fatica Uso della Bacchetta: " + (faticaBac === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaBac) + " base") + (faticaTrackedBac>0 ? " + Oggetti/Conoscenze -"+fmtFatica(faticaTrackedBac) : "") + ".");
  noteRighe.push("Fatica Imbottigliamento e Pulizia: " + (faticaImb === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaImb) + " base") + (faticaExtraImb > 0 ? " + Sintesi Tecnica+ -" + fmtFatica(faticaExtraImb) : "") + (faticaTrackedImb>0 ? " + Oggetti/Conoscenze -"+fmtFatica(faticaTrackedImb) : "") + ".");
  noteRighe.push("Fatica Distillazione: " + faticaDistTesto + ".");
- if(distEffRiep!=="skip" && dosiInfo.finale!==null && dosiInfo.finale>1){
-   if(distillDoseDestroyed){noteRighe.push("Distillazione: la singola dose calcolata è stata distrutta; le altre "+(dosiInfo.finale-1)+" dosi non sono state sottoposte a Distillazione in questo calcolo e restano a spazio standard.");}
-   else{noteRighe.push("Distillazione: lo spazio calcolato riguarda una sola dose; le altre "+(dosiInfo.finale-1)+" dosi restano a spazio standard finché non vengono distillate separatamente.");}
+ var distillStandardCount = (dosiInfo.finale!==null && dosiInfo.finale>=0) ? Math.max(0, dosiInfo.finale - distillDoseCount) : 0;
+ if(distillDoseCount > 0){
+   noteRighe.push("Distillazione: " + summarizeDistillationSpaces(distillSpaces, distillStandardCount, distillDestroyedCount) + ".");
  }
  var extraAuditManualita = extraAuditText(pg,"manualita","Manualità Tecnica+");
  var extraAuditMemoria = extraAuditText(pg,"memoria","Memoria Tecnica+");
@@ -5762,8 +5901,8 @@ function renderImbottStep(container){
 
  var durataFinaleVisual = durataPercent === 0 ? "" : fmtPct(durataPercent);
  var dosiSopravvissute = dosiInfo.finale;
- if(dosiSopravvissute !== null && distillDoseDestroyed){ dosiSopravvissute = Math.max(0,dosiSopravvissute-1); }
- var dosiFinaleVisual = dosiSopravvissute === null ? "Da calcolare" : (dosiSopravvissute + (dosiSopravvissute === 1 ? " dose" : " dosi") + (distillDoseDestroyed ? " (1 dose persa in Distillazione)" : ""));
+ if(dosiSopravvissute !== null && distillDestroyedCount>0){ dosiSopravvissute = Math.max(0,dosiSopravvissute-distillDestroyedCount); }
+ var dosiFinaleVisual = dosiSopravvissute === null ? "Da calcolare" : (dosiSopravvissute + (dosiSopravvissute === 1 ? " dose" : " dosi") + (distillDestroyedCount>0 ? " (" + distillDestroyedCount + (distillDestroyedCount===1 ? " dose persa" : " dosi perse") + " in Distillazione)" : ""));
  var postsFinaliVisual = "Da calcolare";
  if(imbEsito === "0%"){
    postsFinaliVisual = "Processo fallito";
@@ -5790,14 +5929,15 @@ function renderImbottStep(container){
  var zeroDosiUtili = (dosiSopravvissute === 0);
  if(zeroDosiUtili){ noteRighe.push("Uso della Bacchetta: il totale finale è 0 dosi utili. La Pulizia del Calderone viene comunque conclusa, ma non esiste alcuna dose da registrare o distillare."); }
  var spazioFinaleVisual = zeroDosiUtili ? "Nessuna dose" : "Standard";
- if(distillDoseDestroyed){
-   spazioFinaleVisual = dosiInfo.finale>1 ? ("1 dose distrutta; altre "+(dosiInfo.finale-1)+" a spazio standard in questo calcolo") : "Dose distrutta";
- }else if(distEffRiep !== "skip" && dosiInfo.finale>1){
-   var spazioUna = (spazioDose && spazioDose!=="standard") ? (spazioDose+" spazio") : (spazioDose===null?"da determinare":"spazio standard");
-   spazioFinaleVisual = "1 dose: "+spazioUna+"; altre "+(dosiInfo.finale-1)+" a spazio standard in questo calcolo";
- }else if(!zeroDosiUtili){
-   if(spazioDose && spazioDose !== "standard"){ spazioFinaleVisual = spazioDose + " spazio"; }
-   if(spazioDose === null){ spazioFinaleVisual = "Da determinare"; }
+ if(!zeroDosiUtili){
+   var standardResidue = (dosiInfo.finale!==null && dosiInfo.finale>=0) ? Math.max(0, dosiInfo.finale - distillDoseCount) : 0;
+   if(distillDoseCount > 0 || distillDestroyedCount > 0){
+     spazioFinaleVisual = summarizeDistillationSpaces(distillSpaces, standardResidue, distillDestroyedCount);
+   } else if(spazioDose && spazioDose !== "standard"){
+     spazioFinaleVisual = spazioDose + " spazio";
+   } else if(spazioDose === null){
+     spazioFinaleVisual = "Da determinare";
+   }
  }
  addSummaryStat("Spazio delle dosi", spazioFinaleVisual, false);
  addSummaryStat("Post finali", postsFinaliVisual, false);
@@ -5855,12 +5995,10 @@ function renderImbottStep(container){
  if(roleLink !== ""){ roleInventario = " ([url=" + roleLink + "]x[/url])"; }
 
  var spazioInventario = "spazio standard";
- if(distillDoseDestroyed){
-   spazioInventario = dosiInfo.finale>1 ? ("1 dose distrutta in Distillazione; "+(dosiInfo.finale-1)+" dose/i superstiti a spazio standard in questo calcolo") : "dose distrutta in Distillazione";
- }else if(distEffRiep!=="skip" && dosiInfo.finale>1){
-   var spazioInvUna=(spazioDose&&spazioDose!=="standard")?(spazioDose+" spazio"):(spazioDose===null?"spazio da determinare":"spazio standard");
-   spazioInventario="1 dose calcolata: "+spazioInvUna+"; altre "+(dosiInfo.finale-1)+" dose/i a spazio standard in questo calcolo";
- }else if(spazioDose && spazioDose !== "standard"){ spazioInventario = spazioDose + " spazio"; }
+ if(distillDoseCount > 0 || distillDestroyedCount > 0){
+   var standardInvCount = (dosiInfo.finale!==null && dosiInfo.finale>=0) ? Math.max(0, dosiInfo.finale - distillDoseCount) : 0;
+   spazioInventario = summarizeDistillationSpaces(distillSpaces, standardInvCount, distillDestroyedCount);
+ } else if(spazioDose && spazioDose !== "standard"){ spazioInventario = spazioDose + " spazio"; }
  else if(spazioDose === null){ spazioInventario = "spazio da determinare"; }
 
  var inventarioTesto = zeroDosiUtili ?
