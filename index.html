@@ -1,3 +1,4 @@
+<!-- Revisione v56: Azioni Illegali specifiche per Pozioni — selezione iniziale, Pozionista di mestiere, protezioni e controlli PNG in Produzione/Uso della Bacchetta -->
 <!-- Revisione v55: bonus/possibilità da Oggetti e Conoscenze tracciabili con fonte, condizione, Fatica e usi; editor riallineati e riepilogo usi finale -->
 <!-- Revisione v54: Uso della Bacchetta separa i bonus che aumentano Tecnica dai bonus che aggiungono direttamente possibilità al d15 -->
 <!-- Revisione v53: Categoria Standard/OOP/E calcolata sulla Forza complessiva effettiva, incluso il bonus di Preparazione -->
@@ -1120,6 +1121,8 @@
  tierV: false,
  conoscenzaPosseduta: false,
  valigettaAdduco: false,
+ illegale: false,
+ protezioniIllegali: {cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},
  forzaStandard: "",
  pozionarioNome: ""
  }; 
@@ -1156,8 +1159,9 @@
  votoManualita: "",
  votoMemoria: "",
  votoSintesi: "",
- sapienzaPozionistica: null, 
- sapienzaAdulto: false, 
+ sapienzaPozionistica: null,
+ sapienzaAdulto: false,
+ pozionistaMestiere: false,
  speziale: "0", 
  chimico: "0", 
  toccoMagico: "0", 
@@ -1251,7 +1255,7 @@
     - se cambia l'Ingrediente o la quantità sostituita nel rimedio di Preparazione, il vecchio d14 di rimedio
       viene invalidato perché era stato eseguito dopo una sostituzione diversa. */
  var STORAGE_KEY="creazionePozione_v11";
- var SAVE_SCHEMA_VERSION=55;
+ var SAVE_SCHEMA_VERSION=56;
  var saveTimer=null;
  function saveState(){
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
@@ -1440,7 +1444,7 @@
    if(needsSchemaSave){saveState();}
   }catch(e){}
  }
- function resetAllState(){try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}POZ={nome:"",classificazione:"",tierBase:false,tierIV:false,tierV:false,conoscenzaPosseduta:false,valigettaAdduco:false,forzaStandard:"",pozionarioNome:""};pgs=[];pgCounter=0;pgs.push(newPG());currentStep="info";lastRuleConfigSignature=null;staleResultsResetNotice=false;renderAll();}
+ function resetAllState(){try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}POZ={nome:"",classificazione:"",tierBase:false,tierIV:false,tierV:false,conoscenzaPosseduta:false,valigettaAdduco:false,illegale:false,protezioniIllegali:{cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},forzaStandard:"",pozionarioNome:""};pgs=[];pgCounter=0;pgs.push(newPG());currentStep="info";lastRuleConfigSignature=null;staleResultsResetNotice=false;renderAll();}
  
  /* ---------- HELPERS ---------- */ 
  var voto_bonus = { T:-3, D:-2, S:-1, A:0, O:1, E:2 }; 
@@ -2082,7 +2086,90 @@
  }); 
  } 
  
- function pgDataGet(pg, key, def){ 
+ 
+/* ---------- AZIONI ILLEGALI — POZIONI ---------- */
+var ILLEGAL_PROTECTION_DEFS=[
+ {key:"cave",label:"Cave Inimicum",faces:7},
+ {key:"fianto",label:"Fianto Duri",faces:4},
+ {key:"iterum",label:"Iterum Post Me",faces:5},
+ {key:"maxima",label:"Protego Maxima",faces:10},
+ {key:"babbanum",label:"Repello Babbanum",faces:1},
+ {key:"inimicum",label:"Repello Inimicum",faces:3},
+ {key:"salvio",label:"Salvio Hexia",faces:3}
+];
+
+function ensureIllegalProtections(){
+ if(!POZ.protezioniIllegali || typeof POZ.protezioniIllegali!=="object"){POZ.protezioniIllegali={};}
+ for(var i=0;i<ILLEGAL_PROTECTION_DEFS.length;i++){
+  var k=ILLEGAL_PROTECTION_DEFS[i].key;
+  if(POZ.protezioniIllegali[k]===undefined){POZ.protezioniIllegali[k]=false;}
+ }
+ return POZ.protezioniIllegali;
+}
+function illegalExtraFaces(){
+ var p=ensureIllegalProtections(),tot=0;
+ for(var i=0;i<ILLEGAL_PROTECTION_DEFS.length;i++){var d=ILLEGAL_PROTECTION_DEFS[i];if(p[d.key])tot+=d.faces;}
+ return tot;
+}
+function illegalBaseFaces(pg){return (pg&&pg.tipo==="adulto"&&!!pg.pozionistaMestiere)?50:30;}
+function illegalPhaseLabel(phase){return phase==="prod"?"Produzione":"Uso della Bacchetta";}
+function invalidateIllegalDiscovery(pg){
+ if(!pg||!pg.data)return;
+ ["prod","bacchetta"].forEach(function(ph){delete pg.data["illegal_"+ph+"_result"];delete pg.data["illegal_"+ph+"_sig"];});
+}
+function invalidateIllegalDiscoveryAll(){for(var i=0;i<pgs.length;i++){invalidateIllegalDiscovery(pgs[i]);}}
+
+function buildIllegalProtectionConfig(){
+ var box=el("div","guide-text");
+ box.appendChild(el("div",null,"<b>Protezione del Laboratorio dalle autorità</b>"));
+ box.appendChild(elText("p","small-note","Il controllo PNG specifico per una Pozione illegale si esegue in Produzione e in Uso della Bacchetta. Il dado base è 1d30; un Pozionista di mestiere usa 1d50. In entrambi i casi il PG viene scoperto soltanto con risultato 1."));
+ box.appendChild(elText("p","small-note","Seleziona soltanto gli Incantesimi già evocati ONGame in uno o più post precedenti al controllo. Le facce si sommano al dado base. Se il Laboratorio è già protetto, la stessa protezione può valere per più Pozioni illegali. La Fatica degli Incantesimi resta quella prevista dalle rispettive specifiche e va gestita separatamente: questa guida non fornisce qui un costo completo per ciascuna protezione."));
+ var protections=ensureIllegalProtections();
+ for(var i=0;i<ILLEGAL_PROTECTION_DEFS.length;i++){
+  (function(def){
+   var line=el("div","chk-line");
+   var chk=el("input");chk.type="checkbox";chk.id="poz-illegal-prot-"+def.key;chk.checked=!!protections[def.key];
+   chk.addEventListener("change",function(){protections[def.key]=chk.checked;invalidateIllegalDiscoveryAll();renderAll();});
+   line.appendChild(chk);
+   var lbl=elText("label",null,def.label+" (+"+def.faces+" "+(def.faces===1?"faccia":"facce")+")");lbl.htmlFor=chk.id;line.appendChild(lbl);
+   box.appendChild(line);
+  })(ILLEGAL_PROTECTION_DEFS[i]);
+ }
+ var total=illegalExtraFaces();
+ box.appendChild(el("div","formula-tag","Facce di protezione selezionate: +"+total+". Il dado effettivo verrà calcolato nelle due fasi in base al profilo del Personaggio."));
+ box.appendChild(el("p","small-note","Questo è il controllo specifico per la creazione di Pozioni illegali: non si aggiunge anche il normale 1d100 delle Azioni Illegali Generiche. L'eventuale tentativo di scoperta da parte di un altro PG tramite Orecchie Indiscrete resta esterno al tool, perché dipende dai Parametri e dalle Conoscenze di quel PG."));
+ box.appendChild(el("p","small-note","Nota sul testo del regolamento: l'elenco assegna a Repello Babbanum +1 faccia, mentre l'esempio successivo lo conteggia implicitamente come +2. Il tool segue il valore esplicito dell'elenco: +1."));
+ return box;
+}
+function illegalOutcomeText(raw,faces){
+ if(raw===""){return "in attesa";}
+ if(!intInRange(raw,1,faces)){return "Risultato impossibile";}
+ return Number(raw)===1?"SCOPERTO — avvisa il Narratore":"Non scoperto";
+}
+function buildIllegalDiscoveryBlock(pg,phase){
+ var box=el("div","guide-text"),phaseLabel=illegalPhaseLabel(phase);
+ var base=illegalBaseFaces(pg),extra=illegalExtraFaces(),faces=base+extra;
+ var sig=String(base)+"|"+String(extra),sigKey="illegal_"+phase+"_sig",resultKey="illegal_"+phase+"_result";
+ var oldSig=pgDataGet(pg,sigKey,null);if(oldSig!==null&&String(oldSig)!==sig){delete pg.data[resultKey];}pg.data[sigKey]=sig;
+ box.appendChild(el("div",null,"<b>Pozione illegale — controllo PNG durante "+phaseLabel+"</b>"));
+ box.appendChild(elText("p","small-note",(base===50?"Pozionista di mestiere: dado base 1d50.":"Dado base 1d30.")+(extra?" Protezioni attive: +"+extra+" facce.":" Nessuna protezione aggiuntiva selezionata.")+" Dado finale: 1d"+faces+". Con 1 il PG viene scoperto da un PNG e deve avvisare il Narratore."));
+ var line=el("div","result-line"),codeId="illegal-"+phase+"-code-"+pg.id,code=el("div","dice-code");code.id=codeId;
+ code.textContent="<b>Il PG viene scoperto da un PNG durante "+phaseLabel+" della Pozione illegale?</b>\n[quote]1. Il PG viene scoperto da un PNG\n2-"+faces+". Il PG non viene scoperto[/quote]\n\n[dice=1d"+faces+"]Controllo Azione Illegale — "+phaseLabel+" Pozione[/dice]";
+ line.appendChild(code);var copy=el("button","copy-btn","Copia");copy.id="illegal-"+phase+"-copy-"+pg.id;line.appendChild(copy);setTimeout(function(){attachCopy(copy.id,codeId);},0);box.appendChild(line);
+ var resLine=el("div","result-line");resLine.appendChild(elText("span",null,"Risultato ottenuto (1-"+faces+"):"));
+ var inp=el("input");inp.type="number";inp.min="1";inp.max=String(faces);inp.step="1";inp.id="illegal-"+phase+"-result-"+pg.id;inp.value=pgDataGet(pg,resultKey,"");
+ var tag=el("span","out-tag out-neutral","in attesa");tag.id="illegal-"+phase+"-tag-"+pg.id;
+ function refresh(){var raw=inp.value;pg.data[resultKey]=raw;var msg=illegalOutcomeText(raw,faces);tag.textContent=msg;if(msg==="in attesa"){tag.className="out-tag out-neutral";}else if(msg==="Non scoperto"){tag.className="out-tag out-ok";}else{tag.className="out-tag out-fail";}scheduleSave();}
+ inp.addEventListener("input",refresh);resLine.appendChild(inp);resLine.appendChild(tag);box.appendChild(resLine);refresh();return box;
+}
+function buildIllegalSummary(pg){
+ var box=el("div","guide-text"),base=illegalBaseFaces(pg),extra=illegalExtraFaces(),faces=base+extra;
+ function one(ph){var raw=pgDataGet(pg,"illegal_"+ph+"_result","");if(raw==="")return illegalPhaseLabel(ph)+": controllo non ancora registrato (1d"+faces+").";if(!intInRange(raw,1,faces))return illegalPhaseLabel(ph)+": risultato non valido.";return illegalPhaseLabel(ph)+": "+(Number(raw)===1?"SCOPERTO da PNG":"non scoperto")+" ("+raw+" su 1d"+faces+").";}
+ box.innerHTML="<b>Creazione illegale:</b> "+one("prod")+" "+one("bacchetta")+" Le protezioni selezionate aggiungono +"+extra+" facce al dado base "+base+".";
+ return box;
+}
+
+function pgDataGet(pg, key, def){ 
  if(pg.data[key] === undefined){ return def; } 
  return pg.data[key]; 
  }
@@ -2649,7 +2736,22 @@ function renderAll(){
  var adducoLbl=elText("label",null,"La Pozione viene creata in una Valigetta del Pozionista ottenuta con Adduco Maxima (-50% della Forza finale)");adducoLbl.htmlFor=adduco.id;adducoLine.appendChild(adducoLbl);
  p.appendChild(adducoLine);
  p.appendChild(el("p", "small-note", "Caso speciale: Adduco Maxima rende la Valigetta illegale e dimezza permanentemente la Forza delle Pozioni create al suo interno. Il malus viene applicato nel Riepilogo Finale dopo gli altri modificatori di Forza."));
- 
+
+ var illegalLine=el("div","chk-line");
+ var illegalChk=el("input");illegalChk.type="checkbox";illegalChk.id="poz-illegale";illegalChk.checked=!!POZ.illegale;
+ illegalChk.addEventListener("change",function(){
+  if(POZ.illegale!==illegalChk.checked){
+   POZ.illegale=illegalChk.checked;
+   invalidateIllegalDiscoveryAll();
+   renderAll();
+  }
+ });
+ illegalLine.appendChild(illegalChk);
+ var illegalLbl=elText("label",null,"La Pozione è illegale e la sto creando ONGame");
+ illegalLbl.htmlFor=illegalChk.id;illegalLine.appendChild(illegalLbl);p.appendChild(illegalLine);
+ p.appendChild(elText("p","small-note","Attiva questa voce soltanto se la Pozione che stai creando è illegale. L'uso di un Ingrediente o di un Calderone illegale non rende automaticamente illegale la Pozione ai fini di questo controllo."));
+ if(POZ.illegale){p.appendChild(buildIllegalProtectionConfig());}
+
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Personaggio &#8594;"); 
  nextBtn.addEventListener(EV, function(){
@@ -2717,6 +2819,8 @@ function renderAll(){
   if(pg.tipo === selTipo.value){ return; }
   var oldTipo = pg.tipo;
   pg.tipo = selTipo.value;
+  if(pg.tipo !== "adulto"){ pg.pozionistaMestiere = false; }
+  invalidateIllegalDiscovery(pg);
   /* Il valore 1 della Sapienza che uno Studente porta internamente serve solo a
      rappresentare il limite I delle Conoscenze Avanzate. Non è un valore Adulto
      deducibile dal regolamento: passando ad Adulto va richiesto esplicitamente. */
@@ -2864,9 +2968,27 @@ function renderAll(){
  dSap.appendChild(el("p", "small-note", "A 25: 0 Fatica in Produzione, Uso della Bacchetta, Imbottigliamento/Pulizia e Distillazione. La Preparazione degli Ingredienti resta a -0,5 Fatica.")); 
  row2.appendChild(dSap); 
  } 
- card.appendChild(row2); 
- 
- card.appendChild(el("div", "divider")); 
+ card.appendChild(row2);
+
+ if(pg.tipo === "adulto"){
+  var mestiereLine = el("div", "chk-line");
+  var mestiere = el("input"); mestiere.type="checkbox"; mestiere.id="pozionista-mestiere-"+pg.id; mestiere.checked=!!pg.pozionistaMestiere;
+  mestiere.addEventListener("change",function(){
+   if(pg.pozionistaMestiere!==mestiere.checked){
+    pg.pozionistaMestiere=mestiere.checked;
+    invalidateIllegalDiscovery(pg);
+    renderAll();
+   }
+  });
+  mestiereLine.appendChild(mestiere);
+  var mestiereLbl=elText("label",null,"Pozionista di mestiere — usa 1d50 invece di 1d30 nei controlli PNG durante la creazione di Pozioni illegali");
+  mestiereLbl.htmlFor=mestiere.id;mestiereLine.appendChild(mestiereLbl);
+  card.appendChild(mestiereLine);
+ }else{
+  pg.pozionistaMestiere=false;
+ }
+
+ card.appendChild(el("div", "divider"));
  card.appendChild(el("p", null, "<b>Conoscenze Avanzate possedute</b> (0 = non posseduta)"));
  if(pg.tipo === "studente"){
   card.appendChild(el("p", "small-note", "Studente: può possedere soltanto il livello I della Sapienza. Perciò ciascuna Conoscenza Avanzata può essere assente oppure al livello I; non sono disponibili i livelli II-V."));
@@ -3981,7 +4103,8 @@ function renderAll(){
  
  function buildProdCard(pg){ 
  var card = el("div", "pg-card"); 
- card.appendChild(elText("h3", null, pg.nome)); 
+ card.appendChild(elText("h3", null, pg.nome));
+ if(POZ.illegale){ card.appendChild(buildIllegalDiscoveryBlock(pg,"prod")); card.appendChild(el("div","divider")); } 
  card.appendChild(buildPhaseExtraControl(pg, "memoria", "Memoria Tecnica+"));
  
  var memEffBox = buildExtraEfficaciaBlock(pg, "memoria", "Memoria Tecnica+");
@@ -4205,7 +4328,8 @@ function renderAll(){
  
  function buildBacchettaCard(pg){ 
  var card = el("div", "pg-card"); 
- card.appendChild(elText("h3", null, pg.nome)); 
+ card.appendChild(elText("h3", null, pg.nome));
+ if(POZ.illegale){ card.appendChild(buildIllegalDiscoveryBlock(pg,"bacchetta")); card.appendChild(el("div","divider")); } 
  
  card.appendChild(buildManualBonusEditor(pg,"bac_tecnica_extra",{
   allowTechnique:false,
@@ -5590,7 +5714,8 @@ function renderImbottStep(container){
 
  function buildRiepilogoCard(pg, tiersPresent){ 
  var card = el("div", "pg-card"); 
- card.appendChild(elText("h3", null, pg.nome)); 
+ card.appendChild(elText("h3", null, pg.nome));
+ if(POZ.illegale){ card.appendChild(buildIllegalSummary(pg)); } 
 
  var prodStatusFinal=pgDataGet(pg,"prod_status","pending");
  if(prodStatusFinal==="discarded"){
