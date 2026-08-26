@@ -1237,7 +1237,18 @@
   #creazione-pozione button.copy-btn{width:100% !important;}
 }
 
-</style> 
+</style>
+<style id="v60-contrast-fix">
+/* v60 — riepiloghi chiari ad alto contrasto, senza dipendere dai colori ereditati. */
+#creazione-pozione .final-posts-box{background:#e7efd6!important;color:#202819!important;border-color:#6f7f48!important;border-left-color:#566f2a!important;}
+#creazione-pozione .final-posts-box b,
+#creazione-pozione .final-posts-box strong{color:#263817!important;}
+#creazione-pozione .final-posts-box.fail{background:#f2d8dc!important;color:#581f29!important;border-color:#a85b68!important;border-left-color:#8d2f40!important;}
+#creazione-pozione .final-posts-box.fail b{color:#581f29!important;}
+#creazione-pozione .result-line>span{color:#f3ede6!important;}
+#creazione-pozione button.copy-btn{color:#fff!important;}
+</style>
+ 
 <div class="wrap"> 
  <div class="seal" aria-hidden="true"><i class="fa-solid fa-flask"></i></div>
  <h1 class="main-title">• Creazione di una Pozione •</h1> 
@@ -1706,18 +1717,12 @@
  }
 
  function manualBonusTotals(pg,key,allowTechnique){
-  var arr=manualBonusEntries(pg,key);
-  var roll=0, technique=0, valid=true;
-  for(var i=0;i<arr.length;i++){
-   var raw=arr[i].value;
-   if(raw===""||raw===null||raw===undefined){continue;}
-   if(!nonNegativeInt(raw)){valid=false;continue;}
-   var n=Number(raw);
-   if(allowTechnique && arr[i].target==="technique"){ technique+=n; }
-   else { roll+=n; }
+  /* v59: i bonus liberi/manuali sono stati rimossi; restano solo quelli del catalogo regolamentato. */
+  if(pg&&pg.data){
+   pg.data[key]=0;
+   pg.data[key+"_entries"]=[];
   }
-  pg.data[key]=roll; /* compatibilità con le formule/chiavi storiche: qui resta solo il bonus diretto al tiro */
-  return {roll:roll,technique:technique,total:roll+technique,valid:valid};
+  return {roll:0,technique:0,total:0,valid:true};
  }
 
  function blockNonIntegerBonusKeys(inp){
@@ -1727,71 +1732,10 @@
  }
 
  function buildManualBonusEditor(pg,key,options){
-  options=options||{};
-  var allowTechnique=!!options.allowTechnique;
-  var fixedTarget=options.fixedTarget||"";
-  var title=options.title||"Altri bonus da Oggetti/Conoscenze";
-  var note=options.note||"Registra separatamente ogni bonus, indicando la fonte e su cosa agisce.";
-  var wrap=el("div","manual-bonus-editor");
-  wrap.appendChild(elText("div","manual-bonus-editor-title",title));
-  wrap.appendChild(elText("p","small-note",note));
-  var rows=el("div"); wrap.appendChild(rows);
-  var add=el("button","action manual-bonus-add","+ Aggiungi bonus");
-  wrap.appendChild(add);
-
-  function fireChange(){
-   manualBonusTotals(pg,key,allowTechnique);
-   if(typeof options.onChange==="function"){options.onChange();}
-  }
-  function renderRows(){
-   rows.innerHTML="";
-   var entries=manualBonusEntries(pg,key);
-   for(var i=0;i<entries.length;i++){
-    (function(idx){
-     var entry=entries[idx];
-     var row=el("div","manual-bonus-grid");
-
-     var amountBox=el("div");
-     amountBox.appendChild(elText("label",null,"Bonus — solo numeri"));
-     var amount=el("input"); amount.type="number"; amount.min="0"; amount.step="1"; amount.inputMode="numeric"; amount.placeholder="0"; amount.value=entry.value;
-     blockNonIntegerBonusKeys(amount);
-     amount.addEventListener("input",function(){entry.value=amount.value;fireChange();});
-     amountBox.appendChild(amount);
-     row.appendChild(amountBox);
-
-     var targetBox=el("div");
-     targetBox.appendChild(elText("label",null,"Agisce su"));
-     if(fixedTarget){
-      var fixed=el("input"); fixed.type="text"; fixed.value=fixedTarget; fixed.readOnly=true; targetBox.appendChild(fixed);
-     }else{
-      var target=el("select");
-      var o1=elText("option",null,options.rollLabel||"Possibilità del tiro"); o1.value="roll"; target.appendChild(o1);
-      if(allowTechnique){var o2=elText("option",null,"Tecnica");o2.value="technique";target.appendChild(o2);}
-      target.value=(allowTechnique&&entry.target==="technique")?"technique":"roll";
-      entry.target=target.value;
-      target.addEventListener("change",function(){entry.target=target.value;fireChange();});
-      targetBox.appendChild(target);
-     }
-     row.appendChild(targetBox);
-
-     var sourceBox=el("div");
-     sourceBox.appendChild(elText("label",null,"Fonte / Oggetto / Conoscenza"));
-     var source=el("input"); source.type="text"; source.placeholder="es. Guanti incantati"; source.value=entry.source||"";
-     source.addEventListener("input",function(){entry.source=source.value;});
-     sourceBox.appendChild(source);
-     row.appendChild(sourceBox);
-
-     var rem=el("button","action danger manual-bonus-remove","×"); rem.title="Rimuovi questa riga";
-     rem.addEventListener(EV,function(){entries.splice(idx,1);while(entries.length<2){entries.push({value:"",target:"roll",source:""});}fireChange();renderRows();});
-     row.appendChild(rem);
-     rows.appendChild(row);
-    })(i);
-   }
-  }
-  add.addEventListener(EV,function(){manualBonusEntries(pg,key).push({value:"",target:"roll",source:""});renderRows();});
-  renderRows();
-  manualBonusTotals(pg,key,allowTechnique);
-  return wrap;
+  /* v59: editor manuale eliminato. Pulisce eventuali dati delle versioni precedenti
+     per evitare bonus invisibili dopo la migrazione. */
+  manualBonusTotals(pg,key,!!(options&&options.allowTechnique));
+  return document.createDocumentFragment();
  }
 
  var POZ_TRACKED_PRESETS={};
@@ -1832,7 +1776,7 @@
   if(!pg.data){pg.data={};}
   var arr=pg.data["tracked_effect_entries"];
   if(!Array.isArray(arr)){arr=[];}
-  if(arr.length===0){arr.push({source:"",detail:"",phase:"prep",target:"roll",bonus:"",fatigue:"",usesBefore:"",usesSpent:"",preset:"",stack:""});}
+  arr=arr.filter(function(e){return e&&e.preset&&POZ_TRACKED_PRESETS[e.preset];});
   for(var i=0;i<arr.length;i++){
    if(!arr[i]||typeof arr[i]!=="object"){arr[i]={};}
    var e=arr[i];
@@ -1920,14 +1864,13 @@
  function buildTrackedEffectEditor(pg){
   var wrap=el("div","tracked-effect-editor");
   wrap.appendChild(elText("div","tracked-effect-title","Oggetti / Conoscenze — bonus regolamentati"));
-  wrap.appendChild(elText("p","small-note","Come negli strumenti di Erbologia e Magizoologia, puoi scegliere direttamente gli effetti regolamentati. Il tool precompila bonus, usi e tipo di modifica; l'effetto viene applicato alla fase scelta e compare nel Riepilogo Finale. «Aggiungi effetto manuale» resta disponibile per bonus non ancora presenti nel catalogo."));
+  wrap.appendChild(elText("p","small-note","Come negli strumenti di Erbologia e Magizoologia, puoi scegliere direttamente gli effetti regolamentati. Il tool precompila bonus, usi e tipo di modifica; l'effetto viene applicato alla fase scelta e compare nel Riepilogo Finale. Sono disponibili soltanto gli effetti presenti nel catalogo regolamentato."));
   var picker=el("div","tracked-preset-picker");
   var pbox=el("div");pbox.appendChild(elText("label",null,"Scegli dal Prezzario / Conoscenze"));var psel=el("select");psel.innerHTML=pozTrackedPresetOptions();pbox.appendChild(psel);picker.appendChild(pbox);
   var padd=el("button","action","+ Inserisci");picker.appendChild(padd);wrap.appendChild(picker);
   var pnote=elText("p","tracked-preset-note","Manuali dell'Ars modificano la Tecnica prima delle formule; Amuleto della Fortuna e Magi Biografia modificano il dado/possibilità. Per Magi Biografia si registra il bonus già presente in Scheda: la Fatica è stata spesa nella role in cui è stato preparato.");wrap.appendChild(pnote);
 
   var rows=el("div");wrap.appendChild(rows);
-  var add=el("button","action tracked-effect-add","+ Aggiungi effetto manuale");wrap.appendChild(add);
 
   function highlightText(e){
    var src=String(e.source||"").trim()||"EFFETTO DA COMPLETARE";
@@ -1969,7 +1912,7 @@
      target.addEventListener("change",function(){var old=e.phase;e.target=target.value;invalidateTrackedEffectPhase(pg,old);refreshMeta();});
      bonus.addEventListener("input",function(){var old=e.phase;e.bonus=bonus.value;invalidateTrackedEffectPhase(pg,old);refreshMeta();});
      phase.addEventListener("change",function(){var old=e.phase;e.phase=phase.value;invalidateTrackedEffectPhase(pg,old);invalidateTrackedEffectPhase(pg,e.phase);refreshMeta();});
-     rem.addEventListener(EV,function(){var old=e.phase;entries.splice(idx,1);if(entries.length===0){entries.push({source:"",detail:"",phase:"prep",target:"roll",bonus:"",fatigue:"",usesBefore:"",usesSpent:"",preset:"",stack:""});}invalidateTrackedEffectPhase(pg,old);renderRows();});
+     rem.addEventListener(EV,function(){var old=e.phase;entries.splice(idx,1);invalidateTrackedEffectPhase(pg,old);renderRows();});
      rows.appendChild(card);
     })(i);
    }
@@ -1978,11 +1921,6 @@
   function addPreset(key){
    var p=POZ_TRACKED_PRESETS[key];if(!p)return;
    var entries=trackedEffectEntries(pg);
-   if(entries.length===1){
-    var q=entries[0];
-    var blank=String(q.source||"").trim()===""&&String(q.detail||"").trim()===""&&String(q.bonus||"")===""&&String(q.fatigue||"")===""&&String(q.usesBefore||"")===""&&String(q.usesSpent||"")==="";
-    if(blank){entries.splice(0,1);}
-   }
    if(p.stack){
     for(var i=entries.length-1;i>=0;i--){if(entries[i].stack===p.stack){invalidateTrackedEffectPhase(pg,entries[i].phase);entries.splice(i,1);}}
    }
@@ -1990,7 +1928,6 @@
    invalidateTrackedEffectPhase(pg,(p.phases&&p.phases[0])||"prep");renderRows();scheduleSave();
   }
   padd.addEventListener(EV,function(){if(psel.value){addPreset(psel.value);psel.value="";}});
-  add.addEventListener(EV,function(){trackedEffectEntries(pg).push({source:"",detail:"",phase:"prep",target:"roll",bonus:"",fatigue:"",usesBefore:"",usesSpent:"",preset:"",stack:""});renderRows();});
   renderRows();return wrap;
  }
 
