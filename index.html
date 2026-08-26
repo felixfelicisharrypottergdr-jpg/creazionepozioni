@@ -1,4 +1,4 @@
-<!-- Revisione v57: nuovo regolamento Studenti/Adulti nelle fasi + UX/UI semplificata; voto della singola Pozione in Preparazione, Produzione e Imbottigliamento con bonus specifici delle Conoscenze Avanzate I -->
+<!-- Revisione v58: catalogo bonus allineato a Erbologia/Magizoologia — preset da Prezzario/Conoscenze, usi/Fatica, bonus a Tecnica o dado, riepilogo oggetti e usi del Calderone -->
 <!-- Revisione v56: Azioni Illegali specifiche per Pozioni — selezione iniziale, Pozionista di mestiere, protezioni e controlli PNG in Produzione/Uso della Bacchetta -->
 <!-- Revisione v55: bonus/possibilità da Oggetti e Conoscenze tracciabili con fonte, condizione, Fatica e usi; editor riallineati e riepilogo usi finale -->
 <!-- Revisione v54: Uso della Bacchetta separa i bonus che aumentano Tecnica dai bonus che aggiungono direttamente possibilità al d15 -->
@@ -1014,6 +1014,44 @@
 }
 #creazione-pozione .tracked-effect-highlight b{color:var(--acid-soft) !important;}
 #creazione-pozione .tracked-effect-add{margin-top:13px !important;}
+#creazione-pozione .tracked-preset-picker{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  gap:10px !important;
+  align-items:end !important;
+  margin:12px 0 14px !important;
+  padding:12px !important;
+  border:1px solid var(--line) !important;
+  border-radius:12px !important;
+  background:rgba(255,255,255,.035) !important;
+}
+#creazione-pozione .tracked-preset-picker label{display:block !important;margin:0 0 5px !important;}
+#creazione-pozione .tracked-preset-note{
+  margin:8px 0 0 !important;
+  font-size:12px !important;
+  color:var(--muted) !important;
+}
+#creazione-pozione .tracked-effect-card[data-preset]{
+  border-left:4px solid var(--acid) !important;
+}
+#creazione-pozione .tracked-effect-badge{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
+  margin:0 0 8px !important;
+  padding:3px 8px !important;
+  border-radius:999px !important;
+  background:rgba(179,118,47,.13) !important;
+  border:1px solid rgba(179,118,47,.35) !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+  letter-spacing:.04em !important;
+  text-transform:uppercase !important;
+}
+@media(max-width:640px){
+  #creazione-pozione .tracked-preset-picker{grid-template-columns:1fr !important;}
+}
+
 #creazione-pozione .usage-summary-box{
   margin:16px 0 20px !important;
   padding:15px 17px !important;
@@ -1362,7 +1400,7 @@
     - se cambia l'Ingrediente o la quantità sostituita nel rimedio di Preparazione, il vecchio d14 di rimedio
       viene invalidato perché era stato eseguito dopo una sostituzione diversa. */
  var STORAGE_KEY="creazionePozione_v11";
- var SAVE_SCHEMA_VERSION=57;
+ var SAVE_SCHEMA_VERSION=58;
  var saveTimer=null;
  function saveState(){
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
@@ -1756,21 +1794,58 @@
   return wrap;
  }
 
+ var POZ_TRACKED_PRESETS={};
+ function pozTrackedDef(key,o){POZ_TRACKED_PRESETS[key]=o;}
+ /* Prezzario: Manuali dell'Ars. Il bonus modifica la Tecnica nella singola fase
+    scelta e l'uso viene conteggiato nel riepilogo. */
+ pozTrackedDef("ars_std",{g:"Prezzario — Manuali",label:"Manuali dell'Ars — standard / Obscurus Books (+2 Tecnica)",source:"Manuali dell'Ars",detail:"Versione standard / Obscurus Books · 10 usi",target:"technique",bonus:2,uses:10,phases:["prep","prod","bacchetta","imbott"]});
+ pozTrackedDef("ars_elfi",{g:"Prezzario — Manuali",label:"Manuali dell'Ars — Mercato degli Elfi (+1 Tecnica)",source:"Manuali dell'Ars — Mercato degli Elfi",detail:"Versione Mercato degli Elfi · 5 usi",target:"technique",bonus:1,uses:5,phases:["prep","prod","bacchetta","imbott"]});
+ for(var pt=1;pt<=4;pt++){
+  pozTrackedDef("talismano_tecnica_"+pt,{g:"Altre Conoscenze",label:"Talismano Astronomico — Urano/Luna Piena (+"+pt+" Tecnica)",source:"Talismano Astronomico — Urano/Luna Piena",detail:"Bonus a Tecnica già ottenuto · 3 usi · Fatica della creazione già spesa",target:"technique",bonus:pt,uses:3,stack:"talismano",phases:["prep","prod","bacchetta","imbott"]});
+ }
+ /* Magi Biografia: il bonus è già stato preparato in una role precedente.
+    La Fatica è stata pagata allora: qui si consumano soltanto gli usi rimasti. */
+ pozTrackedDef("magibio_1",{g:"Altre Conoscenze",label:"Magi Biografia — Severus Piton · bonus +1 già ottenuto",source:"Magi Biografia — Severus Piton",detail:"Bonus Pozionistica già ottenuto · 3 usi · Fatica già spesa nella role di preparazione",target:"roll",bonus:1,uses:3,stack:"magi-biografia",phases:["prep","prod","bacchetta","imbott"]});
+ pozTrackedDef("magibio_2",{g:"Altre Conoscenze",label:"Magi Biografia — Severus Piton · bonus +2 già ottenuto",source:"Magi Biografia — Severus Piton",detail:"Bonus Pozionistica già ottenuto · 3 usi · Fatica già spesa nella role di preparazione",target:"roll",bonus:2,uses:3,stack:"magi-biografia",phases:["prep","prod","bacchetta","imbott"]});
+ pozTrackedDef("magibio_3",{g:"Altre Conoscenze",label:"Magi Biografia — Severus Piton · bonus +3 già ottenuto",source:"Magi Biografia — Severus Piton",detail:"Bonus Pozionistica già ottenuto · 3 usi · Fatica già spesa nella role di preparazione",target:"roll",bonus:3,uses:3,stack:"magi-biografia",phases:["prep","prod","bacchetta","imbott"]});
+ for(var paf=1;paf<=7;paf++){
+  pozTrackedDef("amu_"+paf,{g:"Prezzario — Bonus generici",label:"Amuleto della Fortuna (+"+paf+")",source:"Amuleto della Fortuna",detail:"3 usi · massimo 1 Amuleto della Fortuna per role",target:"roll",bonus:paf,uses:3,stack:"fortuna",phases:["prep","prod","bacchetta","imbott"]});
+ }
+
+ function pozTrackedPresetOptions(){
+  var groups={},order=[];
+  Object.keys(POZ_TRACKED_PRESETS).forEach(function(k){
+   var p=POZ_TRACKED_PRESETS[k],g=p.g||"Altro";
+   if(!groups[g]){groups[g]=[];order.push(g);}
+   groups[g].push({k:k,p:p});
+  });
+  var h='<option value="">— Seleziona dal regolamento —</option>';
+  order.forEach(function(g){
+   h+='<optgroup label="'+escapeHtml(g)+'">';
+   groups[g].forEach(function(x){h+='<option value="'+x.k+'">'+escapeHtml(x.p.label)+'</option>';});
+   h+='</optgroup>';
+  });
+  return h;
+ }
+
  function trackedEffectEntries(pg){
   if(!pg.data){pg.data={};}
   var arr=pg.data["tracked_effect_entries"];
   if(!Array.isArray(arr)){arr=[];}
-  if(arr.length===0){arr.push({source:"",detail:"",phase:"prep",bonus:"",fatigue:"",usesBefore:"",usesSpent:""});}
+  if(arr.length===0){arr.push({source:"",detail:"",phase:"prep",target:"roll",bonus:"",fatigue:"",usesBefore:"",usesSpent:"",preset:"",stack:""});}
   for(var i=0;i<arr.length;i++){
    if(!arr[i]||typeof arr[i]!=="object"){arr[i]={};}
    var e=arr[i];
    if(e.source===undefined||e.source===null){e.source="";}
    if(e.detail===undefined||e.detail===null){e.detail="";}
    if(["prep","prod","bacchetta","imbott"].indexOf(e.phase)===-1){e.phase="prep";}
+   if(e.target!=="technique"){e.target="roll";}
    if(e.bonus===undefined||e.bonus===null){e.bonus="";}
    if(e.fatigue===undefined||e.fatigue===null){e.fatigue="";}
    if(e.usesBefore===undefined||e.usesBefore===null){e.usesBefore="";}
    if(e.usesSpent===undefined||e.usesSpent===null){e.usesSpent="";}
+   if(e.preset===undefined||e.preset===null){e.preset="";}
+   if(e.stack===undefined||e.stack===null){e.stack="";}
   }
   pg.data["tracked_effect_entries"]=arr;
   return arr;
@@ -1782,12 +1857,13 @@
  }
 
  function trackedEffectPhaseLabel(phase){
-  return {prep:"Preparazione — possibilità ai d14",prod:"Produzione — possibilità al d30",bacchetta:"Uso della Bacchetta — possibilità al d15",imbott:"Imbottigliamento/Pulizia — bonus al d10"}[phase]||phase;
+  return {prep:"Preparazione — d14",prod:"Produzione — d30",bacchetta:"Uso della Bacchetta — d15",imbott:"Imbottigliamento/Pulizia — d10"}[phase]||phase;
  }
 
  function trackedEffectInfo(pg){
   var arr=trackedEffectEntries(pg);
   var bonus={prep:0,prod:0,bacchetta:0,imbott:0};
+  var technique={prep:0,prod:0,bacchetta:0,imbott:0};
   var fatigue={prep:0,prod:0,bacchetta:0,imbott:0};
   var active=[]; var valid=true;
   for(var i=0;i<arr.length;i++){
@@ -1805,13 +1881,17 @@
    if(!entryValid){valid=false;}
    var b=nonNegativeInt(e.bonus)?Number(e.bonus):0;
    var f=e.fatigue!==""&&nonNegativeNumber(e.fatigue)?Number(e.fatigue):0;
-   if(entryValid){bonus[e.phase]+=b;fatigue[e.phase]+=f;}
+   if(entryValid){
+    if(e.target==="technique"){technique[e.phase]+=b;}else{bonus[e.phase]+=b;}
+    fatigue[e.phase]+=f;
+   }
    active.push({entry:e,valid:entryValid,bonus:b,fatigue:f,usageEntered:usageEntered,remaining:usageEntered&&entryValid?Number(e.usesBefore)-Number(e.usesSpent):null});
   }
-  return {valid:valid,bonus:bonus,fatigue:fatigue,active:active};
+  return {valid:valid,bonus:bonus,technique:technique,fatigue:fatigue,active:active};
  }
 
  function trackedEffectBonus(pg,phase){return trackedEffectInfo(pg).bonus[phase]||0;}
+ function trackedEffectTechnique(pg,phase){return trackedEffectInfo(pg).technique[phase]||0;}
  function trackedEffectFatigue(pg,phase){return trackedEffectInfo(pg).fatigue[phase]||0;}
  function trackedEffectFatigueTotal(pg){var f=trackedEffectInfo(pg).fatigue;return (f.prep||0)+(f.prod||0)+(f.bacchetta||0)+(f.imbott||0);}
 
@@ -1821,7 +1901,8 @@
    var a=info.active[i],e=a.entry;
    if(!a.valid){lines.push("Effetto extra da correggere prima del riepilogo.");continue;}
    var src=String(e.source||"").trim()||"Fonte non indicata";
-   var s=src+(String(e.detail||"").trim()?" — "+String(e.detail).trim():"")+": +"+a.bonus+" "+(e.phase==="imbott"?"al risultato":"possibilità")+" in "+trackedEffectPhaseLabel(e.phase)+"; Fatica -"+fmtFatica(a.fatigue);
+   var targetTxt=e.target==="technique"?"Tecnica":(e.phase==="imbott"?"al risultato":"possibilità");
+   var s=src+(String(e.detail||"").trim()?" — "+String(e.detail).trim():"")+": +"+a.bonus+" "+targetTxt+" in "+trackedEffectPhaseLabel(e.phase)+"; Fatica -"+fmtFatica(a.fatigue);
    if(a.usageEntered){s+="; usi consumati "+Number(e.usesSpent)+" su "+Number(e.usesBefore)+" → restano "+a.remaining;}
    lines.push(s+".");
   }
@@ -1838,17 +1919,23 @@
 
  function buildTrackedEffectEditor(pg){
   var wrap=el("div","tracked-effect-editor");
-  wrap.appendChild(elText("div","tracked-effect-title","Possibilità/bonus extra — Oggetti e Conoscenze"));
-  wrap.appendChild(elText("p","small-note","Usa questo blocco per effetti come Magibiografia o Oggetti che concedono possibilità aggiuntive e hanno anche un costo di Fatica e/o un numero di usi. Esempio: Magibiografia · 100% Studente · +2 possibilità · -3 Fatica · 3 usi. Il bonus viene applicato automaticamente alla fase scelta; Fatica e usi vengono riportati nel Riepilogo Finale. Per semplici bonus senza costo/usi puoi continuare a usare i campi della singola fase."));
+  wrap.appendChild(elText("div","tracked-effect-title","Oggetti / Conoscenze — bonus regolamentati"));
+  wrap.appendChild(elText("p","small-note","Come negli strumenti di Erbologia e Magizoologia, puoi scegliere direttamente gli effetti regolamentati. Il tool precompila bonus, usi e tipo di modifica; l'effetto viene applicato alla fase scelta e compare nel Riepilogo Finale. «Aggiungi effetto manuale» resta disponibile per bonus non ancora presenti nel catalogo."));
+  var picker=el("div","tracked-preset-picker");
+  var pbox=el("div");pbox.appendChild(elText("label",null,"Scegli dal Prezzario / Conoscenze"));var psel=el("select");psel.innerHTML=pozTrackedPresetOptions();pbox.appendChild(psel);picker.appendChild(pbox);
+  var padd=el("button","action","+ Inserisci");picker.appendChild(padd);wrap.appendChild(picker);
+  var pnote=elText("p","tracked-preset-note","Manuali dell'Ars modificano la Tecnica prima delle formule; Amuleto della Fortuna e Magi Biografia modificano il dado/possibilità. Per Magi Biografia si registra il bonus già presente in Scheda: la Fatica è stata spesa nella role in cui è stato preparato.");wrap.appendChild(pnote);
+
   var rows=el("div");wrap.appendChild(rows);
-  var add=el("button","action tracked-effect-add","+ Aggiungi effetto");wrap.appendChild(add);
+  var add=el("button","action tracked-effect-add","+ Aggiungi effetto manuale");wrap.appendChild(add);
 
   function highlightText(e){
    var src=String(e.source||"").trim()||"EFFETTO DA COMPLETARE";
    var detail=String(e.detail||"").trim();
    var bonus=nonNegativeInt(e.bonus)?Number(e.bonus):0;
    var fat=e.fatigue!==""&&nonNegativeNumber(e.fatigue)?Number(e.fatigue):0;
-   var s="<b>"+escapeHtml(src.toUpperCase())+"</b>"+(detail?" · "+escapeHtml(detail.toUpperCase()):"")+" → +"+bonus+(e.phase==="imbott"?" AL RISULTATO":" POSSIBILITÀ")+" · "+escapeHtml(trackedEffectPhaseLabel(e.phase).toUpperCase())+" · -"+fmtFatica(fat)+" FATICA";
+   var targetTxt=e.target==="technique"?" TECNICA":(e.phase==="imbott"?" AL RISULTATO":" POSSIBILITÀ");
+   var s="<b>"+escapeHtml(src.toUpperCase())+"</b>"+(detail?" · "+escapeHtml(detail.toUpperCase()):"")+" → +"+bonus+targetTxt+" · "+escapeHtml(trackedEffectPhaseLabel(e.phase).toUpperCase())+" · -"+fmtFatica(fat)+" FATICA";
    if(nonNegativeInt(e.usesBefore)&&nonNegativeInt(e.usesSpent)&&Number(e.usesSpent)<=Number(e.usesBefore)){s+=" · "+Number(e.usesSpent)+"/"+Number(e.usesBefore)+" USI → "+(Number(e.usesBefore)-Number(e.usesSpent))+" RIMASTI";}
    return s;
   }
@@ -1857,18 +1944,20 @@
    rows.innerHTML="";var entries=trackedEffectEntries(pg);
    for(var i=0;i<entries.length;i++){
     (function(idx){
-     var e=entries[idx];var card=el("div","tracked-effect-card");
+     var e=entries[idx];var card=el("div","tracked-effect-card");if(e.preset){card.setAttribute("data-preset",e.preset);card.appendChild(elText("div","tracked-effect-badge","Dal regolamento"));}
+     var preset=POZ_TRACKED_PRESETS[e.preset]||null;
      var top=el("div","tracked-effect-grid");
-     var sourceBox=el("div");sourceBox.appendChild(elText("label",null,"Fonte / Oggetto / Conoscenza"));var source=el("input");source.type="text";source.placeholder="es. Magibiografia";source.value=e.source;sourceBox.appendChild(source);top.appendChild(sourceBox);
-     var phaseBox=el("div");phaseBox.appendChild(elText("label",null,"Agisce su"));var phase=el("select");var po=[["prep","Preparazione — d14"],["prod","Produzione — d30"],["bacchetta","Uso Bacchetta — d15"],["imbott","Imbottigliamento — d10"]];for(var j=0;j<po.length;j++){var op=elText("option",null,po[j][1]);op.value=po[j][0];phase.appendChild(op);}phase.value=e.phase;phaseBox.appendChild(phase);top.appendChild(phaseBox);
-     var bonusBox=el("div");bonusBox.appendChild(elText("label",null,"Bonus — solo numeri"));var bonus=el("input");bonus.type="number";bonus.min="0";bonus.step="1";bonus.inputMode="numeric";bonus.placeholder="es. 2";bonus.value=e.bonus;blockNonIntegerBonusKeys(bonus);bonusBox.appendChild(bonus);top.appendChild(bonusBox);
+     var sourceBox=el("div");sourceBox.appendChild(elText("label",null,"Fonte / Oggetto / Conoscenza"));var source=el("input");source.type="text";source.placeholder="es. Amuleto della Fortuna";source.value=e.source;source.readOnly=!!preset;sourceBox.appendChild(source);top.appendChild(sourceBox);
+     var phaseBox=el("div");phaseBox.appendChild(elText("label",null,"Agisce su"));var phase=el("select");var po=[["prep","Preparazione — d14"],["prod","Produzione — d30"],["bacchetta","Uso Bacchetta — d15"],["imbott","Imbottigliamento — d10"]];for(var j=0;j<po.length;j++){if(preset&&preset.phases&&preset.phases.indexOf(po[j][0])<0)continue;var op=elText("option",null,po[j][1]);op.value=po[j][0];phase.appendChild(op);}if(!phase.querySelector('option[value="'+e.phase+'"]')&&phase.options.length){e.phase=phase.options[0].value;}phase.value=e.phase;phaseBox.appendChild(phase);top.appendChild(phaseBox);
+     var targetBox=el("div");targetBox.appendChild(elText("label",null,"Tipo di bonus"));var target=el("select");var tor=elText("option",null,"Possibilità / risultato");tor.value="roll";target.appendChild(tor);var tot=elText("option",null,"Tecnica (prima della formula)");tot.value="technique";target.appendChild(tot);target.value=e.target||"roll";target.disabled=!!preset;targetBox.appendChild(target);top.appendChild(targetBox);
+     var bonusBox=el("div");bonusBox.appendChild(elText("label",null,"Valore bonus"));var bonus=el("input");bonus.type="number";bonus.min="0";bonus.step="1";bonus.inputMode="numeric";bonus.placeholder="es. 2";bonus.value=e.bonus;bonus.readOnly=!!preset;blockNonIntegerBonusKeys(bonus);bonusBox.appendChild(bonus);top.appendChild(bonusBox);
      var rem=el("button","action danger manual-bonus-remove","×");rem.title="Rimuovi questo effetto";top.appendChild(rem);card.appendChild(top);
 
      var meta=el("div","tracked-effect-meta");
-     var detailBox=el("div");detailBox.appendChild(elText("label",null,"Esito / condizione"));var detail=el("input");detail.type="text";detail.placeholder="es. 100% Studente";detail.value=e.detail;detailBox.appendChild(detail);meta.appendChild(detailBox);
-     var fatBox=el("div");fatBox.appendChild(elText("label",null,"Fatica consumata"));var fat=el("input");fat.type="number";fat.min="0";fat.step="0.5";fat.placeholder="es. 3";fat.value=e.fatigue;fat.addEventListener("keydown",function(ev){if(ev.key==="e"||ev.key==="E"||ev.key==="+"||ev.key==="-"){ev.preventDefault();}});fatBox.appendChild(fat);meta.appendChild(fatBox);
+     var detailBox=el("div");detailBox.appendChild(elText("label",null,"Esito / condizione"));var detail=el("input");detail.type="text";detail.placeholder="es. bonus già ottenuto";detail.value=e.detail;detail.readOnly=!!preset;detailBox.appendChild(detail);meta.appendChild(detailBox);
+     var fatBox=el("div");fatBox.appendChild(elText("label",null,"Fatica consumata ora"));var fat=el("input");fat.type="number";fat.min="0";fat.step="0.5";fat.placeholder="0";fat.value=e.fatigue;fat.readOnly=!!preset;fat.addEventListener("keydown",function(ev){if(ev.key==="e"||ev.key==="E"||ev.key==="+"||ev.key==="-"){ev.preventDefault();}});fatBox.appendChild(fat);meta.appendChild(fatBox);
      var ubBox=el("div");ubBox.appendChild(elText("label",null,"Usi disponibili prima"));var ub=el("input");ub.type="number";ub.min="0";ub.step="1";ub.placeholder="es. 3";ub.value=e.usesBefore;blockNonIntegerBonusKeys(ub);ubBox.appendChild(ub);meta.appendChild(ubBox);
-     var usBox=el("div");usBox.appendChild(elText("label",null,"Usi consumati ora"));var us=el("input");us.type="number";us.min="0";us.step="1";us.placeholder="es. 1";us.value=e.usesSpent;blockNonIntegerBonusKeys(us);usBox.appendChild(us);meta.appendChild(usBox);card.appendChild(meta);
+     var usBox=el("div");usBox.appendChild(elText("label",null,"Usi consumati in questa creazione"));var us=el("input");us.type="number";us.min="0";us.step="1";us.placeholder="es. 1";us.value=e.usesSpent;us.readOnly=!!preset;blockNonIntegerBonusKeys(us);usBox.appendChild(us);meta.appendChild(usBox);card.appendChild(meta);
      var hi=el("div","tracked-effect-highlight");hi.innerHTML=highlightText(e);card.appendChild(hi);
 
      function refreshMeta(){hi.innerHTML=highlightText(e);scheduleSave();}
@@ -1877,14 +1966,31 @@
      fat.addEventListener("input",function(){e.fatigue=fat.value;refreshMeta();});
      ub.addEventListener("input",function(){e.usesBefore=ub.value;refreshMeta();});
      us.addEventListener("input",function(){e.usesSpent=us.value;refreshMeta();});
+     target.addEventListener("change",function(){var old=e.phase;e.target=target.value;invalidateTrackedEffectPhase(pg,old);refreshMeta();});
      bonus.addEventListener("input",function(){var old=e.phase;e.bonus=bonus.value;invalidateTrackedEffectPhase(pg,old);refreshMeta();});
      phase.addEventListener("change",function(){var old=e.phase;e.phase=phase.value;invalidateTrackedEffectPhase(pg,old);invalidateTrackedEffectPhase(pg,e.phase);refreshMeta();});
-     rem.addEventListener(EV,function(){var old=e.phase;entries.splice(idx,1);if(entries.length===0){entries.push({source:"",detail:"",phase:"prep",bonus:"",fatigue:"",usesBefore:"",usesSpent:""});}invalidateTrackedEffectPhase(pg,old);renderRows();});
+     rem.addEventListener(EV,function(){var old=e.phase;entries.splice(idx,1);if(entries.length===0){entries.push({source:"",detail:"",phase:"prep",target:"roll",bonus:"",fatigue:"",usesBefore:"",usesSpent:"",preset:"",stack:""});}invalidateTrackedEffectPhase(pg,old);renderRows();});
      rows.appendChild(card);
     })(i);
    }
   }
-  add.addEventListener(EV,function(){trackedEffectEntries(pg).push({source:"",detail:"",phase:"prep",bonus:"",fatigue:"",usesBefore:"",usesSpent:""});renderRows();});
+
+  function addPreset(key){
+   var p=POZ_TRACKED_PRESETS[key];if(!p)return;
+   var entries=trackedEffectEntries(pg);
+   if(entries.length===1){
+    var q=entries[0];
+    var blank=String(q.source||"").trim()===""&&String(q.detail||"").trim()===""&&String(q.bonus||"")===""&&String(q.fatigue||"")===""&&String(q.usesBefore||"")===""&&String(q.usesSpent||"")==="";
+    if(blank){entries.splice(0,1);}
+   }
+   if(p.stack){
+    for(var i=entries.length-1;i>=0;i--){if(entries[i].stack===p.stack){invalidateTrackedEffectPhase(pg,entries[i].phase);entries.splice(i,1);}}
+   }
+   entries.push({source:p.source,detail:p.detail||"",phase:(p.phases&&p.phases[0])||"prep",target:p.target||"roll",bonus:String(p.bonus||0),fatigue:"0",usesBefore:p.uses==null?"":String(p.uses),usesSpent:p.uses==null?"": "1",preset:key,stack:p.stack||""});
+   invalidateTrackedEffectPhase(pg,(p.phases&&p.phases[0])||"prep");renderRows();scheduleSave();
+  }
+  padd.addEventListener(EV,function(){if(psel.value){addPreset(psel.value);psel.value="";}});
+  add.addEventListener(EV,function(){trackedEffectEntries(pg).push({source:"",detail:"",phase:"prep",target:"roll",bonus:"",fatigue:"",usesBefore:"",usesSpent:"",preset:"",stack:""});renderRows();});
   renderRows();return wrap;
  }
 
@@ -1921,8 +2027,9 @@
   if(pg.tipo !== "studente" && pg.tipo !== "adulto"){ return "Seleziona se il Personaggio è Studente o Adulto nello Step 2."; }
   if(!intInRange(pg.tecnica, 1, 20)){ return "Inserisci la Tecnica come intero da 1 a 20 nello Step 2."; }
   if(!globalTechniqueBonusInfo(pg).valid){ return "Nei bonus alla Tecnica dello Step 2 inserisci solo numeri interi da 0 in su."; }
-  if(!trackedEffectInfo(pg).valid){ return "Correggi Possibilità/bonus extra nello Step 2: indica la Fonte; bonus e usi devono essere numeri interi da 0 in su, la Fatica un numero da 0 in su e gli usi consumati non possono superare quelli disponibili."; }
+  if(!trackedEffectInfo(pg).valid){ return "Correggi Oggetti/Conoscenze nello Step 2: indica la Fonte; bonus e usi devono essere numeri interi da 0 in su, la Fatica un numero da 0 in su e gli usi consumati non possono superare quelli disponibili."; }
   var setupCald=calderoneInfo(pg);
+ if(setupCald.key!=="none"&&setupCald.uses!==null){var setupUses=pgDataGet(pg,"calderone_uses_before","");if(!positiveInt(setupUses)){return "Il Calderone/strumento selezionato non ha usi disponibili: inserisci almeno 1 uso residuo oppure seleziona un altro strumento.";}}
   if(setupCald.foldRisk){
    var setupRisk=pgDataGet(pg,"calderone_pieghevole_risk","");
    if(!intInRange(setupRisk,1,2)){ return "Risolvi nello Step 2 il 1d2 del Calderone pieghevole del Mercato degli Elfi: con 1 il calderone scoppia."; }
@@ -3008,12 +3115,29 @@ function renderAll(){
  caldSel.value=calderoneInfo(pg).key;
  caldSel.addEventListener("change",function(){
   var oldC=String(pgDataGet(pg,"calderone_usato","none")||"none");
-  if(oldC!==caldSel.value){pg.data["calderone_usato"]=caldSel.value;invalidateFromCalderoneNow(pg);renderAll();}
+  if(oldC!==caldSel.value){pg.data["calderone_usato"]=caldSel.value;pg.data["calderone_uses_before"]="";invalidateFromCalderoneNow(pg);renderAll();}
  });
  caldBox.appendChild(caldSel);
  var ciNow=calderoneInfo(pg);
  caldBox.appendChild(elText("p","small-note",calderoneEffectText(ciNow)));
- if(ciNow.foldRisk){
+ if(ciNow.key!=="none"){
+  var useWrap=el("div","row");
+  var useBox=el("div");
+  useBox.appendChild(elText("label",null,ciNow.uses===null?"Usi del Calderone":"Usi disponibili prima di questa Pozione"));
+  if(ciNow.uses===null){
+   useBox.appendChild(elText("p","small-note","Il Prezzario indica «fino all’esplosione»: non c’è un contatore numerico da scalare."));
+   pg.data["calderone_uses_before"]="";
+  }else{
+   var useInp=el("input");useInp.type="number";useInp.min="0";useInp.step="1";useInp.inputMode="numeric";blockNonIntegerBonusKeys(useInp);
+   var savedUses=pgDataGet(pg,"calderone_uses_before","");
+   if(savedUses===""||!nonNegativeInt(savedUses)){savedUses=String(ciNow.uses);pg.data["calderone_uses_before"]=savedUses;}
+   useInp.value=savedUses;
+   useInp.addEventListener("input",function(){pg.data["calderone_uses_before"]=useInp.value;scheduleSave();});
+   useBox.appendChild(useInp);
+   useBox.appendChild(elText("p","small-note","La creazione consuma 1 uso. Se il Calderone era già stato usato in precedenza, inserisci qui gli usi che gli restano prima di questa Pozione."));
+  }
+  useWrap.appendChild(useBox);caldBox.appendChild(useWrap);
+ } if(ciNow.foldRisk){
   var riskLine=el("div","result-line");
   var riskCodeId="cald-risk-code-"+pg.id;var riskCode=el("div","dice-code");riskCode.id=riskCodeId;
   riskCode.textContent="[dice=1d2]Rischio Calderone pieghevole del Mercato degli Elfi - "+pg.nome+" (con 1 il calderone scoppia)[/dice]";
@@ -3704,7 +3828,7 @@ function renderAll(){
  
  function calcPrepTier(pg, tier){
  var prepManual = manualBonusTotals(pg, "prep_extra_" + tier.key, false);
- var tecnicaEffettiva = effectiveTechnique(pg);
+ var tecnicaEffettiva = effectiveTechnique(pg) + trackedEffectTechnique(pg,"prep");
  var tecBase = tecnicaBasePrep(tecnicaEffettiva);
  var d6 = pgDataGet(pg, "prep_d6", "");
  var competenzaB = 0;
@@ -4300,7 +4424,7 @@ function renderAll(){
 
  function recomputeProd(pg){ 
  var prodManual = manualBonusTotals(pg,"prod_extra",false);
- var tecBase = effectiveTechnique(pg); 
+ var tecBase = effectiveTechnique(pg) + trackedEffectTechnique(pg,"prod"); 
  var chimicoB = chimicoBonusFixed(pg); 
  var classB = classBonusProd(POZ.classificazione); 
  var memExtra = extraBonusStatic(pg, "memoria", pg.memoria); 
@@ -4512,7 +4636,7 @@ function renderAll(){
  var bacTechManual = manualBonusTotals(pg,"bac_tecnica_extra",false);
  var bacManual = manualBonusTotals(pg,"bac_extra",false);
  var tecnicaGlobale = effectiveTechnique(pg);
- var bonusTecnicaBac = bacTechManual.roll;
+ var bonusTecnicaBac = bacTechManual.roll + trackedEffectTechnique(pg,"bacchetta");
  var tecnicaEffettiva = tecnicaGlobale + bonusTecnicaBac;
  var tecBase = tecnicaBaseBacchetta(tecnicaEffettiva); 
  var toccoB = levelNum(pg.toccoMagico); 
@@ -4741,32 +4865,32 @@ function applySintesiToPosts(pg, basePosts){
 
 var CALDERONI_POZIONE = {
  "none": {label:"Nessun Calderone con bonus selezionato",postPercent:0,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0,folding:false,foldRisk:false},
- "peltro": {label:"Calderone accelerante in peltro — standard / Candele Velenose",postPercent:10,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
- "peltro_elfi": {label:"Calderone accelerante in peltro — Mercato degli Elfi",postPercent:5,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
- "ottone": {label:"Calderone accelerante in ottone — standard / Candele Velenose",postPercent:20,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
- "ottone_elfi": {label:"Calderone accelerante in ottone — Mercato degli Elfi",postPercent:10,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
- "rame": {label:"Calderone accelerante in rame — standard / Candele Velenose",postPercent:30,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
- "rame_elfi": {label:"Calderone accelerante in rame — Mercato degli Elfi",postPercent:15,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
- "bronzo": {label:"Calderone performante in bronzo — standard / Candele Velenose",postPercent:0,postFloor:false,doseExtra:2,prodBonus:0,healthMalus:0},
- "bronzo_elfi": {label:"Calderone performante in bronzo — Mercato degli Elfi",postPercent:0,postFloor:false,doseExtra:1,prodBonus:0,healthMalus:0},
- "argento": {label:"Calderone performante in argento — standard / Candele Velenose",postPercent:0,postFloor:false,doseExtra:4,prodBonus:0,healthMalus:0},
- "argento_elfi": {label:"Calderone performante in argento — Mercato degli Elfi",postPercent:0,postFloor:false,doseExtra:2,prodBonus:0,healthMalus:0},
- "granito": {label:"Calderone performante in granito — standard / Candele Velenose",postPercent:0,postFloor:false,doseExtra:6,prodBonus:0,healthMalus:0},
- "granito_elfi": {label:"Calderone performante in granito — Mercato degli Elfi",postPercent:0,postFloor:false,doseExtra:3,prodBonus:0,healthMalus:0},
- "autorimestante": {label:"Calderone autorimestante — standard / Candele Velenose",postPercent:0,postFloor:false,doseExtra:0,prodBonus:5,healthMalus:0},
- "autorimestante_elfi": {label:"Calderone autorimestante — Mercato degli Elfi",postPercent:0,postFloor:false,doseExtra:0,prodBonus:2,healthMalus:0},
- "pieghevole": {label:"Calderone e distillatore pieghevoli — standard / Candele Velenose",postPercent:0,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0,folding:true,foldRisk:false},
- "pieghevole_elfi": {label:"Calderone e distillatore pieghevoli — Mercato degli Elfi",postPercent:0,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0,folding:true,foldRisk:true},
- "piombo_illegale": {label:"Calderone accelerante in piombo illegale",postPercent:50,postFloor:true,doseExtra:0,prodBonus:0,healthMalus:25,illegal:true},
- "cadmio_illegale": {label:"Calderone performante in cadmio illegale",postPercent:0,postFloor:false,doseExtra:5,prodBonus:0,healthMalus:25,illegal:true},
- "carapace_schiopodo": {label:"Carapace di Schiopodo Sparacoda trattato",postPercent:30,postFloor:true,doseExtra:3,prodBonus:0,healthMalus:30,illegal:true},
- "carapace_fiammagranchio": {label:"Carapace di Fiammagranchio trattato",postPercent:50,postFloor:true,doseExtra:5,prodBonus:0,healthMalus:30,illegal:true}
+ "peltro": {label:"Calderone accelerante in peltro — standard / Candele Velenose",uses:null,postPercent:10,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
+ "peltro_elfi": {label:"Calderone accelerante in peltro — Mercato degli Elfi",uses:5,postPercent:5,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
+ "ottone": {label:"Calderone accelerante in ottone — standard / Candele Velenose",uses:10,postPercent:20,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
+ "ottone_elfi": {label:"Calderone accelerante in ottone — Mercato degli Elfi",uses:5,postPercent:10,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
+ "rame": {label:"Calderone accelerante in rame — standard / Candele Velenose",uses:20,postPercent:30,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
+ "rame_elfi": {label:"Calderone accelerante in rame — Mercato degli Elfi",uses:10,postPercent:15,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0},
+ "bronzo": {label:"Calderone performante in bronzo — standard / Candele Velenose",uses:10,postPercent:0,postFloor:false,doseExtra:2,prodBonus:0,healthMalus:0},
+ "bronzo_elfi": {label:"Calderone performante in bronzo — Mercato degli Elfi",uses:5,postPercent:0,postFloor:false,doseExtra:1,prodBonus:0,healthMalus:0},
+ "argento": {label:"Calderone performante in argento — standard / Candele Velenose",uses:10,postPercent:0,postFloor:false,doseExtra:4,prodBonus:0,healthMalus:0},
+ "argento_elfi": {label:"Calderone performante in argento — Mercato degli Elfi",uses:5,postPercent:0,postFloor:false,doseExtra:2,prodBonus:0,healthMalus:0},
+ "granito": {label:"Calderone performante in granito — standard / Candele Velenose",uses:10,postPercent:0,postFloor:false,doseExtra:6,prodBonus:0,healthMalus:0},
+ "granito_elfi": {label:"Calderone performante in granito — Mercato degli Elfi",uses:5,postPercent:0,postFloor:false,doseExtra:3,prodBonus:0,healthMalus:0},
+ "autorimestante": {label:"Calderone autorimestante — standard / Candele Velenose",uses:10,postPercent:0,postFloor:false,doseExtra:0,prodBonus:5,healthMalus:0},
+ "autorimestante_elfi": {label:"Calderone autorimestante — Mercato degli Elfi",uses:5,postPercent:0,postFloor:false,doseExtra:0,prodBonus:2,healthMalus:0},
+ "pieghevole": {label:"Calderone e distillatore pieghevoli — standard / Candele Velenose",uses:10,postPercent:0,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0,folding:true,foldRisk:false},
+ "pieghevole_elfi": {label:"Calderone e distillatore pieghevoli — Mercato degli Elfi",uses:5,postPercent:0,postFloor:false,doseExtra:0,prodBonus:0,healthMalus:0,folding:true,foldRisk:true},
+ "piombo_illegale": {label:"Calderone accelerante in piombo illegale",uses:10,postPercent:50,postFloor:true,doseExtra:0,prodBonus:0,healthMalus:25,illegal:true},
+ "cadmio_illegale": {label:"Calderone performante in cadmio illegale",uses:10,postPercent:0,postFloor:false,doseExtra:5,prodBonus:0,healthMalus:25,illegal:true},
+ "carapace_schiopodo": {label:"Carapace di Schiopodo Sparacoda trattato",uses:10,postPercent:30,postFloor:true,doseExtra:3,prodBonus:0,healthMalus:30,illegal:true},
+ "carapace_fiammagranchio": {label:"Carapace di Fiammagranchio trattato",uses:10,postPercent:50,postFloor:true,doseExtra:5,prodBonus:0,healthMalus:30,illegal:true}
 };
 function calderoneInfo(pg){
  var key=String(pgDataGet(pg,"calderone_usato","none")||"none");
  if(!Object.prototype.hasOwnProperty.call(CALDERONI_POZIONE,key)){key="none";}
  var x=CALDERONI_POZIONE[key];
- return {key:key,label:x.label,postPercent:Number(x.postPercent||0),postFloor:!!x.postFloor,doseExtra:Number(x.doseExtra||0),prodBonus:Number(x.prodBonus||0),healthMalus:Number(x.healthMalus||0),folding:!!x.folding,foldRisk:!!x.foldRisk,illegal:!!x.illegal};
+ return {key:key,label:x.label,uses:(x.uses===null?null:(x.uses===undefined?null:Number(x.uses))),postPercent:Number(x.postPercent||0),postFloor:!!x.postFloor,doseExtra:Number(x.doseExtra||0),prodBonus:Number(x.prodBonus||0),healthMalus:Number(x.healthMalus||0),folding:!!x.folding,foldRisk:!!x.foldRisk,illegal:!!x.illegal};
 }
 function calderoneEffectText(info){
  if(!info||info.key==="none"){return "Seleziona qui l'eventuale Calderone o manufatto usato: il tool applicherà automaticamente i bonus previsti dal Prezzario nelle fasi corrette. I campi manuali delle fasi restano riservati ad altri Oggetti/Conoscenze.";}
@@ -5076,7 +5200,7 @@ function renderImbottStep(container){
   var d6v = pgDataGet(pg, "imb_d6", "");
   if(intInRange(d6v,1,6)){ votoC = Number(d6v); } else { votoC = 0; imbAuxReady = false; }
  } 
- var tecnicaEffImb = effectiveTechnique(pg);
+ var tecnicaEffImb = effectiveTechnique(pg) + trackedEffectTechnique(pg,"imbott");
  var x = votoC + tecnicaEffImb;
  var imbCopyBtn = document.getElementById("imb-copy-" + pg.id);
  var imbResultInp = document.getElementById("imb-result-" + pg.id);
@@ -6098,6 +6222,10 @@ function renderImbottStep(container){
  var caldRiep=calderoneInfo(pg);
  if(caldRiep.key!=="none"){
    noteRighe.push("Calderone/strumento: "+calderoneEffectText(caldRiep));
+   if(caldRiep.key!=="none"&&caldRiep.uses!==null){
+    var caldBefore=Number(pgDataGet(pg,"calderone_uses_before",caldRiep.uses));
+    if(isFinite(caldBefore)&&caldBefore>=1){noteRighe.push("Uso Calderone/strumento: 1 uso consumato in questa creazione; "+Math.max(0,caldBefore-1)+" usi residui.");}
+   }else if(caldRiep.key!=="none"){noteRighe.push("Uso Calderone/strumento: utilizzato in questa creazione; il Prezzario non prevede un contatore numerico di usi.");}
    if(imbEsito!=="0%" && caldRiep.postPercent>0){
     noteRighe.push("Post finali dopo l'effetto del manufatto: "+imbPosts+".");
     var sintRiepStack=sintesiReductionInfo(pg);
