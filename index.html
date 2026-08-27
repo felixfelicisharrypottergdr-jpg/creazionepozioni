@@ -1,3 +1,4 @@
+<!-- Revisione v61: importazione strutturata verso Il Mio Elfo Domestico dal Riepilogo Finale -->
 <!-- Revisione v58: catalogo bonus allineato a Erbologia/Magizoologia — preset da Prezzario/Conoscenze, usi/Fatica, bonus a Tecnica o dado, riepilogo oggetti e usi del Calderone -->
 <!-- Revisione v56: Azioni Illegali specifiche per Pozioni — selezione iniziale, Pozionista di mestiere, protezioni e controlli PNG in Produzione/Uso della Bacchetta -->
 <!-- Revisione v55: bonus/possibilità da Oggetti e Conoscenze tracciabili con fonte, condizione, Fatica e usi; editor riallineati e riepilogo usi finale -->
@@ -1235,6 +1236,43 @@
   #creazione-pozione .profile-section-title{display:block !important;}
   #creazione-pozione .profile-section-title small{display:block !important;margin-top:3px !important;}
   #creazione-pozione button.copy-btn{width:100% !important;}
+}
+
+
+
+/* v61 - passaggio Pozioni -> Il Mio Elfo Domestico */
+#creazione-pozione .elfo-import-box{
+  margin:22px 0 18px !important;
+  padding:17px 18px !important;
+  border:1px solid #b45a62 !important;
+  border-left:5px solid #c96c74 !important;
+  border-radius:9px !important;
+  background:linear-gradient(180deg,rgba(105,29,40,.38),rgba(60,22,30,.28)) !important;
+  box-shadow:0 6px 16px rgba(0,0,0,.20) !important;
+}
+#creazione-pozione .elfo-import-box .elfo-import-title{
+  margin:0 0 7px !important;
+  color:#ffd9dc !important;
+  font-family:'magic',var(--serif) !important;
+  font-size:20px !important;
+}
+#creazione-pozione .elfo-import-box .small-note{
+  color:#ead5d6 !important;
+}
+#creazione-pozione button.elfo-import-btn{
+  background:linear-gradient(180deg,#8f3542,#6e2430) !important;
+  border:1px solid #d47b83 !important;
+  color:#fff5f5 !important;
+  font-weight:700 !important;
+  box-shadow:0 4px 10px rgba(0,0,0,.22) !important;
+}
+#creazione-pozione button.elfo-import-btn:hover{
+  background:linear-gradient(180deg,#a64350,#7c2936) !important;
+  border-color:#ef9aa1 !important;
+}
+#creazione-pozione button.elfo-import-btn:disabled{
+  opacity:.45 !important;
+  cursor:not-allowed !important;
 }
 
 </style>
@@ -5726,6 +5764,41 @@ function renderImbottStep(container){
   return nome + ": Efficacia " + eff + "%, -" + sinfo.percent + "% post di Imbottigliamento/Pulizia; Fatica -" + costo + ".";
  }
 
+
+ function elfoPotionExportValue(v){
+  var s=String(v==null?'':v).replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();
+  return s===''?'—':s;
+ }
+ function elfoPrepOutcome(pg,tiersPresent){
+  var incomplete=false,unrem=false;
+  for(var i=0;i<tiersPresent.length;i++){
+   var st=pgDataGet(pg,'prep_status_'+tiersPresent[i],'pending');
+   if(st==='pending'||st==='invalid'||st==='fail_pending'){incomplete=true;}
+   if(st==='fail_unremediated'){unrem=true;}
+  }
+  if(incomplete){return 'incompleta';}
+  return unrem?'fallita':'riuscita';
+ }
+ function elfoProdOutcome(pg){
+  var st=pgDataGet(pg,'prod_status','pending');
+  if(st==='success'){return 'riuscita';}
+  if(st==='fail'){return 'fallita';}
+  return 'incompleta';
+ }
+ function elfoBacOutcome(pg){
+  var st=pgDataGet(pg,'bac_status','pending');
+  if(st==='success'){return 'riuscita';}
+  if(st==='fail'){return 'fallita';}
+  return 'incompleta';
+ }
+ function elfoPotionToolsText(pg,cald){
+  var a=[];
+  if(cald&&cald.key!=='none'&&cald.label){a.push(cald.label);}
+  var audit=trackedEffectAuditLines(pg);
+  for(var i=0;i<audit.length;i++){if(audit[i])a.push(audit[i]);}
+  return a.length?a.join(' · '):'//';
+ }
+
  /* ==================================================== */ 
  /* STEP 8 - RIEPILOGO FINALE */ 
  /* ==================================================== */ 
@@ -6336,7 +6409,65 @@ function renderImbottStep(container){
  var cartCopy = el("button", "copy-btn", "Copia frase Inventario"); cartCopy.id = "riep-cart-copy-" + pg.id; cartCopy.style.marginTop = "10px";
  if(incompleto || zeroDosiUtili){ cartCopy.disabled = true; cartCopy.title = zeroDosiUtili ? "Non esiste alcuna dose utile da registrare in Inventario." : "Completa prima tutti i risultati necessari al riepilogo."; }
  inventoryBox.appendChild(cartCopy); out.appendChild(inventoryBox);
- if(!zeroDosiUtili){ setTimeout(function(){ attachCopyPlain("riep-cart-copy-" + pg.id, "riep-cart-" + pg.id); }, 0); } 
+ if(!zeroDosiUtili){ setTimeout(function(){ attachCopyPlain("riep-cart-copy-" + pg.id, "riep-cart-" + pg.id); }, 0); }
+
+ /* --- pacchetto per Il Mio Elfo Domestico --- */
+ var prepOutcomeElfo=elfoPrepOutcome(pg,tiersPresent);
+ var prodOutcomeElfo=elfoProdOutcome(pg);
+ var bacOutcomeElfo=elfoBacOutcome(pg);
+ var caldElfo=calderoneInfo(pg);
+ var elfoMods=[];
+ var sintElfo=sintesiReductionInfo(pg);
+ if(sintElfo.ready&&sintElfo.percent>0){elfoMods.push('Sintesi Tecnica+: -'+sintElfo.percent+'% post');}
+ if(caldElfo&&caldElfo.postPercent>0){elfoMods.push(caldElfo.label+': -'+caldElfo.postPercent+'% post');}
+ if(imbAwareness==='noticed'){elfoMods.push('Il PG si accorge del maggior tempo della postazione');}
+ else if(imbAwareness==='not_noticed'){elfoMods.push('Il PG non si accorge del maggior tempo della postazione');}
+ if(!elfoMods.length){elfoMods.push('//');}
+ var distillSvoltaElfo=distillDoseCount>0;
+ var distillEsitoElfo='//';
+ if(distillSvoltaElfo){
+   distillEsitoElfo='Distillate '+distillDoseCount+' '+(distillDoseCount===1?'dose':'dosi');
+   if(distillDestroyedCount>0){distillEsitoElfo+=' · '+distillDestroyedCount+' '+(distillDestroyedCount===1?'dose distrutta':'dosi distrutte');}
+ }
+ var elfoLines=[
+   'FELIX_ELFO_POZIONE_V1',
+   'DESTINAZIONE: Laboratorio/Postazione',
+   'Creatore: '+elfoPotionExportValue(pg.nome),
+   'Nome Pozione: '+elfoPotionExportValue(POZ.nome||'Pozione senza nome'),
+   'Classificazione: '+elfoPotionExportValue(POZ.classificazione),
+   'Tipologia: —',
+   'Link principale: '+elfoPotionExportValue(roleLink),
+   'Calderone/Oggetti: '+elfoPotionExportValue(elfoPotionToolsText(pg,caldElfo)),
+   'Preparazione Esito: '+prepOutcomeElfo,
+   'Preparazione Forza: '+elfoPotionExportValue(Math.abs(prepAcc.forza)),
+   'Preparazione Link: '+elfoPotionExportValue(roleLink),
+   'Produzione Esito: '+prodOutcomeElfo,
+   'Produzione Forza: '+elfoPotionExportValue(Math.abs(prodAcc.forza)),
+   'Produzione Link: '+elfoPotionExportValue(roleLink),
+   'Bacchetta Esito: '+bacOutcomeElfo,
+   'Bacchetta Dosi: '+elfoPotionExportValue(dosiInfo.finale===null?'':dosiInfo.finale),
+   'Bacchetta Link: '+elfoPotionExportValue(roleLink),
+   'Distillazione: '+(distillSvoltaElfo?'sì':'no'),
+   'Distillazione Link: '+elfoPotionExportValue(distillSvoltaElfo?roleLink:''),
+   'Distillazione Esito: '+elfoPotionExportValue(distillEsitoElfo),
+   'Distillazione Bagaglio: '+elfoPotionExportValue(distillSvoltaElfo?spazioFinaleVisual:''),
+   'Imbottigliamento Link: '+elfoPotionExportValue(roleLink),
+   'Imbottigliamento Esito: '+elfoPotionExportValue(imbEsito),
+   'Post richiesti: '+elfoPotionExportValue(imbPosts===null||imbPosts===undefined?'':imbPosts),
+   'Modificatori: '+elfoPotionExportValue(elfoMods.join(' · ')),
+   'Forza finale Generatore: '+elfoPotionExportValue(forzaFinaleVisual),
+   'Categoria finale Generatore: '+elfoPotionExportValue(categoria)
+ ];
+ var elfoText=elfoLines.join('\n');
+ var elfoBox=el('div','elfo-import-box');
+ elfoBox.appendChild(elText('div','elfo-import-title','Il Mio Elfo Domestico'));
+ elfoBox.appendChild(elText('p','small-note','Copia i dati della Pozione e incollali in Laboratorio/Postazione → «Importa Pozione dal Generatore». I link delle singole fasi usano il Link della role indicato qui nel Riepilogo, perché il Generatore non raccoglie link separati per fase. La Tipologia resta da verificare nell’Elfo.'));
+ var elfoCode=el('div');elfoCode.id='riep-elfo-code-'+pg.id;elfoCode.style.display='none';elfoCode.textContent=elfoText;elfoCode.setAttribute('data-plain',elfoText);elfoBox.appendChild(elfoCode);
+ var elfoBtn=elText('button','action elfo-import-btn','Importa a Il Mio Elfo');elfoBtn.id='riep-elfo-copy-'+pg.id;elfoBtn.type='button';
+ if(incompleto){elfoBtn.disabled=true;elfoBtn.title='Completa prima i risultati necessari al Riepilogo.';}
+ elfoBox.appendChild(elfoBtn);
+ out.appendChild(elfoBox);
+ setTimeout(function(){attachCopyPlain('riep-elfo-copy-'+pg.id,'riep-elfo-code-'+pg.id);},0);
  
  if(forzaAssolutaTesto === ""){ 
  out.appendChild(el("p", "small-note", "La Forza Standard della Pozione viene letta automaticamente dallo Step 1.")); 
