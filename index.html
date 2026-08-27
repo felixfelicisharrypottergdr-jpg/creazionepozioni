@@ -1,3 +1,9 @@
+<!-- Revisione v72: audit finale — il 1d10 di Efficacia Extra+ accetta 10 senza ricostruire il campo dopo la prima cifra -->
+<!-- Revisione v69: sessioni Firebase protette da doppia creazione e race delete/autosalvataggio -->
+<!-- Revisione v68: ripresa Firebase preserva i risultati salvati; campi numerici del riepilogo terminale non si ricostruiscono durante la digitazione -->
+<!-- Revisione v67: audit funzionale — viewport mobile reale; reset coerente con sessione Firebase; fase sessione corretta; profilo non selezionato più chiaro -->
+<!-- Revisione v71: rifinitura audit — messaggi corretti per Distillazione parziale; testi Bacchetta/Imbottigliamento riallineati al catalogo bonus v59 -->
+<!-- Revisione v70: Distillazione multipla — conteggio corretto di più dosi distrutte, perdita terminale se vengono distrutte tutte le dosi, quantità superstite esportata all'Elfo -->
 <!-- Revisione v65: contrasto Sessioni Pozioni corretto; label/input del PG leggibili sul pannello chiaro -->
 <!-- Revisione v66: cambio Step riporta in cima anche nell’iframe ForumFree; navigazione in font magic; spiegazioni lunghe richiudibili -->
 <!-- Revisione v63: sessioni Firebase personali per ogni creazione; il refresh torna all’elenco e non riprende automaticamente una Pozione -->
@@ -8,6 +14,7 @@
 <!-- Revisione v54: Uso della Bacchetta separa i bonus che aumentano Tecnica dai bonus che aggiungono direttamente possibilità al d15 -->
 <!-- Revisione v53: Categoria Standard/OOP/E calcolata sulla Forza complessiva effettiva, incluso il bonus di Preparazione -->
 <!-- Revisione regolamento v52: bonus Tecnica centralizzati nello Step 2 e applicati alla Tecnica effettiva prima di tutte le formule; refresh = nuova creazione vuota -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <div id="creazione-pozione" class="foglio"> 
 <style>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css');
@@ -1033,7 +1040,7 @@
 #creazione-pozione .tracked-preset-note{
   margin:8px 0 0 !important;
   font-size:12px !important;
-  color:var(--muted) !important;
+  color:var(--text-dim) !important;
 }
 #creazione-pozione .tracked-effect-card[data-preset]{
   border-left:4px solid var(--acid) !important;
@@ -1757,7 +1764,7 @@
  function restoreSavedState(){
   try{var raw=window.localStorage.getItem(STORAGE_KEY);if(!raw){return;}applySavedStateObject(JSON.parse(raw));}catch(e){}
  }
- function resetAllState(){try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}POZ={nome:"",classificazione:"",tierBase:false,tierIV:false,tierV:false,conoscenzaPosseduta:false,valigettaAdduco:false,illegale:false,protezioniIllegali:{cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},forzaStandard:"",pozionarioNome:""};pgs=[];pgCounter=0;pgs.push(newPG());currentStep="info";lastRuleConfigSignature=null;staleResultsResetNotice=false;renderAll();}
+ function resetAllState(preservePgName){var keepName=preservePgName&&pgs&&pgs.length?String(pgs[0].nome||"").trim():"";try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}POZ={nome:"",classificazione:"",tierBase:false,tierIV:false,tierV:false,conoscenzaPosseduta:false,valigettaAdduco:false,illegale:false,protezioniIllegali:{cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},forzaStandard:"",pozionarioNome:""};pgs=[];pgCounter=0;pgs.push(newPG());if(keepName){pgs[0].nome=keepName;}currentStep="info";lastRuleConfigSignature=null;staleResultsResetNotice=false;renderAll();}
 
  /* Ponte minimo verso il gestore Firebase esterno. */
  window.__pozSessionBridge={
@@ -1765,11 +1772,16 @@
   apply:function(saved){
    resetAllState();
    applySavedStateObject(saved||{});
+   /* La sessione appena caricata è il nuovo stato di riferimento, non una modifica
+      retroattiva dell'attuale creazione vuota. Senza riallineare la firma, il primo
+      render interpretava il ripristino Firebase come cambio di regole/profilo e
+      poteva azzerare i dadi e gli esiti appena caricati. */
+   lastRuleConfigSignature=ruleConfigSignature();
    renderAll();
   },
   newBlank:function(name){resetAllState();if(pgs[0])pgs[0].nome=String(name||'').trim()||'Personaggio';currentStep='info';renderAll();},
   meta:function(){return {pgName:(pgs[0]&&String(pgs[0].nome||'').trim())||'',potionName:String(POZ.nome||POZ.pozionarioNome||'').trim(),currentStep:currentStep};},
-  phaseLabel:function(key){for(var i=0;i<steps.length;i++){if(steps[i].key===key)return String(steps[i].label||'').replace(/^\\d+\\.\\s*/,'');}return key||'Pozione';}
+  phaseLabel:function(key){for(var i=0;i<steps.length;i++){if(steps[i].key===key)return String(steps[i].label||'').replace(/^\d+\.\s*/,'');}return key||'Pozione';}
  };
  
  /* ---------- HELPERS ---------- */ 
@@ -3146,7 +3158,7 @@ function renderAll(){
   if(["X","XX","XXX","XXXX","XXXXX"].indexOf(POZ.classificazione)===-1||(!POZ.tierBase&&!POZ.tierIV&&!POZ.tierV)){window.alert("Seleziona la Classificazione e almeno una fascia di Ingredienti prima di proseguire.");return;}if(!positiveInt(POZ.forzaStandard)){window.alert("Inserisci la Forza Standard della Pozione.");return;}if(!POZ.conoscenzaPosseduta){window.alert("Conferma che il creatore possiede la Conoscenza della Pozione.");return;}
   goPozioniStep("pg");
  }); 
- p.appendChild(nextBtn);var resetBtn=el("button","action danger","Nuova Pozione — azzera tutto");resetBtn.addEventListener(EV,function(){if(window.confirm("Vuoi davvero azzerare tutti i dati e iniziare una nuova Pozione?")){resetAllState();}});p.appendChild(resetBtn);p.appendChild(el("p","small-note","I dati restano disponibili finché questa pagina rimane aperta. Ricaricando la pagina, la creazione viene azzerata e si riparte da zero."));
+ p.appendChild(nextBtn);var resetBtn=el("button","action danger","Azzera questa Pozione");resetBtn.addEventListener(EV,function(){if(window.confirm("Vuoi davvero azzerare tutti i dati della Pozione nella sessione corrente? Il nome del PG verrà mantenuto, ma i dati della Pozione e tutti i risultati delle fasi saranno cancellati.")){resetAllState(true);}});p.appendChild(resetBtn);p.appendChild(el("p","small-note","Questa azione azzera soltanto la Pozione nella sessione corrente e mantiene il nome del PG. Per creare una Pozione separata usa «Sessioni» e «+ Nuova Pozione». Ricaricando la pagina torni all’elenco delle sessioni Firebase."));
  container.appendChild(p);
  }
  
@@ -3350,7 +3362,7 @@ function renderAll(){
   dVotoPoz.appendChild(selVotoPoz);
   dVotoPoz.appendChild(el("p","small-note","È il voto usato in Preparazione, Produzione e Imbottigliamento/Pulizia. Le Conoscenze Avanzate I della relativa fase applicano il proprio bonus senza sostituire il voto. Coerenza scolastica: con Media T o D tutte le Conoscenze hanno lo stesso voto; dalla Media S in poi i voti individuali possono differenziarsi, ma non possono restare T/D."));
  row2.appendChild(dVotoPoz);
- } else { 
+ } else if(pg.tipo === "adulto"){ 
  var dSap = el("div"); 
  dSap.appendChild(el("label", null, "Sapienza Pozionistica (0-25)")); 
  var inpSap = el("input"); 
@@ -3390,24 +3402,28 @@ function renderAll(){
  }
 
  card.appendChild(el("div", "divider"));
- card.appendChild(el("div", "profile-section-title", "<span>Conoscenze Avanzate</span><small>seleziona soltanto quelle possedute</small>"));
- if(pg.tipo === "studente"){
-  card.appendChild(el("p", "small-note", "Studente: può possedere soltanto il livello I della Sapienza. Perciò ciascuna Conoscenza Avanzata può essere assente oppure al livello I; non sono disponibili i livelli II-V."));
-  if(POZ.classificazione==="XXXX"||POZ.classificazione==="XXXXX"){
-   card.appendChild(el("div","guide-text","<b>Promemoria Studente:</b> a Hogwarts le Postazioni ordinarie sono destinate a Pozioni X-XXX. Produrre ONGame una Pozione "+POZ.classificazione+" a scuola viola il regolamento scolastico; se viene preparata altrove nei pressi di Hogwarts con Calderone/Kit personale, il regolamento richiede di avvisare il Narratore. Questo promemoria non blocca il calcolo."));
-  }
+ if(pg.tipo === "studente" || pg.tipo === "adulto"){
+   card.appendChild(el("div", "profile-section-title", "<span>Conoscenze Avanzate</span><small>seleziona soltanto quelle possedute</small>"));
+   if(pg.tipo === "studente"){
+    card.appendChild(el("p", "small-note", "Studente: può possedere soltanto il livello I della Sapienza. Perciò ciascuna Conoscenza Avanzata può essere assente oppure al livello I; non sono disponibili i livelli II-V."));
+    if(POZ.classificazione==="XXXX"||POZ.classificazione==="XXXXX"){
+     card.appendChild(el("div","guide-text","<b>Promemoria Studente:</b> a Hogwarts le Postazioni ordinarie sono destinate a Pozioni X-XXX. Produrre ONGame una Pozione "+POZ.classificazione+" a scuola viola il regolamento scolastico; se viene preparata altrove nei pressi di Hogwarts con Calderone/Kit personale, il regolamento richiede di avvisare il Narratore. Questo promemoria non blocca il calcolo."));
+    }
+   }
+   
+   var row3 = el("div", "row advanced-grid"); 
+   row3.appendChild(buildLevelSelect(pg, "speziale", "Speziale · Preparazione")); 
+   row3.appendChild(buildLevelSelect(pg, "chimico", "Chimico · Produzione")); 
+   row3.appendChild(buildLevelSelect(pg, "toccoMagico", "Tocco Magico · Bacchetta")); 
+   card.appendChild(row3); 
+  
+   var row4 = el("div", "row advanced-grid"); 
+   row4.appendChild(buildLevelSelect(pg, "calderaio", "Calderaio · Imbottigliamento")); 
+   row4.appendChild(buildLevelSelect(pg, "distillatore", "Distillatore · Distillazione")); 
+   card.appendChild(row4); 
+ }else{
+  card.appendChild(el("div","guide-text","Seleziona prima Studente o Adulto: compariranno qui soltanto i campi e le Conoscenze Avanzate pertinenti al tipo di Personaggio."));
  }
- 
- var row3 = el("div", "row advanced-grid"); 
- row3.appendChild(buildLevelSelect(pg, "speziale", "Speziale · Preparazione")); 
- row3.appendChild(buildLevelSelect(pg, "chimico", "Chimico · Produzione")); 
- row3.appendChild(buildLevelSelect(pg, "toccoMagico", "Tocco Magico · Bacchetta")); 
- card.appendChild(row3); 
-
- var row4 = el("div", "row advanced-grid"); 
- row4.appendChild(buildLevelSelect(pg, "calderaio", "Calderaio · Imbottigliamento")); 
- row4.appendChild(buildLevelSelect(pg, "distillatore", "Distillatore · Distillazione")); 
- card.appendChild(row4); 
  
  return card; 
  } 
@@ -3673,8 +3689,18 @@ function renderAll(){
    if(field === "memoria"){ delete pg.data["prod_mem_dice"]; clearProdOutcome(pg); }
    if(field === "sintesi"){ delete pg.data["sintesi_d2"]; clearAfterImb(pg); }
   }
-  renderAll();
+  /* Il d10 può dare 10: non ricostruire tutta la fase dopo la prima cifra,
+     altrimenti digitare 10 può fermarsi a 1. Aggiorniamo soltanto il tag locale
+     e facciamo il rendering completo quando il campo viene confermato. */
+  var rawNow=inp.value;
+  var invalidNow=rawNow!==""&&!intInRange(rawNow,1,10);
+  if(invalidNow){ tag.textContent="Risultato impossibile"; tag.className="out-tag out-fail"; }
+  else if(newEff==="pending"){ tag.textContent="in attesa"; tag.className="out-tag out-neutral"; }
+  else if(newEff==="0"){ tag.textContent="Efficacia 0%"; tag.className="out-tag out-fail"; }
+  else { tag.textContent="Efficacia "+newEff+"%"; tag.className="out-tag out-ok"; }
+  scheduleSave();
  });
+ inp.addEventListener("change",function(){ renderAll(); });
  box.appendChild(line);
  setTimeout(function(){ attachCopy("extra-eff-copy-" + field + "-" + pg.id,codeId); },0);
  return box;
@@ -4717,7 +4743,7 @@ function renderAll(){
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Fase 3: Uso della Bacchetta")); 
  p.appendChild(el("div", "guide-text", 
- "Si lancia un d15. Senza questo passaggio la Pozione non ha alcun effetto. Il numero base di dosi dipende da Tocco Magico; se uno specifico Oggetto utilizzato concede dosi aggiuntive, registrale nel campo dedicato senza confonderle con i bonus al d15. " + 
+ "Si lancia un d15. Senza questo passaggio la Pozione non ha alcun effetto. Il numero base di dosi dipende da Tocco Magico; gli eventuali Calderoni/manufatti del catalogo selezionati nello Step 2 che concedono dosi aggiuntive vengono applicati automaticamente e restano separati dai bonus al d15. " + 
  "Costo: -0,5 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
@@ -5209,7 +5235,7 @@ function renderImbottStep(container){
  "Si lancia un d10. L'esito (0%, 33%, 66%, 100%) determina il numero di post finali necessari in base al profilo del PG e alla Classificazione della Pozione. Per uno Studente, Calderaio I aggiunge +1 al valore del Voto prima di sommare la Tecnica: serve soltanto a stabilire la fascia di riferimento del d10 e il profilo dei post resta Studente. " +
  "Con 0% la Pozione è persa e il calderone esplode. Con 33% o 66% la Pozione è pronta, ma il PG deve anche verificare se si accorge che la postazione resterà occupata più a lungo. " +
  "Costo base: -2 Fatica (0 con Sapienza Pozionistica 25). Se usi Sintesi Tecnica+, aggiungi il suo costo di -2 Fatica: il tool ne determina prima l'Efficacia con 1d10 e applica la riduzione dei post prevista. " +
- "Gli <b>Altri bonus</b> sotto modificano il risultato del d10 e non devono includere il Calderone/strumento scelto nello Step 2. Se Sintesi Tecnica+ si cumula con un manufatto che riduce i post <i>per difetto</i>, il materiale disponibile non stabilisce quale riduzione vada applicata per prima: poiché l’arrotondamento può cambiare il totale, il tool richiede di indicare esplicitamente l’ordine invece di inventarlo. " +
+ "Gli eventuali bonus da <b>Oggetti/Conoscenze</b> scelti nello Step 2 e assegnati all’Imbottigliamento modificano il risultato del d10; il Calderone/strumento scelto nello Step 2 viene invece applicato automaticamente e non va duplicato. Se Sintesi Tecnica+ si cumula con un manufatto che riduce i post <i>per difetto</i>, il materiale disponibile non stabilisce quale riduzione vada applicata per prima: poiché l’arrotondamento può cambiare il totale, il tool richiede di indicare esplicitamente l’ordine invece di inventarlo. " +
  "I range del d10 e il numero di post finali sono calcolati direttamente secondo la tabella del regolamento.")); 
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
@@ -6120,7 +6146,7 @@ function renderImbottStep(container){
     var manualId="riep-dispensa-loss-manual-"+pg.id;
     var manualLbl=elText("label",null,"Totale unità/dosi della ricetta consumate");manualLbl.htmlFor=manualId;manualWrap.appendChild(manualLbl);
     var manualInp=el("input");manualInp.type="number";manualInp.id=manualId;manualInp.min="0";manualInp.step="1";manualInp.value=pgDataGet(pg,"riep_dispensa_base_manual","");
-    manualInp.addEventListener("input",function(){pg.data["riep_dispensa_base_manual"]=manualInp.value;renderAll();});manualWrap.appendChild(manualInp);card.appendChild(manualWrap);
+    manualInp.addEventListener("input",function(){pg.data["riep_dispensa_base_manual"]=manualInp.value;scheduleSave();});manualInp.addEventListener("change",function(){renderAll();});manualWrap.appendChild(manualInp);card.appendChild(manualWrap);
   }
   /* Se la perdita avviene in Distillazione, la creazione era già stata completata.
      Per uno Studente resta quindi rilevante il conteggio delle Pozioni create ONGame
@@ -6130,8 +6156,8 @@ function renderImbottStep(container){
     var countLossId="riep-student-count-loss-"+pg.id;
     var countLossLbl=elText("label",null,"Numero progressivo di Pozioni create ONGame dallo Studente (facoltativo)");countLossLbl.htmlFor=countLossId;countWrap.appendChild(countLossLbl);
     var countLossInp=el("input");countLossInp.type="number";countLossInp.id=countLossId;countLossInp.min="1";countLossInp.step="1";countLossInp.placeholder="es. 3, 6, 9...";countLossInp.value=pgDataGet(pg,"riep_student_potion_count","");
-    countLossInp.addEventListener("input",function(){pg.data["riep_student_potion_count"]=countLossInp.value;renderAll();});countWrap.appendChild(countLossInp);card.appendChild(countWrap);
-    card.appendChild(elText("p","small-note","La dose è stata persa dopo la creazione, durante la Distillazione: se questa Pozione è stata creata ONGame, continua a rientrare nel conteggio periodico dello Studente."));
+    countLossInp.addEventListener("input",function(){pg.data["riep_student_potion_count"]=countLossInp.value;scheduleSave();});countLossInp.addEventListener("change",function(){renderAll();});countWrap.appendChild(countLossInp);card.appendChild(countWrap);
+    card.appendChild(elText("p","small-note","La Pozione era già stata creata, ma tutte le dosi disponibili sono state successivamente perse durante la Distillazione: se la creazione è stata giocata ONGame, continua a rientrare nel conteggio periodico dello Studente."));
   }
   var info=computeDispensaInfo(pg,tiersPresent);
   var lines=[];
@@ -6140,7 +6166,7 @@ function renderImbottStep(container){
   if(terminale==="distill" && pg.tipo==="studente"){
     var lossPozCount=pgDataGet(pg,"riep_student_potion_count","");
     if(lossPozCount!=="" && positiveInt(lossPozCount) && Number(lossPozCount)%3===0){
-      lines.push("Promemoria Studente: questa era la Pozione ONGame n. "+lossPozCount+"; effettua 1d10 per il rischio di Acne Purulenta (con 1), anche se l’unica dose è stata successivamente distrutta in Distillazione.");
+      lines.push("Promemoria Studente: questa era la Pozione ONGame n. "+lossPozCount+"; effettua 1d10 per il rischio di Acne Purulenta (con 1), anche se tutte le dosi disponibili sono state successivamente distrutte in Distillazione.");
     }
   }
   if(info.complete){
@@ -6172,11 +6198,18 @@ function renderImbottStep(container){
  }
  if(!!pgDataGet(pg, "distill_destroyed", false)){
    var dosiPrimaDist=computeDosiFinali(pg);
-   if(dosiPrimaDist.finale===null || dosiPrimaDist.finale<=1){
-     appendDispensaPersa(card,pg,tiersPresent,"La singola dose disponibile è esplosa nel controllo di rischio prima del secondo tentativo di Distillazione.","distill");
+   var distrutteCard=Number(pgDataGet(pg,"distill_destroyed_count",1));
+   if(!isFinite(distrutteCard)||distrutteCard<1){distrutteCard=1;}
+   var superstitiCard=dosiPrimaDist.finale===null?null:Math.max(0,Number(dosiPrimaDist.finale)-distrutteCard);
+   if(superstitiCard===null || superstitiCard<=0){
+     var motivoDistPersa=distrutteCard===1?
+       "La singola dose disponibile è esplosa nel controllo di rischio prima del secondo tentativo di Distillazione.":
+       ("Tutte le "+distrutteCard+" dosi disponibili sono andate distrutte nei controlli di rischio della Distillazione.");
+     appendDispensaPersa(card,pg,tiersPresent,motivoDistPersa,"distill");
      return card;
    }
-   card.appendChild(elText("div","guide-text","La dose sottoposta a Distillazione è esplosa nel controllo di rischio prima del secondo tentativo. Poiché la Distillazione si esegue dose per dose, le altre "+(dosiPrimaDist.finale-1)+" dosi ottenute restano disponibili e vengono riepilogate qui sotto."));
+   var msgDistrutteCard=distrutteCard===1?"Una dose sottoposta a Distillazione è andata distrutta.":("Sono andate distrutte "+distrutteCard+" dosi sottoposte a Distillazione.");
+   card.appendChild(elText("div","guide-text",msgDistrutteCard+" Poiché la Distillazione si esegue dose per dose, restano disponibili "+superstitiCard+" "+(superstitiCard===1?"dose":"dosi")+" e vengono riepilogate qui sotto."));
  } 
  
  if(POZ.nome !== ""){ 
@@ -6631,7 +6664,8 @@ function renderImbottStep(container){
    'Produzione Forza: '+elfoPotionExportValue(Math.abs(prodAcc.forza)),
    'Produzione Link: '+elfoPotionExportValue(roleLink),
    'Bacchetta Esito: '+bacOutcomeElfo,
-   'Bacchetta Dosi: '+elfoPotionExportValue(dosiInfo.finale===null?'':dosiInfo.finale),
+   /* L'Elfo usa questo campo come quantità effettivamente disponibile: dopo la Distillazione esportiamo quindi le dosi superstiti, mantenendo il nome della chiave per compatibilità con il parser esistente. */
+   'Bacchetta Dosi: '+elfoPotionExportValue(dosiSopravvissute===null?'':dosiSopravvissute),
    'Bacchetta Link: '+elfoPotionExportValue(roleLink),
    'Distillazione: '+(distillSvoltaElfo?'sì':'no'),
    'Distillazione Link: '+elfoPotionExportValue(distillSvoltaElfo?roleLink:''),
@@ -6668,7 +6702,7 @@ function renderImbottStep(container){
  var r1 = el("tr", null, "<th>Modificatore di Forza</th><td>" + forzaTesto + "</td>"); 
  var r2 = el("tr", null, "<th>Categoria Pozione</th><td>" + categoria + "</td>"); 
  var r3 = el("tr", null, "<th>Durata effetti/bonus-malus</th><td>" + durataTesto + "</td>"); 
- var r4 = el("tr", null, "<th>Dosi finali disponibili</th><td>" + (dosiSopravvissute === null ? "da calcolare (vedi Step 5)" : dosiSopravvissute) + (distillDoseDestroyed ? " (1 dose distrutta in Distillazione)" : "") + "</td>"); 
+ var r4 = el("tr", null, "<th>Dosi finali disponibili</th><td>" + (dosiSopravvissute === null ? "da calcolare (vedi Step 5)" : dosiSopravvissute) + (distillDestroyedCount>0 ? " ("+distillDestroyedCount+" "+(distillDestroyedCount===1?"dose distrutta":"dosi distrutte")+" in Distillazione)" : "") + "</td>"); 
  var r5 = el("tr", null, "<th>Post finali richiesti</th><td>" + (imbEsito === "" ? "da calcolare (vedi Step 6)" : (imbEsito === "0%" ? "non applicabili: processo fallito" : ((imbPosts === null || imbPosts === undefined) ? "da calcolare" : imbPosts))) + "</td>");
  var r6 = el("tr", null, "<th>Imbottigliamento/Calderone</th><td>" + (imbEsito === "" ? "da calcolare (vedi Step 6)" : (imbEsito === "0%" ? "Esploso" : (zeroDosiUtili ? "Pulizia conclusa, nessuna dose utile — esito " + imbEsito : "Pronta, esito " + imbEsito))) + "</td>"); 
  var r7 = el("tr", null, "<th>Fatica creazione + Extra+ + Oggetti/Conoscenze</th><td>-" + fmtFatica(faticaObbl) + " Fatica</td>");
@@ -6735,9 +6769,10 @@ function renderImbottStep(container){
 (function(){
 'use strict';
 var CFG={apiKey:'AIzaSyCvd56bSEL02s2OY2PSk7uyFX-CYRB4Vz0',authDomain:'conteggi-eee1b.firebaseapp.com',projectId:'conteggi-eee1b',storageBucket:'conteggi-eee1b.firebasestorage.app',messagingSenderId:'481320219586',appId:'1:481320219586:web:87e974d618a302adfadc5b'};
-var COLL='sessioni_pozioni', fb={auth:null,db:null,user:null}, currentId='', currentData=null, loading=false, signing=false, chain=Promise.resolve();
+var COLL='sessioni_pozioni', fb={auth:null,db:null,user:null}, currentId='', currentData=null, loading=false, signing=false, creating=false, chain=Promise.resolve();
 function E(id){return document.getElementById(id)}
 function status(id,msg,kind){var e=E(id);if(!e)return;e.textContent=msg||'';if(id==='poz-session-auth-status')e.className='poz-session-status'+(kind?' '+kind:'')}
+function setCreating(v){creating=!!v;var b=E('poz-session-new');if(b)b.disabled=creating;}
 function ts(v){try{var d=v&&typeof v.toDate==='function'?v.toDate():(v&&typeof v.seconds==='number'?new Date(v.seconds*1000):null);return d?d.toLocaleString('it-IT'):''}catch(e){return ''}}
 function bridge(){return window.__pozSessionBridge}
 function showHome(){E('poz-session-home').style.display='';E('poz-session-workspace').style.display='none'}
@@ -6745,9 +6780,9 @@ function showWork(){E('poz-session-home').style.display='none';E('poz-session-wo
 function payload(){var b=bridge(),m=b.meta(),s=b.collect();return {ownerUid:fb.user.uid,pgName:m.pgName||((currentData&&currentData.pgName)||'PG'),potionName:m.potionName||'',phase:m.currentStep,phaseLabel:b.phaseLabel(m.currentStep),status:m.currentStep==='riepilogo'?'riepilogo':'in_corso',updatedAt:firebase.firestore.FieldValue.serverTimestamp(),toolVersion:'pozioni-v63-sessioni-firebase',state:s}}
 window.pozSessionSaveNow=function(){if(loading||!currentId||!fb.db||!fb.user||!bridge())return Promise.resolve(true);var id=currentId,p=payload(),st=E('poz-session-save-status');if(st)st.textContent='Salvataggio automatico…';var task=chain.catch(function(){}).then(function(){return fb.db.collection(COLL).doc(id).set(p,{merge:true})}).then(function(){if(id===currentId){currentData=Object.assign({},currentData||{},p);if(st)st.textContent='Salvata automaticamente su Firebase ✓'}return true}).catch(function(err){console.error(err);if(id===currentId&&st)st.textContent='Errore salvataggio Firebase: '+(err.message||err);throw err});chain=task.catch(function(){});return task};
 function loadList(){var host=E('poz-session-list');if(!host||!fb.db||!fb.user)return;host.innerHTML='<div class="poz-session-status">Caricamento sessioni…</div>';fb.db.collection(COLL).where('ownerUid','==',fb.user.uid).get().then(function(snap){var rows=[];snap.forEach(function(d){rows.push({id:d.id,data:d.data()||{}})});rows.sort(function(a,b){return ((b.data.updatedAt&&b.data.updatedAt.seconds)||0)-((a.data.updatedAt&&a.data.updatedAt.seconds)||0)});host.innerHTML='';if(!rows.length){host.innerHTML='<div class="poz-session-status">Nessuna Pozione salvata. Inserisci il nome del PG e crea una nuova sessione.</div>';return}rows.forEach(function(r){var d=r.data,box=document.createElement('div');box.className='poz-session-item';var l=document.createElement('div'),t=document.createElement('div');t.className='poz-session-title';t.textContent=(d.pgName||'PG')+' — '+(d.potionName||'Pozione da definire');l.appendChild(t);var m=document.createElement('div');m.className='poz-session-meta';var dt=ts(d.updatedAt);m.textContent='Fase: '+(d.phaseLabel||d.phase||'Pozione')+(dt?' · Aggiornata '+dt:'');l.appendChild(m);var a=document.createElement('div');a.className='poz-session-actions';var rr=document.createElement('button');rr.type='button';rr.className='action small resume';rr.textContent='Riprendi';rr.addEventListener('click',function(){currentId=r.id;currentData=r.data;loading=true;try{bridge().apply(r.data.state||{})}finally{loading=false}showWork()});var x=document.createElement('button');x.type='button';x.className='action small delete';x.textContent='Elimina';x.addEventListener('click',function(){if(!confirm('Eliminare definitivamente questa sessione Pozioni?'))return;fb.db.collection(COLL).doc(r.id).delete().then(loadList).catch(function(e){status('poz-session-home-msg','Impossibile eliminare: '+(e.message||e),'bad')})});a.appendChild(rr);a.appendChild(x);box.appendChild(l);box.appendChild(a);host.appendChild(box)})}).catch(function(e){console.error(e);host.innerHTML='<div class="poz-session-status bad">Impossibile caricare le sessioni: '+String(e.message||e)+'</div>'})}
-function newSession(){var name=String((E('poz-session-pg-name')||{}).value||'').trim();if(!name){status('poz-session-home-msg','Inserisci il nome del PG prima di creare la Pozione.','bad');return}if(!fb.user||!fb.db||!bridge()){status('poz-session-home-msg','Firebase non è ancora pronto.','bad');return}loading=true;try{bridge().newBlank(name)}finally{loading=false}var b=bridge(),meta=b.meta(),p={ownerUid:fb.user.uid,pgName:name,potionName:'',phase:'info',phaseLabel:b.phaseLabel('info'),status:'in_corso',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),toolVersion:'pozioni-v63-sessioni-firebase',state:b.collect()};status('poz-session-home-msg','Creo la nuova sessione…','saving');fb.db.collection(COLL).add(p).then(function(ref){currentId=ref.id;currentData=p;status('poz-session-home-msg','','');showWork()}).catch(function(e){console.error(e);status('poz-session-home-msg','Impossibile creare la sessione: '+(e.message||e),'bad')})}
+function newSession(){if(creating)return;var name=String((E('poz-session-pg-name')||{}).value||'').trim();if(!name){status('poz-session-home-msg','Inserisci il nome del PG prima di creare la Pozione.','bad');return}if(!fb.user||!fb.db||!bridge()){status('poz-session-home-msg','Firebase non è ancora pronto.','bad');return}setCreating(true);loading=true;try{bridge().newBlank(name)}finally{loading=false}var b=bridge(),meta=b.meta(),p={ownerUid:fb.user.uid,pgName:name,potionName:'',phase:'info',phaseLabel:b.phaseLabel('info'),status:'in_corso',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),toolVersion:'pozioni-v63-sessioni-firebase',state:b.collect()};status('poz-session-home-msg','Creo la nuova sessione…','saving');fb.db.collection(COLL).add(p).then(function(ref){currentId=ref.id;currentData=p;setCreating(false);status('poz-session-home-msg','','');showWork()}).catch(function(e){setCreating(false);console.error(e);status('poz-session-home-msg','Impossibile creare la sessione: '+(e.message||e),'bad')})}
 function back(){var id=currentId;(currentId?window.pozSessionSaveNow():Promise.resolve(true)).then(function(){if(id===currentId){currentId='';currentData=null}showHome();loadList()}).catch(function(){})}
-function delCurrent(){if(!currentId||!fb.db)return;if(!confirm('Eliminare definitivamente questa sessione Pozioni? Non potrà essere recuperata.'))return;var id=currentId;fb.db.collection(COLL).doc(id).delete().then(function(){if(id===currentId){currentId='';currentData=null}showHome();loadList()}).catch(function(e){E('poz-session-save-status').textContent='Impossibile eliminare: '+(e.message||e)})}
+function delCurrent(){if(!currentId||!fb.db)return;if(!confirm('Eliminare definitivamente questa sessione Pozioni? Non potrà essere recuperata.'))return;var id=currentId,oldData=currentData;/* Sgancia subito la sessione: eventuali autosave debounced successivi diventano no-op. Gli autosave già in coda vengono invece lasciati terminare PRIMA del delete, così nessun set può ricreare il documento dopo l’eliminazione. */currentId='';currentData=null;var pending=chain.catch(function(){});pending.then(function(){return fb.db.collection(COLL).doc(id).delete()}).then(function(){showHome();loadList()}).catch(function(e){currentId=id;currentData=oldData;var st=E('poz-session-save-status');if(st)st.textContent='Impossibile eliminare: '+(e.message||e)})}
 function init(){showHome();E('poz-session-new').addEventListener('click',newSession);E('poz-session-back').addEventListener('click',back);E('poz-session-delete-current').addEventListener('click',delCurrent);try{if(typeof firebase==='undefined')throw new Error('SDK Firebase non caricato');if(!firebase.apps.length)firebase.initializeApp(CFG);fb.auth=firebase.auth();fb.db=firebase.firestore();fb.auth.onAuthStateChanged(function(user){if(user){signing=false;fb.user=user;status('poz-session-auth-status','Firebase connesso · sessioni personali attive ✓','ok');loadList();return}if(signing)return;signing=true;fb.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){return fb.auth.signInAnonymously()}).catch(function(e){signing=false;console.error(e);status('poz-session-auth-status','Errore autenticazione Firebase: '+(e.message||e),'bad')})})}catch(e){console.error(e);status('poz-session-auth-status','Firebase non disponibile: '+(e.message||e),'bad')}}
 init();
 })();
