@@ -1276,6 +1276,19 @@
   cursor:not-allowed !important;
 }
 
+
+/* v64 — Bonus compatti: i preset regolamentati mostrano solo le scelte utili al giocatore. */
+#creazione-pozione .tracked-effect-card-compact{padding:12px 13px !important;}
+#creazione-pozione .tracked-compact-head{display:flex !important;align-items:flex-start !important;justify-content:space-between !important;gap:12px !important;}
+#creazione-pozione .tracked-compact-copy{min-width:0 !important;flex:1 1 auto !important;}
+#creazione-pozione .tracked-compact-name{color:var(--text) !important;font-size:15px !important;font-weight:600 !important;line-height:1.35 !important;}
+#creazione-pozione .tracked-compact-detail{margin-top:3px !important;color:var(--text-dim) !important;font-size:12px !important;line-height:1.4 !important;}
+#creazione-pozione .tracked-compact-controls{display:grid !important;grid-template-columns:minmax(210px,1fr) minmax(145px,.45fr) !important;gap:10px 12px !important;align-items:end !important;margin-top:10px !important;}
+#creazione-pozione .tracked-compact-controls>div{min-width:0 !important;}
+#creazione-pozione .tracked-compact-controls label{min-height:0 !important;margin-bottom:5px !important;}
+#creazione-pozione .tracked-effect-highlight-compact{margin-top:9px !important;font-size:11.5px !important;}
+@media(max-width:640px){#creazione-pozione .tracked-compact-controls{grid-template-columns:1fr !important;}}
+
 </style>
 
 <style id="v62-sessioni-firebase-css">
@@ -1960,55 +1973,65 @@
 
  function buildTrackedEffectEditor(pg){
   var wrap=el("div","tracked-effect-editor");
-  wrap.appendChild(elText("div","tracked-effect-title","Oggetti / Conoscenze — bonus regolamentati"));
-  wrap.appendChild(elText("p","small-note","Come negli strumenti di Erbologia e Magizoologia, puoi scegliere direttamente gli effetti regolamentati. Il tool precompila bonus, usi e tipo di modifica; l'effetto viene applicato alla fase scelta e compare nel Riepilogo Finale. Sono disponibili soltanto gli effetti presenti nel catalogo regolamentato."));
+  wrap.appendChild(elText("div","tracked-effect-title","Oggetti / Conoscenze — bonus"));
+  wrap.appendChild(elText("p","small-note","Scegli il bonus dal regolamento: il tool conosce già valore, tipo, Fatica e numero massimo di usi. Devi indicare soltanto la fase in cui lo usi e, se necessario, quanti usi ti restavano prima di questa creazione."));
   var picker=el("div","tracked-preset-picker");
-  var pbox=el("div");pbox.appendChild(elText("label",null,"Scegli dal Prezzario / Conoscenze"));var psel=el("select");psel.innerHTML=pozTrackedPresetOptions();pbox.appendChild(psel);picker.appendChild(pbox);
-  var padd=el("button","action","+ Inserisci");picker.appendChild(padd);wrap.appendChild(picker);
-  var pnote=elText("p","tracked-preset-note","Manuali dell'Ars modificano la Tecnica prima delle formule; Amuleto della Fortuna e Magi Biografia modificano il dado/possibilità. Per Magi Biografia si registra il bonus già presente in Scheda: la Fatica è stata spesa nella role in cui è stato preparato.");wrap.appendChild(pnote);
+  var pbox=el("div");pbox.appendChild(elText("label",null,"Oggetto / Conoscenza"));var psel=el("select");psel.innerHTML=pozTrackedPresetOptions();pbox.appendChild(psel);picker.appendChild(pbox);
+  var padd=el("button","action","+ Aggiungi bonus");picker.appendChild(padd);wrap.appendChild(picker);
 
   var rows=el("div");wrap.appendChild(rows);
 
-  function highlightText(e){
-   var src=String(e.source||"").trim()||"EFFETTO DA COMPLETARE";
-   var detail=String(e.detail||"").trim();
-   var bonus=nonNegativeInt(e.bonus)?Number(e.bonus):0;
-   var fat=e.fatigue!==""&&nonNegativeNumber(e.fatigue)?Number(e.fatigue):0;
-   var targetTxt=e.target==="technique"?" TECNICA":(e.phase==="imbott"?" AL RISULTATO":" POSSIBILITÀ");
-   var s="<b>"+escapeHtml(src.toUpperCase())+"</b>"+(detail?" · "+escapeHtml(detail.toUpperCase()):"")+" → +"+bonus+targetTxt+" · "+escapeHtml(trackedEffectPhaseLabel(e.phase).toUpperCase())+" · -"+fmtFatica(fat)+" FATICA";
-   if(nonNegativeInt(e.usesBefore)&&nonNegativeInt(e.usesSpent)&&Number(e.usesSpent)<=Number(e.usesBefore)){s+=" · "+Number(e.usesSpent)+"/"+Number(e.usesBefore)+" USI → "+(Number(e.usesBefore)-Number(e.usesSpent))+" RIMASTI";}
-   return s;
+  function compactSummary(e,p){
+   var targetTxt=(p.target==="technique"?"Tecnica":"possibilità / risultato");
+   var bits=["+"+Number(p.bonus||0)+" "+targetTxt,"si applica automaticamente"];
+   if(p.uses!=null){
+    var before=nonNegativeInt(e.usesBefore)?Number(e.usesBefore):Number(p.uses);
+    bits.push("1 uso consumato");
+    bits.push(Math.max(0,before-1)+" rimasti");
+   }
+   if(Number(e.fatigue||0)>0){bits.push("-"+fmtFatica(Number(e.fatigue||0))+" Fatica");}
+   else if(/Fatica già spesa/i.test(p.detail||"")){bits.push("Fatica già spesa");}
+   return bits.join(" · ");
   }
 
   function renderRows(){
    rows.innerHTML="";var entries=trackedEffectEntries(pg);
    for(var i=0;i<entries.length;i++){
     (function(idx){
-     var e=entries[idx];var card=el("div","tracked-effect-card");if(e.preset){card.setAttribute("data-preset",e.preset);card.appendChild(elText("div","tracked-effect-badge","Dal regolamento"));}
-     var preset=POZ_TRACKED_PRESETS[e.preset]||null;
-     var top=el("div","tracked-effect-grid");
-     var sourceBox=el("div");sourceBox.appendChild(elText("label",null,"Fonte / Oggetto / Conoscenza"));var source=el("input");source.type="text";source.placeholder="es. Amuleto della Fortuna";source.value=e.source;source.readOnly=!!preset;sourceBox.appendChild(source);top.appendChild(sourceBox);
-     var phaseBox=el("div");phaseBox.appendChild(elText("label",null,"Agisce su"));var phase=el("select");var po=[["prep","Preparazione — d14"],["prod","Produzione — d30"],["bacchetta","Uso Bacchetta — d15"],["imbott","Imbottigliamento — d10"]];for(var j=0;j<po.length;j++){if(preset&&preset.phases&&preset.phases.indexOf(po[j][0])<0)continue;var op=elText("option",null,po[j][1]);op.value=po[j][0];phase.appendChild(op);}if(!phase.querySelector('option[value="'+e.phase+'"]')&&phase.options.length){e.phase=phase.options[0].value;}phase.value=e.phase;phaseBox.appendChild(phase);top.appendChild(phaseBox);
-     var targetBox=el("div");targetBox.appendChild(elText("label",null,"Tipo di bonus"));var target=el("select");var tor=elText("option",null,"Possibilità / risultato");tor.value="roll";target.appendChild(tor);var tot=elText("option",null,"Tecnica (prima della formula)");tot.value="technique";target.appendChild(tot);target.value=e.target||"roll";target.disabled=!!preset;targetBox.appendChild(target);top.appendChild(targetBox);
-     var bonusBox=el("div");bonusBox.appendChild(elText("label",null,"Valore bonus"));var bonus=el("input");bonus.type="number";bonus.min="0";bonus.step="1";bonus.inputMode="numeric";bonus.placeholder="es. 2";bonus.value=e.bonus;bonus.readOnly=!!preset;blockNonIntegerBonusKeys(bonus);bonusBox.appendChild(bonus);top.appendChild(bonusBox);
-     var rem=el("button","action danger manual-bonus-remove","×");rem.title="Rimuovi questo effetto";top.appendChild(rem);card.appendChild(top);
+     var e=entries[idx],p=POZ_TRACKED_PRESETS[e.preset];if(!p)return;
+     /* I preset sono la fonte di verità: eventuali vecchi campi tecnici non possono alterare il regolamento. */
+     e.source=p.source||"";e.detail=p.detail||"";e.target=p.target||"roll";e.bonus=String(p.bonus||0);e.fatigue="0";e.stack=p.stack||"";
+     if(p.uses!=null){
+      if(!nonNegativeInt(e.usesBefore)){e.usesBefore=String(p.uses);}
+      if(Number(e.usesBefore)>Number(p.uses)){e.usesBefore=String(p.uses);}
+      e.usesSpent="1";
+     }else{e.usesBefore="";e.usesSpent="";}
+     if(!e.phase || (p.phases&&p.phases.indexOf(e.phase)<0)){e.phase=(p.phases&&p.phases[0])||"prep";}
 
-     var meta=el("div","tracked-effect-meta");
-     var detailBox=el("div");detailBox.appendChild(elText("label",null,"Esito / condizione"));var detail=el("input");detail.type="text";detail.placeholder="es. bonus già ottenuto";detail.value=e.detail;detail.readOnly=!!preset;detailBox.appendChild(detail);meta.appendChild(detailBox);
-     var fatBox=el("div");fatBox.appendChild(elText("label",null,"Fatica consumata ora"));var fat=el("input");fat.type="number";fat.min="0";fat.step="0.5";fat.placeholder="0";fat.value=e.fatigue;fat.readOnly=!!preset;fat.addEventListener("keydown",function(ev){if(ev.key==="e"||ev.key==="E"||ev.key==="+"||ev.key==="-"){ev.preventDefault();}});fatBox.appendChild(fat);meta.appendChild(fatBox);
-     var ubBox=el("div");ubBox.appendChild(elText("label",null,"Usi disponibili prima"));var ub=el("input");ub.type="number";ub.min="0";ub.step="1";ub.placeholder="es. 3";ub.value=e.usesBefore;blockNonIntegerBonusKeys(ub);ubBox.appendChild(ub);meta.appendChild(ubBox);
-     var usBox=el("div");usBox.appendChild(elText("label",null,"Usi consumati in questa creazione"));var us=el("input");us.type="number";us.min="0";us.step="1";us.placeholder="es. 1";us.value=e.usesSpent;us.readOnly=!!preset;blockNonIntegerBonusKeys(us);usBox.appendChild(us);meta.appendChild(usBox);card.appendChild(meta);
-     var hi=el("div","tracked-effect-highlight");hi.innerHTML=highlightText(e);card.appendChild(hi);
+     var card=el("div","tracked-effect-card tracked-effect-card-compact");card.setAttribute("data-preset",e.preset);
+     var head=el("div","tracked-compact-head");
+     var txt=el("div","tracked-compact-copy");
+     txt.appendChild(elText("div","tracked-effect-badge","Dal regolamento"));
+     txt.appendChild(elText("div","tracked-compact-name",p.source||p.label||"Bonus"));
+     if(p.detail){txt.appendChild(elText("div","tracked-compact-detail",p.detail));}
+     head.appendChild(txt);
+     var rem=el("button","action danger manual-bonus-remove","×");rem.type="button";rem.title="Rimuovi questo bonus";head.appendChild(rem);card.appendChild(head);
 
-     function refreshMeta(){hi.innerHTML=highlightText(e);scheduleSave();}
-     source.addEventListener("input",function(){e.source=source.value;refreshMeta();});
-     detail.addEventListener("input",function(){e.detail=detail.value;refreshMeta();});
-     fat.addEventListener("input",function(){e.fatigue=fat.value;refreshMeta();});
-     ub.addEventListener("input",function(){e.usesBefore=ub.value;refreshMeta();});
-     us.addEventListener("input",function(){e.usesSpent=us.value;refreshMeta();});
-     target.addEventListener("change",function(){var old=e.phase;e.target=target.value;invalidateTrackedEffectPhase(pg,old);refreshMeta();});
-     bonus.addEventListener("input",function(){var old=e.phase;e.bonus=bonus.value;invalidateTrackedEffectPhase(pg,old);refreshMeta();});
-     phase.addEventListener("change",function(){var old=e.phase;e.phase=phase.value;invalidateTrackedEffectPhase(pg,old);invalidateTrackedEffectPhase(pg,e.phase);refreshMeta();});
+     var controls=el("div","tracked-compact-controls");
+     var phaseBox=el("div");phaseBox.appendChild(elText("label",null,"Si applica a"));var phase=el("select");
+     var po=[["prep","Preparazione — d14"],["prod","Produzione — d30"],["bacchetta","Uso della Bacchetta — d15"],["imbott","Imbottigliamento — d10"]];
+     for(var j=0;j<po.length;j++){if(p.phases&&p.phases.indexOf(po[j][0])<0)continue;var op=elText("option",null,po[j][1]);op.value=po[j][0];phase.appendChild(op);}phase.value=e.phase;phaseBox.appendChild(phase);controls.appendChild(phaseBox);
+
+     var ub=null;
+     if(p.uses!=null){
+      var ubBox=el("div");ubBox.appendChild(elText("label",null,"Usi disponibili prima"));ub=el("input");ub.type="number";ub.min="1";ub.max=String(p.uses);ub.step="1";ub.inputMode="numeric";ub.value=e.usesBefore;blockNonIntegerBonusKeys(ub);ubBox.appendChild(ub);controls.appendChild(ubBox);
+     }
+     card.appendChild(controls);
+     var hi=el("div","tracked-effect-highlight tracked-effect-highlight-compact");hi.textContent=compactSummary(e,p);card.appendChild(hi);
+
+     function refresh(){hi.textContent=compactSummary(e,p);scheduleSave();}
+     phase.addEventListener("change",function(){var old=e.phase;e.phase=phase.value;invalidateTrackedEffectPhase(pg,old);invalidateTrackedEffectPhase(pg,e.phase);refresh();});
+     if(ub){ub.addEventListener("input",function(){var n=parseInt(ub.value,10);if(Number.isFinite(n)){n=Math.max(1,Math.min(Number(p.uses),n));e.usesBefore=String(n);}else{e.usesBefore=ub.value;}refresh();});ub.addEventListener("blur",function(){if(!nonNegativeInt(e.usesBefore)||Number(e.usesBefore)<1){e.usesBefore=String(p.uses);ub.value=e.usesBefore;refresh();}});}
      rem.addEventListener(EV,function(){var old=e.phase;entries.splice(idx,1);invalidateTrackedEffectPhase(pg,old);renderRows();});
      rows.appendChild(card);
     })(i);
@@ -2018,10 +2041,8 @@
   function addPreset(key){
    var p=POZ_TRACKED_PRESETS[key];if(!p)return;
    var entries=trackedEffectEntries(pg);
-   if(p.stack){
-    for(var i=entries.length-1;i>=0;i--){if(entries[i].stack===p.stack){invalidateTrackedEffectPhase(pg,entries[i].phase);entries.splice(i,1);}}
-   }
-   entries.push({source:p.source,detail:p.detail||"",phase:(p.phases&&p.phases[0])||"prep",target:p.target||"roll",bonus:String(p.bonus||0),fatigue:"0",usesBefore:p.uses==null?"":String(p.uses),usesSpent:p.uses==null?"": "1",preset:key,stack:p.stack||""});
+   if(p.stack){for(var i=entries.length-1;i>=0;i--){if(entries[i].stack===p.stack){invalidateTrackedEffectPhase(pg,entries[i].phase);entries.splice(i,1);}}}
+   entries.push({source:p.source,detail:p.detail||"",phase:(p.phases&&p.phases[0])||"prep",target:p.target||"roll",bonus:String(p.bonus||0),fatigue:"0",usesBefore:p.uses==null?"":String(p.uses),usesSpent:p.uses==null?"":"1",preset:key,stack:p.stack||""});
    invalidateTrackedEffectPhase(pg,(p.phases&&p.phases[0])||"prep");renderRows();scheduleSave();
   }
   padd.addEventListener(EV,function(){if(psel.value){addPreset(psel.value);psel.value="";}});
