@@ -1,3 +1,4 @@
+<!-- Revisione v65: contrasto Sessioni Pozioni corretto; label/input del PG leggibili sul pannello chiaro -->
 <!-- Revisione v63: sessioni Firebase personali per ogni creazione; il refresh torna all’elenco e non riprende automaticamente una Pozione -->
 <!-- Revisione v61: importazione strutturata verso Il Mio Elfo Domestico dal Riepilogo Finale -->
 <!-- Revisione v58: catalogo bonus allineato a Erbologia/Magizoologia — preset da Prezzario/Conoscenze, usi/Fatica, bonus a Tecnica o dado, riepilogo oggetti e usi del Calderone -->
@@ -1317,6 +1318,27 @@
 #creazione-pozione .poz-session-toolbar .delete-session{background:#7a2638!important;border-color:#c36a7a!important}
 #poz-session-save-status{font-size:.78rem;font-weight:700}
 @media(max-width:650px){#creazione-pozione .poz-session-create{grid-template-columns:1fr}#creazione-pozione .poz-session-item{align-items:flex-start;flex-direction:column}}
+
+/* v65 — contrasto schermata Sessioni Pozioni su pannello chiaro.
+   Gli !important sono necessari perché le regole generali del tool li usano su label/input. */
+#creazione-pozione .poz-session-home .poz-session-create label{
+  color:#4e2630 !important;
+  font-family:var(--serif) !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+  text-transform:none !important;
+  letter-spacing:0 !important;
+}
+#creazione-pozione .poz-session-home .poz-session-create input[type="text"]{
+  background:#fffaf4 !important;
+  color:#241d1b !important;
+  border-color:#a56370 !important;
+  font-family:var(--serif) !important;
+}
+#creazione-pozione .poz-session-home .poz-session-create input[type="text"]::placeholder{
+  color:#7a6961 !important;
+  opacity:1 !important;
+}
 </style>
 <style id="v60-contrast-fix">
 /* v60 — riepiloghi chiari ad alto contrasto, senza dipendere dai colori ereditati. */
