@@ -1,4 +1,5 @@
 <!-- Revisione v65: contrasto Sessioni Pozioni corretto; label/input del PG leggibili sul pannello chiaro -->
+<!-- Revisione v66: cambio Step riporta in cima anche nell’iframe ForumFree; navigazione in font magic; spiegazioni lunghe richiudibili -->
 <!-- Revisione v63: sessioni Firebase personali per ogni creazione; il refresh torna all’elenco e non riprende automaticamente una Pozione -->
 <!-- Revisione v61: importazione strutturata verso Il Mio Elfo Domestico dal Riepilogo Finale -->
 <!-- Revisione v58: catalogo bonus allineato a Erbologia/Magizoologia — preset da Prezzario/Conoscenze, usi/Fatica, bonus a Tecnica o dado, riepilogo oggetti e usi del Calderone -->
@@ -1289,6 +1290,43 @@
 #creazione-pozione .tracked-compact-controls label{min-height:0 !important;margin-bottom:5px !important;}
 #creazione-pozione .tracked-effect-highlight-compact{margin-top:9px !important;font-size:11.5px !important;}
 @media(max-width:640px){#creazione-pozione .tracked-compact-controls{grid-template-columns:1fr !important;}}
+
+/* v66 — navigazione e spiegazioni compatte */
+#creazione-pozione button.step-btn{
+  font-family:'magic',var(--serif) !important;
+  font-weight:400 !important;
+  font-size:16px !important;
+  letter-spacing:.025em !important;
+}
+#creazione-pozione .compact-explainer{
+  margin:8px 0 12px !important;
+  border:1px solid rgba(80,89,87,.70) !important;
+  border-radius:8px !important;
+  overflow:hidden !important;
+  background:rgba(16,18,19,.28) !important;
+}
+#creazione-pozione .compact-explainer > summary{
+  cursor:pointer !important;
+  list-style:none !important;
+  padding:9px 12px !important;
+  color:var(--acid-soft) !important;
+  font-family:var(--serif) !important;
+  font-size:13px !important;
+  font-weight:700 !important;
+  line-height:1.35 !important;
+  user-select:none !important;
+}
+#creazione-pozione .compact-explainer > summary::-webkit-details-marker{display:none !important;}
+#creazione-pozione .compact-explainer > summary::after{content:' +';float:right;font-family:var(--mono) !important;}
+#creazione-pozione .compact-explainer[open] > summary::after{content:' −';}
+#creazione-pozione .compact-explainer-body{
+  padding:0 12px 11px !important;
+  color:var(--text-soft) !important;
+  font-size:13px !important;
+  line-height:1.55 !important;
+}
+#creazione-pozione .compact-explainer-body > :first-child{margin-top:0 !important;}
+#creazione-pozione .compact-explainer-body > :last-child{margin-bottom:0 !important;}
 
 </style>
 
@@ -2600,7 +2638,53 @@ function faticaObbligatoriaTotale(pg){
  } 
  
  /* ---------- NAV ---------- */ 
- /* ---------- NAV ---------- */ 
+ /* v66: cambio pagina = ritorno all’inizio del tool, anche quando è dentro l’iframe ForumFree. */
+ function requestPozioniTop(){
+  setTimeout(function(){
+   try{
+    if(window.parent && window.parent !== window){
+     window.parent.postMessage({tipo:"scrollTopPozioni"}, "*");
+    }
+   }catch(e){}
+   try{
+    if(window.parent === window){
+     var root=document.getElementById("creazione-pozione");
+     if(root && root.scrollIntoView){ root.scrollIntoView({behavior:"smooth",block:"start"}); }
+     else{ window.scrollTo(0,0); }
+    }
+   }catch(e2){}
+  },20);
+ }
+ function goPozioniStep(stepKey){
+  currentStep=stepKey;
+  renderAll();
+  requestPozioniTop();
+ }
+
+ /* Le spiegazioni davvero lunghe diventano richiudibili; avvisi/esiti brevi restano sempre visibili. */
+ function collapseLongExplanations(root){
+  if(!root || !root.querySelectorAll){ return; }
+  var nodes=root.querySelectorAll("p.small-note, div.guide-text");
+  for(var i=0;i<nodes.length;i++){
+   var node=nodes[i];
+   if(!node || node.closest("details.compact-explainer")){ continue; }
+   if(node.querySelector("input,select,button,textarea")){ continue; }
+   var txt=String(node.textContent||"").replace(/\s+/g," ").trim();
+   var limit=node.classList.contains("guide-text")?390:230;
+   if(txt.length<limit){ continue; }
+   var details=document.createElement("details");
+   details.className="compact-explainer";
+   var summary=document.createElement("summary");
+   summary.textContent=node.classList.contains("guide-text")?"Come funziona / dettagli":"Dettagli e regole";
+   var body=document.createElement("div");
+   body.className="compact-explainer-body";
+   node.parentNode.insertBefore(details,node);
+   details.appendChild(summary);
+   body.appendChild(node);
+   details.appendChild(body);
+  }
+ }
+
 function renderNav(){ 
  var nav = document.getElementById("stepsNav"); 
  nav.innerHTML = ""; 
@@ -2615,8 +2699,7 @@ function renderNav(){
  if(s.key === currentStep){ b.setAttribute("aria-current", "step"); } 
  
  b.addEventListener(EV, function(){ 
- currentStep = s.key; 
- renderAll(); 
+ goPozioniStep(s.key); 
  }); 
  
  nav.appendChild(b); 
@@ -2956,6 +3039,7 @@ function renderAll(){
   if(currentStep === "distill"){ renderDistillStep(c); }
   if(currentStep === "riepilogo"){renderRiepilogoStep(c);}
   if(staleResultsResetNotice&&c){var resetWarn=el("div","guide-text","<b>Risultati aggiornati.</b> Hai modificato un dato che incide sulle formule: i dadi e gli esiti già inseriti sono stati azzerati per evitare risultati incoerenti.");if(c.firstChild){c.insertBefore(resetWarn,c.firstChild);}else{c.appendChild(resetWarn);}staleResultsResetNotice=false;}
+  collapseLongExplanations(c);
   saveState();
  }catch(err){
   if(c){
@@ -3060,7 +3144,7 @@ function renderAll(){
  var nextBtn = el("button", "action", "Vai a: Personaggio &#8594;"); 
  nextBtn.addEventListener(EV, function(){
   if(["X","XX","XXX","XXXX","XXXXX"].indexOf(POZ.classificazione)===-1||(!POZ.tierBase&&!POZ.tierIV&&!POZ.tierV)){window.alert("Seleziona la Classificazione e almeno una fascia di Ingredienti prima di proseguire.");return;}if(!positiveInt(POZ.forzaStandard)){window.alert("Inserisci la Forza Standard della Pozione.");return;}if(!POZ.conoscenzaPosseduta){window.alert("Conferma che il creatore possiede la Conoscenza della Pozione.");return;}
-  currentStep = "pg"; renderAll();
+  goPozioniStep("pg");
  }); 
  p.appendChild(nextBtn);var resetBtn=el("button","action danger","Nuova Pozione — azzera tutto");resetBtn.addEventListener(EV,function(){if(window.confirm("Vuoi davvero azzerare tutti i dati e iniziare una nuova Pozione?")){resetAllState();}});p.appendChild(resetBtn);p.appendChild(el("p","small-note","I dati restano disponibili finché questa pagina rimane aperta. Ricaricando la pagina, la creazione viene azzerata e si riparte da zero."));
  container.appendChild(p);
@@ -3086,7 +3170,7 @@ function renderAll(){
  var nextBtn = el("button", "action", "Vai a: Preparazione degli Ingredienti &#8594;"); 
  nextBtn.addEventListener(EV, function(){
   var issue = setupIssue(); if(issue){ window.alert(issue); return; }
-  currentStep = "prep"; renderAll();
+  goPozioniStep("prep");
  }); 
  p.appendChild(nextBtn); 
 
@@ -3810,7 +3894,7 @@ function renderAll(){
 
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Produzione &#8594;"); 
- nextBtn.addEventListener(EV, function(){ currentStep = "prod"; renderAll(); }); 
+ nextBtn.addEventListener(EV, function(){ goPozioniStep("prod"); }); 
  p.appendChild(nextBtn); 
 
  container.appendChild(p); 
@@ -4422,7 +4506,7 @@ function renderAll(){
 
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Uso della Bacchetta &#8594;"); 
- nextBtn.addEventListener(EV, function(){ currentStep = "bacchetta"; renderAll(); }); 
+ nextBtn.addEventListener(EV, function(){ goPozioniStep("bacchetta"); }); 
  p.appendChild(nextBtn); 
 
  container.appendChild(p); 
@@ -4647,7 +4731,7 @@ function renderAll(){
 
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Imbottigliamento e Pulizia del Calderone &#8594;"); 
- nextBtn.addEventListener(EV, function(){ currentStep = "imbott"; renderAll(); }); 
+ nextBtn.addEventListener(EV, function(){ goPozioniStep("imbott"); }); 
  p.appendChild(nextBtn); 
 
  container.appendChild(p); 
@@ -5146,7 +5230,7 @@ function renderImbottStep(container){
 
  p.appendChild(el("div", "divider")); 
  var nextBtn = el("button", "action", "Vai a: Distillazione (facoltativa) &#8594;"); 
- nextBtn.addEventListener(EV, function(){ currentStep = "distill"; renderAll(); }); 
+ nextBtn.addEventListener(EV, function(){ goPozioniStep("distill"); }); 
  p.appendChild(nextBtn); 
 
  container.appendChild(p); 
@@ -5554,7 +5638,7 @@ function renderImbottStep(container){
 
  p.appendChild(el("div", "divider"));
  var nextBtn = el("button", "action", "Vai a: Riepilogo Finale &#8594;");
- nextBtn.addEventListener(EV, function(){ currentStep = "riepilogo"; renderAll(); });
+ nextBtn.addEventListener(EV, function(){ goPozioniStep("riepilogo"); });
  p.appendChild(nextBtn);
 
  container.appendChild(p);
