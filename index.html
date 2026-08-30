@@ -1,3 +1,5 @@
+<!-- Revisione v78: Distillazione — bonus simultanei Amuleto + Magi Biografia, gruppi non cumulabili, usi condivisi e bonifica dei ritentativi non più validi -->
+<!-- Revisione v77: Distillatore usa automaticamente il normale 1d10 delle Conoscenze Avanzate; fascia Imbottigliamento 21-26 fissata alla tabella regolamentare -->
 <!-- Revisione v72: audit finale — il 1d10 di Efficacia Extra+ accetta 10 senza ricostruire il campo dopo la prima cifra -->
 <!-- Revisione v69: sessioni Firebase protette da doppia creazione e race delete/autosalvataggio -->
 <!-- Revisione v68: ripresa Firebase preserva i risultati salvati; campi numerici del riepilogo terminale non si ricostruiscono durante la digitazione -->
@@ -1436,6 +1438,7 @@
  tierV: false,
  conoscenzaPosseduta: false,
  valigettaAdduco: false,
+ valigettaIllegale: false,
  illegale: false,
  protezioniIllegali: {cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},
  forzaStandard: "",
@@ -1570,7 +1573,7 @@
     - se cambia l'Ingrediente o la quantità sostituita nel rimedio di Preparazione, il vecchio d14 di rimedio
       viene invalidato perché era stato eseguito dopo una sostituzione diversa. */
  var STORAGE_KEY="creazionePozione_v11";
- var SAVE_SCHEMA_VERSION=58;
+ var SAVE_SCHEMA_VERSION=61;
  var saveTimer=null;
  function saveState(){
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
@@ -1719,6 +1722,46 @@
     }
    }
   }
+  /* v60: il regolamento è stato chiarito. La fascia 21-26 usa la tabella esplicita
+     e Distillatore usa lo stesso 1d10 delle Conoscenze Avanzate. Rimuoviamo la
+     vecchia scelta di conflitto e lasciamo che gli esiti della Distillazione vengano
+     ricalcolati dal risultato naturale già salvato, senza riutilizzare un'Efficacia manuale. */
+  if(fromVersion<60){
+   if(Object.prototype.hasOwnProperty.call(pg.data,"imb_21_26_rule")){delete pg.data["imb_21_26_rule"];changed=true;}
+   var migEntries=pg.data["distill_entries"];
+   if(Array.isArray(migEntries)){
+    for(var mi=0;mi<migEntries.length;mi++){
+     var me=migEntries[mi];if(!me||typeof me!=="object")continue;
+     me.eff="skip";
+     me.retry_eff="none";
+    }
+    changed=true;
+   }
+  }
+  /* v61/v78: la v77 permetteva un solo bonus diretto per tiro di Distillatore.
+     Il normale sistema di riuscita, invece, somma bonus appartenenti a gruppi diversi
+     e rende non cumulabili soltanto gli effetti dello stesso gruppo. Separiamo quindi
+     Amuleto della Fortuna e Magi Biografia, preservando il vecchio bonus selezionato.
+     I dadi secondari/ritentativi vengono invalidati una sola volta: possono dipendere
+     da un'Efficacia che ora può cambiare quando i due bonus vengono combinati. */
+  if(fromVersion<61){
+   var v61Entries=pg.data["distill_entries"];
+   if(Array.isArray(v61Entries)){
+    for(var v61i=0;v61i<v61Entries.length;v61i++){
+     var v61e=v61Entries[v61i];if(!v61e||typeof v61e!=="object")continue;
+     var oldFirst=String(v61e.bonus_preset||"");
+     var oldRetry=String(v61e.retry_bonus_preset||"");
+     v61e.bonus_amulet=/^amu_/.test(oldFirst)?oldFirst:"";
+     v61e.bonus_magibio=/^magibio_/.test(oldFirst)?oldFirst:"";
+     v61e.retry_bonus_amulet=/^amu_/.test(oldRetry)?oldRetry:"";
+     v61e.retry_bonus_magibio=/^magibio_/.test(oldRetry)?oldRetry:"";
+     delete v61e.bonus_preset;delete v61e.retry_bonus_preset;
+     v61e.eff="skip";v61e.roll="";v61e.retry_risk="";v61e.retry_raw_d10="";
+     v61e.retry_bonus_amulet="";v61e.retry_bonus_magibio="";v61e.retry_eff="none";v61e.retry_roll="";
+    }
+    changed=true;
+   }
+  }
   return changed;
  }
  function applySavedStateObject(saved){
@@ -1726,6 +1769,7 @@
    saved=saved||{};
    var needsSchemaSave=Number(saved&&saved.stateVersion||0)<SAVE_SCHEMA_VERSION;
    if(saved&&saved.poz){for(var k in saved.poz){if(Object.prototype.hasOwnProperty.call(saved.poz,k)){POZ[k]=saved.poz[k];}}}
+   if(POZ.valigettaAdduco){POZ.valigettaIllegale=true;}
    if(saved&&saved.pgs&&saved.pgs.length){
     pgs=saved.pgs;
     /* Migrazione dai salvataggi delle vecchie versioni che potevano contenere più co-creatori.
@@ -1764,7 +1808,7 @@
  function restoreSavedState(){
   try{var raw=window.localStorage.getItem(STORAGE_KEY);if(!raw){return;}applySavedStateObject(JSON.parse(raw));}catch(e){}
  }
- function resetAllState(preservePgName){var keepName=preservePgName&&pgs&&pgs.length?String(pgs[0].nome||"").trim():"";try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}POZ={nome:"",classificazione:"",tierBase:false,tierIV:false,tierV:false,conoscenzaPosseduta:false,valigettaAdduco:false,illegale:false,protezioniIllegali:{cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},forzaStandard:"",pozionarioNome:""};pgs=[];pgCounter=0;pgs.push(newPG());if(keepName){pgs[0].nome=keepName;}currentStep="info";lastRuleConfigSignature=null;staleResultsResetNotice=false;renderAll();}
+ function resetAllState(preservePgName){var keepName=preservePgName&&pgs&&pgs.length?String(pgs[0].nome||"").trim():"";try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}POZ={nome:"",classificazione:"",tierBase:false,tierIV:false,tierV:false,conoscenzaPosseduta:false,valigettaAdduco:false,valigettaIllegale:false,illegale:false,protezioniIllegali:{cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},forzaStandard:"",pozionarioNome:""};pgs=[];pgCounter=0;pgs.push(newPG());if(keepName){pgs[0].nome=keepName;}currentStep="info";lastRuleConfigSignature=null;staleResultsResetNotice=false;renderAll();}
 
  /* Ponte minimo verso il gestore Firebase esterno. */
  window.__pozSessionBridge={
@@ -2472,6 +2516,14 @@ function illegalExtraFaces(){
 }
 function illegalBaseFaces(pg){return (pg&&pg.tipo==="adulto"&&!!pg.pozionistaMestiere)?50:30;}
 function illegalPhaseLabel(phase){return phase==="prod"?"Produzione":"Uso della Bacchetta";}
+function illegalValigettaPhaseLabel(phase){return {prep:"Preparazione degli Ingredienti",prod:"Produzione",bacchetta:"Uso della Bacchetta",imbott:"Imbottigliamento/Pulizia"}[phase]||phase;}
+function usingIllegalValigetta(){return !!POZ.valigettaIllegale || !!POZ.valigettaAdduco;}
+function buildIllegalValigettaNotice(phase){
+ var box=el("div","guide-text");
+ box.setAttribute("data-no-collapse","1");
+ box.innerHTML="<b>Valigetta del Pozionista illegale — "+escapeHtml(illegalValigettaPhaseLabel(phase))+".</b> Il regolamento stabilisce che <u>ogni volta che si lancia un dado di una fase di creazione</u> all’interno di una Valigetta illegale si compie anche un’Azione Illegale. Risolvi quindi l’Azione Illegale prevista dal regolamento generale per ciascun dado lanciato in questa fase. Il dado generale dell’Azione Illegale non è riprodotto qui perché quel regolamento non è tra gli allegati usati per questo audit.";
+ return box;
+}
 function invalidateIllegalDiscovery(pg){
  if(!pg||!pg.data)return;
  ["prod","bacchetta"].forEach(function(ph){delete pg.data["illegal_"+ph+"_result"];delete pg.data["illegal_"+ph+"_sig"];});
@@ -2679,7 +2731,7 @@ function faticaObbligatoriaTotale(pg){
   var nodes=root.querySelectorAll("p.small-note, div.guide-text");
   for(var i=0;i<nodes.length;i++){
    var node=nodes[i];
-   if(!node || node.closest("details.compact-explainer")){ continue; }
+   if(!node || node.closest("details.compact-explainer") || node.getAttribute("data-no-collapse")==="1"){ continue; }
    if(node.querySelector("input,select,button,textarea")){ continue; }
    var txt=String(node.textContent||"").replace(/\s+/g," ").trim();
    var limit=node.classList.contains("guide-text")?390:230;
@@ -2906,9 +2958,9 @@ function invalidateFromTechniqueNow(pg){
 }
 function invalidateFromStudentMediaNow(pg){
  if(!pg){ return; }
- /* La Media scolastica non entra più direttamente nelle formule di fase, ma stabilisce
-    la coerenza dei voti individuali dello Studente. Se cambia, invalidiamo i risultati
-    per evitare dadi conservati con un voto individuale divenuto incompatibile. */
+ /* La Media scolastica stabilisce la coerenza dei voti individuali e, per Distillatore,
+    è direttamente il voto della Materia collegata usato dalla tabella delle Conoscenze Avanzate.
+    Se cambia, invalidiamo i risultati per non conservare dadi risolti con un profilo precedente. */
  var hadResults=hasDataWithPrefixes(pg,[
   "prep_result_","prep_status_","prep_acc_result_","prep_help_acc_result_","prep_remedy_","prep_retry_","prep_replaced_",
   "prod_result","prod_status","prod_decision","bac_result","bac_status","dosi_base_total","dosi_dice",
@@ -2925,9 +2977,9 @@ function invalidateFromAdultSapienzaNow(pg,oldValue,newValue){
  var newHas=intInRange(newValue,1,25);
  var hadResults=false;
 
- /* Il passaggio 0 <-> 1+ cambia il profilo OFFGame delle Extra+ e della Distillazione.
-    I passaggi interni a 1-25 (compreso 24 <-> 25) non cambiano i dadi: a 25 cambia
-    soltanto la Fatica, che viene ricalcolata dinamicamente nel riepilogo. */
+ /* Il passaggio 0 <-> 1+ cambia il profilo OFFGame delle Extra+ e gli effetti finali
+    della Distillazione. Il 1d10 di Distillatore dipende invece dal livello I-V della singola
+    Conoscenza. I passaggi interni a 1-25 (compreso 24 <-> 25) cambiano qui soltanto la Fatica. */
  if(oldHas!==newHas){
   hadResults=hasDataWithPrefixes(pg,[
    "extra_eff_roll_","prep_man_dice","prod_mem_dice","sintesi_d2",
@@ -2955,8 +3007,8 @@ function invalidateFromAdultSapienzaNow(pg,oldValue,newValue){
    if(!usesManualita && !usesMemoria){ clearImbOutcome(pg); }
   }
 
-  /* Anche senza Extra+, la tabella della Distillazione è diversa tra Adulto senza
-     Sapienza e Adulto con Sapienza 1+. */
+  /* Anche senza Extra+, gli spazi ottenibili dalla Distillazione sono diversi tra
+     Adulto senza Sapienza e Adulto con Sapienza 1+. */
   if(!usesManualita && !usesMemoria && !usesSintesi){
    clearDataByPrefixes(pg,["distill_"]);
   }
@@ -3131,11 +3183,18 @@ function renderAll(){
 
  var adducoLine = el("div", "chk-line");
  var adduco=el("input");adduco.type="checkbox";adduco.id="poz-adduco";adduco.checked=!!POZ.valigettaAdduco;
- adduco.addEventListener("change", function(){ POZ.valigettaAdduco = adduco.checked; });
+ adduco.addEventListener("change", function(){ POZ.valigettaAdduco = adduco.checked; if(adduco.checked){POZ.valigettaIllegale=true;} renderAll(); });
  adducoLine.appendChild(adduco);
  var adducoLbl=elText("label",null,"La Pozione viene creata in una Valigetta del Pozionista ottenuta con Adduco Maxima (-50% della Forza finale)");adducoLbl.htmlFor=adduco.id;adducoLine.appendChild(adducoLbl);
  p.appendChild(adducoLine);
  p.appendChild(el("p", "small-note", "Caso speciale: Adduco Maxima rende la Valigetta illegale e dimezza permanentemente la Forza delle Pozioni create al suo interno. Il malus viene applicato nel Riepilogo Finale dopo gli altri modificatori di Forza."));
+
+ var valIllegalLine=el("div","chk-line");
+ var valIllegal=el("input");valIllegal.type="checkbox";valIllegal.id="poz-valigetta-illegale";valIllegal.checked=usingIllegalValigetta();valIllegal.disabled=!!POZ.valigettaAdduco;
+ valIllegal.addEventListener("change",function(){POZ.valigettaIllegale=valIllegal.checked;renderAll();});
+ valIllegalLine.appendChild(valIllegal);
+ var valIllegalLbl=elText("label",null,"Sto usando una Valigetta del Pozionista illegale / senza licenza (anche una Valigetta aggiuntiva prodotta illegalmente)");valIllegalLbl.htmlFor=valIllegal.id;valIllegalLine.appendChild(valIllegalLbl);p.appendChild(valIllegalLine);
+ p.appendChild(elText("p","small-note",POZ.valigettaAdduco?"Adduco Maxima rende automaticamente illegale la Valigetta: l'opzione resta attiva finché usi questa Valigetta.":"Questa voce è distinta dalla Pozione illegale: riguarda il contenitore/laboratorio portatile. Se attiva, ogni dado delle quattro fasi di creazione richiede anche la relativa Azione Illegale."));
 
  var illegalLine=el("div","chk-line");
  var illegalChk=el("input");illegalChk.type="checkbox";illegalChk.id="poz-illegale";illegalChk.checked=!!POZ.illegale;
@@ -3461,7 +3520,7 @@ function renderAll(){
    chimico:"Chimico I: +2 al modificatore del voto in Produzione, fino a +4.",
    toccoMagico:"Tocco Magico I: +1 possibilità al d15; dosi base 1+1d2.",
    calderaio:"Calderaio I: +2 al valore del voto in Imbottigliamento/Pulizia, fino a 7.",
-   distillatore:"Distillatore I: abilita la Distillazione; si applica il profilo Studente."
+   distillatore:"Distillatore I: abilita la Distillazione; il suo 1d10 usa la tabella delle Conoscenze Avanzate e, per lo Studente, il voto nella Materia collegata (Media in Pozioni)."
   };
   if(helpMap[field]){ d.appendChild(el("p","phase-help",helpMap[field])); }
  }
@@ -3900,6 +3959,7 @@ function renderAll(){
  "L'aiutante viene inserito soltanto qui e non diventa co-creatore. Costo base della fase: -0,5 Fatica; l'eventuale Manualità Tecnica+ costa inoltre -1,5 Fatica. Se usata, il tool determina prima la sua Efficacia con 1d10 e poi applica automaticamente il bonus OFFGame ai d14.")); 
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
+ if(usingIllegalValigetta()){p.appendChild(buildIllegalValigettaNotice("prep"));}
 
  var tiers = []; 
  if(POZ.tierBase){ tiers.push({ key:"base", label:"Ingredienti X, XX e XXX" }); } 
@@ -4523,6 +4583,7 @@ function renderAll(){
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
  if(appendDependencyGate(p, "prod")){ container.appendChild(p); return; }
+ if(usingIllegalValigetta()){p.appendChild(buildIllegalValigettaNotice("prod"));}
 
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildProdCard(pgs[i])); 
@@ -4748,6 +4809,7 @@ function renderAll(){
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
  if(appendDependencyGate(p, "bacchetta")){ container.appendChild(p); return; }
+ if(usingIllegalValigetta()){p.appendChild(buildIllegalValigettaNotice("bacchetta"));}
 
  for(var i=0;i<pgs.length;i++){ 
  p.appendChild(buildBacchettaCard(pgs[i])); 
@@ -5240,6 +5302,7 @@ function renderImbottStep(container){
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
  if(appendDependencyGate(p, "imbott")){ container.appendChild(p); return; }
+ if(usingIllegalValigetta()){p.appendChild(buildIllegalValigettaNotice("imbott"));}
 
  if(pgs.length){
    var dosiPulizia=computeDosiFinali(pgs[0]);
@@ -5407,14 +5470,14 @@ function renderImbottStep(container){
   } 
  } 
  
+ var rangeLbl = bracketRangeLabel(x);
  var br = bracketFor(x); 
- var rangeLbl = bracketRangeLabel(x); 
  var rangeLabelEl = document.getElementById("imb-range-label-" + pg.id); 
  if(rangeLabelEl){ 
  rangeLabelEl.innerHTML = "Il range di riferimento è <b>" + rangeLbl + "</b>: dunque le percentuali di riuscita al lancio di 1d10 sono le seguenti:"; 
  } 
  
- var tableWrap = document.getElementById("imb-table-" + pg.id); 
+ var tableWrap = document.getElementById("imb-table-" + pg.id);
  if(tableWrap){ 
  tableWrap.innerHTML = ""; 
  var tbl = el("table", "bracket"); 
@@ -5601,8 +5664,73 @@ function renderImbottStep(container){
  /* STEP 7 - DISTILLAZIONE */ 
  /* ==================================================== */ 
  function distillDefaultEntry(){
- return {eff:"skip",roll:"",retry_risk:"",retry_eff:"none",retry_roll:""};
+ return {raw_d10:"",bonus_amulet:"",bonus_magibio:"",eff:"skip",roll:"",retry_risk:"",retry_raw_d10:"",retry_bonus_amulet:"",retry_bonus_magibio:"",retry_eff:"none",retry_roll:""};
  }
+ function distillStudentGrade(pg){ return votoValido(pg&&pg.mediaPozioni) ? pg.mediaPozioni : ""; }
+ function distillEfficaciaFromAdjusted(pg, adjusted){
+  var n=Number(adjusted);
+  if(!isFinite(n)||Math.floor(n)!==n){return null;}
+  /* Il tool generale della Riuscita applica i bonus al 1d10 e poi
+     riconduce il totale nell'intervallo 1-10 prima di leggere la tabella.
+     È importante soprattutto per Studenti T/D/S: anche un totale >10
+     resta il risultato 10 della loro tabella Avanzata, quindi 0%. */
+  if(n<1){n=1;}
+  if(n>10){n=10;}
+  if(pg.tipo==="studente"){
+   var v=distillStudentGrade(pg);
+   if(v==="T"||v==="D"||v==="S"){return "0";}
+   if(v==="A"){if(n<=4)return "0";if(n<=6)return "33";if(n<=8)return "66";return "100";}
+   if(v==="O"){if(n<=3)return "0";if(n<=5)return "33";if(n<=7)return "66";return "100";}
+   if(v==="E"){if(n<=2)return "0";if(n<=4)return "33";if(n<=6)return "66";return "100";}
+   return null;
+  }
+  if(pg.tipo==="adulto"){
+   var lv=String(pg.distillatore||"0");
+   if(lv==="I"){if(n<=2)return "33";if(n<=4)return "66";return "100";}
+   if(lv==="II"){if(n===1)return "33";if(n<=3)return "66";return "100";}
+   if(lv==="III"){if(n===1)return "33";if(n===2)return "66";return "100";}
+   if(lv==="IV"){if(n===1)return "66";return "100";}
+   if(lv==="V"){return "100";}
+  }
+  return null;
+ }
+ function distillEfficaciaRangeText(pg){
+  if(pg.tipo==="studente"){
+   var v=distillStudentGrade(pg);
+   if(v==="T"||v==="D"||v==="S")return "0%: 1-10";
+   if(v==="A")return "0%: 1-4 · 33%: 5-6 · 66%: 7-8 · 100%: 9-10";
+   if(v==="O")return "0%: 1-3 · 33%: 4-5 · 66%: 6-7 · 100%: 8-10";
+   if(v==="E")return "0%: 1-2 · 33%: 3-4 · 66%: 5-6 · 100%: 7-10";
+   return "seleziona la Media in Pozioni";
+  }
+  var lv=String(pg.distillatore||"0");
+  if(lv==="I")return "33%: 1-2 · 66%: 3-4 · 100%: 5-10";
+  if(lv==="II")return "33%: 1 · 66%: 2-3 · 100%: 4-10";
+  if(lv==="III")return "33%: 1 · 66%: 2 · 100%: 3-10";
+  if(lv==="IV")return "66%: 1 · 100%: 2-10";
+  if(lv==="V")return "100%: 1-10";
+  return "Distillatore non posseduto";
+ }
+ function distillProfileText(pg){
+  if(pg.tipo==="studente")return "Studente · Media in Pozioni: "+(votoValido(pg.mediaPozioni)?votoNome(pg.mediaPozioni):"da selezionare");
+  return "Adulto · Distillatore "+String(pg.distillatore||"0");
+ }
+ var DISTILL_DIRECT_BONUS_KEYS=["magibio_1","magibio_2","magibio_3","amu_1","amu_2","amu_3","amu_4","amu_5","amu_6","amu_7"];
+ var DISTILL_BONUS_GROUPS=[
+  {id:"amulet",stack:"fortuna",label:"Amuleto della Fortuna",keys:["amu_1","amu_2","amu_3","amu_4","amu_5","amu_6","amu_7"]},
+  {id:"magibio",stack:"magi-biografia",label:"Magi Biografia — Severus Piton",keys:["magibio_1","magibio_2","magibio_3"]}
+ ];
+ function distillBonusPreset(key){if(DISTILL_DIRECT_BONUS_KEYS.indexOf(key)<0){return null;}return POZ_TRACKED_PRESETS[key]||null;}
+ function distillBonusGroupById(id){for(var i=0;i<DISTILL_BONUS_GROUPS.length;i++){if(DISTILL_BONUS_GROUPS[i].id===id)return DISTILL_BONUS_GROUPS[i];}return null;}
+ function distillBonusGroupForKey(key){var p=distillBonusPreset(key),stack=p&&p.stack?String(p.stack):"";for(var i=0;i<DISTILL_BONUS_GROUPS.length;i++){if(DISTILL_BONUS_GROUPS[i].stack===stack)return DISTILL_BONUS_GROUPS[i];}return null;}
+ function distillBonusOptionsForGroup(group){var h='<option value="">— non usare —</option>';if(!group)return h;for(var i=0;i<group.keys.length;i++){var k=group.keys[i],p=distillBonusPreset(k);if(p){h+='<option value="'+k+'">'+escapeHtml(p.label)+'</option>';}}return h;}
+ function distillBonusField(keyPrefix,groupId){return (keyPrefix==="first"?"bonus_":"retry_bonus_")+groupId;}
+ function distillSelectedBonusKeys(entry,keyPrefix){var out=[];for(var i=0;i<DISTILL_BONUS_GROUPS.length;i++){var k=String(entry[distillBonusField(keyPrefix,DISTILL_BONUS_GROUPS[i].id)]||"");if(distillBonusPreset(k))out.push(k);}return out;}
+ function distillBonusUsageCounts(pg){var counts={};var es=normalizeDistillEntries(pg);for(var i=0;i<es.length;i++){for(var g=0;g<DISTILL_BONUS_GROUPS.length;g++){var id=DISTILL_BONUS_GROUPS[g].id;var a=[es[i]["bonus_"+id],es[i]["retry_bonus_"+id]];for(var j=0;j<a.length;j++){var k=String(a[j]||'');if(distillBonusPreset(k)){counts[k]=(counts[k]||0)+1;}}}}return counts;}
+ function distillBonusUsesBefore(pg,key){var p=distillBonusPreset(key);if(!p)return 0;var dk='distill_bonus_uses_before_'+key;var raw=pgDataGet(pg,dk,'');if(!positiveInt(raw)||Number(raw)>Number(p.uses||0)){raw=String(p.uses||0);pg.data[dk]=raw;}return Number(raw);}
+ function distillBonusGroupVariants(pg,groupId){var seen={},out=[],es=normalizeDistillEntries(pg);for(var i=0;i<es.length;i++){var a=[es[i]["bonus_"+groupId],es[i]["retry_bonus_"+groupId]];for(var j=0;j<a.length;j++){var k=String(a[j]||"");if(distillBonusPreset(k)&&!seen[k]){seen[k]=1;out.push(k);}}}return out;}
+ function distillBonusGroupConflict(pg,groupId){return distillBonusGroupVariants(pg,groupId).length>1;}
+ function distillBonusAuditLines(pg){var counts=distillBonusUsageCounts(pg),lines=[];Object.keys(counts).forEach(function(k){var p=distillBonusPreset(k);if(!p)return;var before=distillBonusUsesBefore(pg,k),used=counts[k];lines.push((p.source||p.label)+': +'+Number(p.bonus||0)+' al risultato del d10 di Distillazione; '+used+' '+(used===1?'uso consumato':'usi consumati')+' su '+before+' disponibili → '+Math.max(0,before-used)+' rimasti.');});return lines;}
  
  function normalizeDistillEntries(pg){
  var entries = pg.data["distill_entries"];
@@ -5621,14 +5749,29 @@ function renderImbottStep(container){
  if(!isFinite(maxDosi) || maxDosi < 0){ maxDosi = 0; }
  if(entries.length > maxDosi){ entries = entries.slice(0, maxDosi); }
  for(var i=0;i<entries.length;i++){
-   var e = entries[i] || {};
-   entries[i] = {
-     eff: (e.eff === undefined ? "skip" : String(e.eff)),
-     roll: (e.roll === undefined ? "" : String(e.roll)),
-     retry_risk: (e.retry_risk === undefined ? "" : String(e.retry_risk)),
-     retry_eff: (e.retry_eff === undefined ? "none" : String(e.retry_eff)),
-     retry_roll: (e.retry_roll === undefined ? "" : String(e.retry_roll))
-   };
+   var e = entries[i];
+   if(!e || typeof e!=="object"){ e={}; entries[i]=e; }
+   /* Manteniamo l'identità dell'oggetto: i listener della scheda Distillazione
+      devono continuare a scrivere sulla stessa entry anche dopo i ricalcoli. */
+   e.raw_d10 = (e.raw_d10 === undefined ? "" : String(e.raw_d10));
+   /* Compatibilità difensiva con eventuale stato v77 non ancora migrato. */
+   var legacyFirst=String(e.bonus_preset||"");
+   var legacyRetry=String(e.retry_bonus_preset||"");
+   if(e.bonus_amulet===undefined && /^amu_/.test(legacyFirst)){e.bonus_amulet=legacyFirst;}
+   if(e.bonus_magibio===undefined && /^magibio_/.test(legacyFirst)){e.bonus_magibio=legacyFirst;}
+   if(e.retry_bonus_amulet===undefined && /^amu_/.test(legacyRetry)){e.retry_bonus_amulet=legacyRetry;}
+   if(e.retry_bonus_magibio===undefined && /^magibio_/.test(legacyRetry)){e.retry_bonus_magibio=legacyRetry;}
+   e.bonus_amulet = distillBonusPreset(String(e.bonus_amulet||"")) ? String(e.bonus_amulet) : "";
+   e.bonus_magibio = distillBonusPreset(String(e.bonus_magibio||"")) ? String(e.bonus_magibio) : "";
+   e.eff = (e.eff === undefined ? "skip" : String(e.eff));
+   e.roll = (e.roll === undefined ? "" : String(e.roll));
+   e.retry_risk = (e.retry_risk === undefined ? "" : String(e.retry_risk));
+   e.retry_raw_d10 = (e.retry_raw_d10 === undefined ? "" : String(e.retry_raw_d10));
+   e.retry_bonus_amulet = distillBonusPreset(String(e.retry_bonus_amulet||"")) ? String(e.retry_bonus_amulet) : "";
+   e.retry_bonus_magibio = distillBonusPreset(String(e.retry_bonus_magibio||"")) ? String(e.retry_bonus_magibio) : "";
+   delete e.bonus_preset;delete e.retry_bonus_preset;
+   e.retry_eff = (e.retry_eff === undefined ? "none" : String(e.retry_eff));
+   e.retry_roll = (e.retry_roll === undefined ? "" : String(e.retry_roll));
  }
  pg.data["distill_entries"] = entries;
  return entries;
@@ -5641,7 +5784,7 @@ function renderImbottStep(container){
  "Disponibile solo a chi possiede la Conoscenza Avanzata Distillatore. In questo calcolatore viene resa disponibile solo dopo la conclusione delle quattro fasi di creazione e un Imbottigliamento/Pulizia diverso da 0%. " + 
  "Ora puoi aggiungere <b>una scheda per ogni dose che vuoi distillare</b>, fino al numero di dosi disponibili. Ogni scheda gestisce un’eventuale seconda Distillazione sulla stessa dose e calcola lo spazio finale di quella singola dose. " + 
  "Ogni esecuzione della Distillazione costa -1 Fatica per la dose (0 con Sapienza Pozionistica 25); un secondo tentativo sulla stessa dose conta come una nuova esecuzione. " + 
- "Il regolamento nomina un tiro di Distillazione 1d10 ma nel testo fornito non riporta la tabella che converte quel tiro in 0%/33%/66%/100%: per questo l’Efficacia resta da selezionare manualmente.")); 
+ "Il <b>1d10 di Distillatore è lo stesso normale tiro di riuscita delle Conoscenze Avanzate</b>: il tool ricava automaticamente 0% / 33% / 66% / 100% dal profilo del PG. Per lo Studente usa il voto nella Materia collegata (Media in Pozioni); per l’Adulto usa il livello I-V della singola Conoscenza Distillatore. I bonus diretti da <b>Magi Biografia e Amuleto della Fortuna possono sommarsi fra loro sullo stesso 1d10</b>. All’interno dello stesso gruppo, invece, resta valido un solo valore: un Amuleto non è cumulabile con un altro Amuleto e il bonus Pozionistica di Magi Biografia è un unico bonus preparato. Gli usi sono conteggiati su tutti i tentativi e tutte le dosi.")); 
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
  if(appendDependencyGate(p, "distill")){ container.appendChild(p); return; }
@@ -5755,6 +5898,56 @@ function renderImbottStep(container){
   return {fixed:null, faces:0, desc:"Esito non riconosciuto."};
  }
  
+ function renderDistillD10Control(out,pg,entry,idx,keyPrefix,label){
+  var rawField=keyPrefix==="first"?"raw_d10":"retry_raw_d10";
+  var row=el("div","awareness-box");row.appendChild(el("div","awareness-title",label+" — 1d10 di Distillatore"));
+  row.appendChild(elText("p","small-note",distillProfileText(pg)+". Tabella di riuscita: "+distillEfficaciaRangeText(pg)+". Amuleto della Fortuna e Magi Biografia, se entrambi disponibili, si sommano al risultato dello stesso 1d10; all’interno di ciascun gruppo è valido un solo valore."));
+
+  var counts=distillBonusUsageCounts(pg),ready=true,totalBonus=0,selectedKeys=[],bonusBits=[];
+  for(var gi=0;gi<DISTILL_BONUS_GROUPS.length;gi++){
+   (function(group){
+    var bonusField=distillBonusField(keyPrefix,group.id);
+    var wrap=el("div","advanced-field");wrap.appendChild(elText("label",null,group.label+" (facoltativo)"));
+    var sel=el("select");sel.innerHTML=distillBonusOptionsForGroup(group);sel.value=entry[bonusField]||"";wrap.appendChild(sel);row.appendChild(wrap);
+    var p=distillBonusPreset(sel.value),usesInp=null,usageNote=null;
+    if(p){
+     selectedKeys.push(sel.value);totalBonus+=Number(p.bonus||0);bonusBits.push((p.source||group.label)+" +"+Number(p.bonus||0));
+     var ub=el("div");ub.appendChild(elText("label",null,"Usi disponibili prima della Distillazione — "+group.label));usesInp=el("input");usesInp.type="number";usesInp.min="1";usesInp.max=String(p.uses);usesInp.step="1";usesInp.value=String(distillBonusUsesBefore(pg,sel.value));blockNonIntegerBonusKeys(usesInp);ub.appendChild(usesInp);row.appendChild(ub);
+     usageNote=el("p","small-note");row.appendChild(usageNote);
+     var before=distillBonusUsesBefore(pg,sel.value),used=Number(counts[sel.value]||0);
+     usageNote.textContent="Questo bonus è selezionato su "+used+" tiro/i di Distillazione; con "+before+" usi disponibili ne resteranno "+Math.max(0,before-used)+".";
+     if(used>before){ready=false;usageNote.textContent+=" Usi insufficienti: riduci i tiri che usano il bonus o correggi gli usi rimasti.";}
+    }
+    if(distillBonusGroupConflict(pg,group.id)){
+     ready=false;
+     var variants=distillBonusGroupVariants(pg,group.id).map(function(k){var pd=distillBonusPreset(k);return pd?pd.label:k;});
+     row.appendChild(el("div","guide-text","<b>Bonus non coerente — "+escapeHtml(group.label)+".</b> Nei vari tentativi risultano selezionati valori diversi dello stesso bonus ("+escapeHtml(variants.join(" / "))+"). Il regolamento non li rende risorse indipendenti: usa lo stesso valore in tutti i tiri in cui scegli di applicarlo."));
+    }
+    sel.addEventListener("change",function(){
+     entry[bonusField]=sel.value;
+     if(keyPrefix==="first"){
+      entry.eff="skip";entry.roll="";entry.retry_risk="";entry.retry_raw_d10="";entry.retry_bonus_amulet="";entry.retry_bonus_magibio="";entry.retry_eff="none";entry.retry_roll="";
+     }else{entry.retry_eff="none";entry.retry_roll="";}
+     recomputeDistill(pg);
+    });
+    if(usesInp){usesInp.addEventListener("input",function(){var k=sel.value,pd=distillBonusPreset(k);if(pd){var n=parseInt(usesInp.value,10);pg.data['distill_bonus_uses_before_'+k]=Number.isFinite(n)?String(Math.max(1,Math.min(Number(pd.uses),n))):usesInp.value;}recomputeDistill(pg);});}
+   })(DISTILL_BONUS_GROUPS[gi]);
+  }
+
+  var codeLine=el("div","result-line"),cid="distill-d10-"+pg.id+"-"+idx+"-"+keyPrefix,code=el("div","dice-code");code.id=cid;
+  code.textContent="[dice=1d10]"+label+" - "+pg.nome+" (Dose "+(idx+1)+(bonusBits.length?"; "+bonusBits.join("; ")+" al risultato":"")+")[/dice]";codeLine.appendChild(code);var cp=el("button","copy-btn","Copia");cp.id=cid+"-copy";codeLine.appendChild(cp);row.appendChild(codeLine);setTimeout(function(){attachCopy(cid+"-copy",cid);},0);
+  var rr=el("div","result-line");rr.appendChild(elText("span",null,"Risultato naturale del 1d10:"));var inp=el("input");inp.type="number";inp.min="1";inp.max="10";inp.step="1";inp.value=entry[rawField]||"";rr.appendChild(inp);var tag=el("span","out-tag out-neutral","in attesa");rr.appendChild(tag);row.appendChild(rr);
+  var eff=null,adjusted=null;
+  if(pg.tipo==="studente"&&!votoValido(pg.mediaPozioni)){ready=false;tag.textContent="Media in Pozioni mancante";tag.className="out-tag out-fail";}
+  if(inp.value===""){ready=false;if(!(pg.tipo==="studente"&&!votoValido(pg.mediaPozioni))){tag.textContent="in attesa";tag.className="out-tag out-neutral";}}
+  else if(!intInRange(inp.value,1,10)){ready=false;tag.textContent="Risultato impossibile";tag.className="out-tag out-fail";}
+  else if(ready){adjusted=Number(inp.value)+totalBonus;eff=distillEfficaciaFromAdjusted(pg,adjusted);if(eff===null){ready=false;tag.textContent="Profilo non valido";tag.className="out-tag out-fail";}else{var tabValue=Math.max(1,Math.min(10,adjusted));tag.textContent="Risultato modificato: "+adjusted+(tabValue!==adjusted?" (letto come "+tabValue+" nella tabella 1d10)":"")+" → Efficacia "+eff+"%";tag.className=eff==="0"?"out-tag out-fail":"out-tag out-ok";}}
+  else if(inp.value!==""&&intInRange(inp.value,1,10)&&tag.textContent==="in attesa"){tag.textContent="Correggi bonus/usi";tag.className="out-tag out-fail";}
+  inp.addEventListener("input",function(){entry[rawField]=inp.value;if(keyPrefix==="first"){entry.eff="skip";entry.roll="";entry.retry_risk="";entry.retry_raw_d10="";entry.retry_bonus_amulet="";entry.retry_bonus_magibio="";entry.retry_eff="none";entry.retry_roll="";}else{entry.retry_eff="none";entry.retry_roll="";}recomputeDistill(pg);});
+  out.appendChild(row);
+  return {ready:ready,adjusted:adjusted,eff:eff,bonus:totalBonus,bonusKeys:selectedKeys};
+ }
+
  function renderDistillEntryAttemptOutcome(out, pg, entry, idx, eff, keyPrefix, label){
   var spec = distillOutcomeSpec(pg, eff);
   out.appendChild(el("p", "small-note", "<b>" + label + ":</b> " + spec.desc));
@@ -5801,10 +5994,16 @@ function renderImbottStep(container){
  
  function appendDistillEntryRetryFlow(out, pg, entry, idx, firstEff, firstSpace){
   if(firstEff !== "0" && firstEff !== "33" && firstEff !== "66"){
+    /* Nessun ritentativo previsto: elimina anche dallo stato eventuali valori storici
+       nascosti, così non possono riapparire se il ramo viene riaperto in seguito. */
+    entry.retry_risk="";entry.retry_raw_d10="";entry.retry_bonus_amulet="";entry.retry_bonus_magibio="";entry.retry_eff="none";entry.retry_roll="";
     return {space:firstSpace, attempts:1, destroyed:false, processed:true};
   }
   if(firstEff === "66" && firstSpace === null){
     entry.retry_risk = "";
+    entry.retry_raw_d10 = "";
+    entry.retry_bonus_amulet = "";
+    entry.retry_bonus_magibio = "";
     entry.retry_eff = "none";
     entry.retry_roll = "";
     out.appendChild(el("div", "divider"));
@@ -5824,11 +6023,19 @@ function renderImbottStep(container){
   rinp.addEventListener("input", function(){
     entry.retry_risk = rinp.value;
     if(rinp.value !== "1"){
+      entry.retry_raw_d10 = "";
+      entry.retry_bonus_amulet = "";
+      entry.retry_bonus_magibio = "";
       entry.retry_eff = "none";
       entry.retry_roll = "";
     }
     recomputeDistill(pg);
   });
+  /* Anche un salvataggio importato potrebbe contenere un vecchio 2° tentativo pur
+     avendo rischio vuoto, impossibile o pari a 2. Lo stato viene normalizzato subito. */
+  if(rinp.value !== "1"){
+    entry.retry_raw_d10="";entry.retry_bonus_amulet="";entry.retry_bonus_magibio="";entry.retry_eff="none";entry.retry_roll="";
+  }
  
   if(rinp.value === ""){
     return {space:firstSpace, attempts:1, destroyed:false, processed:true};
@@ -5845,54 +6052,38 @@ function renderImbottStep(container){
   }
   rtag.textContent = "2° tentativo consentito"; rtag.className = "out-tag out-ok";
  
-  var erow = el("div"); erow.appendChild(el("label", null, "Efficacia ottenuta — 2° tentativo"));
-  var esel = el("select");
-  var ops = [["none","— non effettuato —"],["0","0% (fallita)"],["33","33%"],["66","66%"],["100","100%"]];
-  for(var i=0;i<ops.length;i++){
-    var o = el("option", null, ops[i][1]); o.value = ops[i][0]; esel.appendChild(o);
-  }
-  esel.value = entry.retry_eff || "none"; erow.appendChild(esel); out.appendChild(erow);
-  esel.addEventListener("change", function(){ entry.retry_eff = esel.value; entry.retry_roll = ""; recomputeDistill(pg); });
-  if(esel.value === "none"){
+  var retryD10=renderDistillD10Control(out,pg,entry,idx,"retry","2° tentativo di Distillazione");
+  if(!retryD10.ready){
+    entry.retry_eff="none";
+    out.appendChild(el("p","small-note","Completa il 1d10 del 2° tentativo e gli eventuali usi del bonus: l’Efficacia verrà calcolata automaticamente con la stessa tabella delle Conoscenze Avanzate."));
     return {space:firstSpace, attempts:1, destroyed:false, processed:true};
   }
+  var retryEff=retryD10.eff;
+  if(entry.retry_eff!==retryEff){entry.retry_eff=retryEff;entry.retry_roll="";}
+  out.appendChild(el("div","result-line",'<span>Efficacia automatica — 2° tentativo</span><span class="out-tag '+(retryEff==="0"?"out-fail":"out-ok")+'">'+retryEff+'%</span>'));
  
-  var secondSpace = renderDistillEntryAttemptOutcome(out, pg, entry, idx, esel.value, "retry", "2° tentativo di Distillazione");
+  var secondSpace = renderDistillEntryAttemptOutcome(out, pg, entry, idx, retryEff, "retry", "2° tentativo di Distillazione");
   out.appendChild(el("p", "small-note", "Dopo questo 2° tentativo non viene proposto un ulteriore tentativo: il regolamento stabilisce che ripetere la Distillazione più di due volte fa esplodere la Pozione."));
-  return {space:secondSpace, attempts:2, destroyed:false, processed:true, invalid:(secondSpace===null && esel.value !== "0")};
+  return {space:secondSpace, attempts:2, destroyed:false, processed:true, invalid:(secondSpace===null && retryEff !== "0")};
  }
  
  function renderSingleDistillDose(out, pg, entry, idx){
   var wrap = el("div", "pg-card");
   wrap.appendChild(elText("h3", null, "Dose " + (idx + 1)));
  
-  var effRow = el("div");
-  effRow.appendChild(el("label", null, "Efficacia ottenuta — 1° tentativo"));
-  var sel = el("select");
-  var opts = [["skip","— seleziona / non distillare questa dose —"],["0","0% (fallita)"],["33","33%"],["66","66%"],["100","100%"]];
-  for(var i=0;i<opts.length;i++){
-    var o = el("option", null, opts[i][1]); o.value = opts[i][0]; sel.appendChild(o);
-  }
-  sel.value = entry.eff || "skip";
-  sel.addEventListener("change", function(){
-    entry.eff = sel.value;
-    entry.roll = "";
-    entry.retry_risk = "";
-    entry.retry_eff = "none";
-    entry.retry_roll = "";
-    recomputeDistill(pg);
-  });
-  effRow.appendChild(sel);
-  wrap.appendChild(effRow);
- 
-  if(sel.value === "skip"){
-    wrap.appendChild(el("div", "guide-text", "Questa scheda non sta ancora distillando nessuna dose. Seleziona un’Efficacia oppure rimuovi la scheda."));
+  var d10state=renderDistillD10Control(wrap,pg,entry,idx,"first","1° tentativo di Distillazione");
+  if(!d10state.ready){
+    entry.eff="skip";
+    wrap.appendChild(el("div", "guide-text", "Completa il <b>1d10 di Distillatore</b> e, se selezionato, verifica che il bonus abbia usi sufficienti. L’Efficacia verrà ricavata automaticamente dalla normale tabella delle Conoscenze Avanzate."));
     out.appendChild(wrap);
     return {processed:false, attempts:0, destroyed:false, invalid:false, space:"standard"};
   }
+  var firstEff=d10state.eff;
+  if(entry.eff!==firstEff){entry.eff=firstEff;entry.roll="";entry.retry_risk="";entry.retry_raw_d10="";entry.retry_bonus_amulet="";entry.retry_bonus_magibio="";entry.retry_eff="none";entry.retry_roll="";}
+  wrap.appendChild(el("div","result-line",'<span>Efficacia automatica — 1° tentativo</span><span class="out-tag '+(firstEff==="0"?"out-fail":"out-ok")+'">'+firstEff+'%</span>'));
  
-  var firstSpace = renderDistillEntryAttemptOutcome(wrap, pg, entry, idx, sel.value, "first", "1° tentativo di Distillazione");
-  var result = appendDistillEntryRetryFlow(wrap, pg, entry, idx, sel.value, firstSpace);
+  var firstSpace = renderDistillEntryAttemptOutcome(wrap, pg, entry, idx, firstEff, "first", "1° tentativo di Distillazione");
+  var result = appendDistillEntryRetryFlow(wrap, pg, entry, idx, firstEff, firstSpace);
   var finalLabel = "Esito finale della dose: da completare";
   var finalClass = "guide-text";
   if(result.destroyed){
@@ -5906,7 +6097,7 @@ function renderImbottStep(container){
   out.appendChild(wrap);
   return result;
  }
- 
+
  function recomputeDistill(pg){ 
  var out = document.getElementById("distill-out-" + pg.id); 
  if(!out){ return; } 
@@ -6423,6 +6614,7 @@ function renderImbottStep(container){
  var categoriaForcePercent = forzaPercentTotal;
  var valigettaFactor = POZ.valigettaAdduco ? 0.5 : 1;
  if(POZ.valigettaAdduco){ noteRighe.push("Valigetta creata con Adduco Maxima: -50% della Forza finale (la Forza viene dimezzata dopo gli altri modificatori)."); }
+ if(usingIllegalValigetta()){noteRighe.push("Valigetta del Pozionista illegale: ogni dado delle quattro fasi di creazione costituisce anche un’Azione Illegale; i relativi controlli generali vanno risolti con il regolamento dedicato.");}
  var durataPercent = prepAcc.durata; 
 
  var forzaBaseRawPerCategoria = POZ.forzaStandard;
@@ -6613,7 +6805,7 @@ function renderImbottStep(container){
    " con " + effectiveTechnique(pg) + " Tecnica" + (globalTechniqueBonusInfo(pg).bonus ? " ("+pg.tecnica+" base +"+globalTechniqueBonusInfo(pg).bonus+" bonus)" : "") + roleInventario +
    " - " + spazioInventario);
 
- var trackedLinesFinal=trackedEffectAuditLines(pg);
+ var trackedLinesFinal=trackedEffectAuditLines(pg).concat(distillBonusAuditLines(pg));
  if(trackedLinesFinal.length){
    var usageBox=el("div","usage-summary-box");
    usageBox.appendChild(elText("div","usage-title","Oggetti/Conoscenze usati — aggiorna Fatica e usi"));
