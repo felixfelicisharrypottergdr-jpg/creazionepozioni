@@ -1,21 +1,3 @@
-<!-- Revisione v78: Distillazione — bonus simultanei Amuleto + Magi Biografia, gruppi non cumulabili, usi condivisi e bonifica dei ritentativi non più validi -->
-<!-- Revisione v77: Distillatore usa automaticamente il normale 1d10 delle Conoscenze Avanzate; fascia Imbottigliamento 21-26 fissata alla tabella regolamentare -->
-<!-- Revisione v72: audit finale — il 1d10 di Efficacia Extra+ accetta 10 senza ricostruire il campo dopo la prima cifra -->
-<!-- Revisione v69: sessioni Firebase protette da doppia creazione e race delete/autosalvataggio -->
-<!-- Revisione v68: ripresa Firebase preserva i risultati salvati; campi numerici del riepilogo terminale non si ricostruiscono durante la digitazione -->
-<!-- Revisione v67: audit funzionale — viewport mobile reale; reset coerente con sessione Firebase; fase sessione corretta; profilo non selezionato più chiaro -->
-<!-- Revisione v71: rifinitura audit — messaggi corretti per Distillazione parziale; testi Bacchetta/Imbottigliamento riallineati al catalogo bonus v59 -->
-<!-- Revisione v70: Distillazione multipla — conteggio corretto di più dosi distrutte, perdita terminale se vengono distrutte tutte le dosi, quantità superstite esportata all'Elfo -->
-<!-- Revisione v65: contrasto Sessioni Pozioni corretto; label/input del PG leggibili sul pannello chiaro -->
-<!-- Revisione v66: cambio Step riporta in cima anche nell’iframe ForumFree; navigazione in font magic; spiegazioni lunghe richiudibili -->
-<!-- Revisione v63: sessioni Firebase personali per ogni creazione; il refresh torna all’elenco e non riprende automaticamente una Pozione -->
-<!-- Revisione v61: importazione strutturata verso Il Mio Elfo Domestico dal Riepilogo Finale -->
-<!-- Revisione v58: catalogo bonus allineato a Erbologia/Magizoologia — preset da Prezzario/Conoscenze, usi/Fatica, bonus a Tecnica o dado, riepilogo oggetti e usi del Calderone -->
-<!-- Revisione v56: Azioni Illegali specifiche per Pozioni — selezione iniziale, Pozionista di mestiere, protezioni e controlli PNG in Produzione/Uso della Bacchetta -->
-<!-- Revisione v55: bonus/possibilità da Oggetti e Conoscenze tracciabili con fonte, condizione, Fatica e usi; editor riallineati e riepilogo usi finale -->
-<!-- Revisione v54: Uso della Bacchetta separa i bonus che aumentano Tecnica dai bonus che aggiungono direttamente possibilità al d15 -->
-<!-- Revisione v53: Categoria Standard/OOP/E calcolata sulla Forza complessiva effettiva, incluso il bonus di Preparazione -->
-<!-- Revisione regolamento v52: bonus Tecnica centralizzati nello Step 2 e applicati alla Tecnica effettiva prima di tutte le formule; refresh = nuova creazione vuota -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <div id="creazione-pozione" class="foglio"> 
 <style>
@@ -1439,6 +1421,7 @@
  conoscenzaPosseduta: false,
  valigettaAdduco: false,
  valigettaIllegale: false,
+ laboratorioNonRegistrato: false,
  illegale: false,
  protezioniIllegali: {cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},
  forzaStandard: "",
@@ -1451,6 +1434,102 @@
  var POZIONARIO_BY_NAME = {};
  for(var pzi=0;pzi<POZIONARIO.length;pzi++){POZIONARIO_BY_NAME[POZIONARIO[pzi].n]=POZIONARIO[pzi];}
  function currentPozionarioEntry(){return POZ.pozionarioNome&&POZIONARIO_BY_NAME[POZ.pozionarioNome]?POZIONARIO_BY_NAME[POZ.pozionarioNome]:null;}
+
+ /* ---------- REGOLE SPECIFICHE DELLE SINGOLE POZIONI ---------- */
+ function isPozioneEsplosiva(){
+  var e=currentPozionarioEntry();
+  return !!(e&&e.n==="Pozione Esplosiva");
+ }
+ function explosivePotionRiskInfo(pg){
+  var active=isPozioneEsplosiva();
+  var roll=active?pgDataGet(pg,"bac_esplosiva_risk",""):"";
+  var valid=active&&intInRange(roll,1,10);
+  return {active:active,roll:roll,valid:valid,complete:!active||valid,exploded:active&&valid&&Number(roll)===1};
+ }
+ function specialBiologicalComponentInfo(){
+  var e=currentPozionarioEntry();
+  if(!e){return null;}
+  if(e.n==="Amortentia +"){
+   return {potion:e.n,needle:"Capello della persona di cui la vittima deve innamorarsi",label:"Capello/pelo della persona di cui la vittima deve innamorarsi",pending:"Capello da aggiungere",note:"Il capello/pelo deve essere ottenuto ONGame in un post e convalidato dal Narratore. La Pozione può essere conclusa senza il componente e registrata come «Capello da aggiungere»; aggiungerlo in seguito costa un’Azione/Azione Bonus."};
+  }
+  if(e.n==="Pozione Polisucco +"){
+   return {potion:e.n,needle:"Capello o pelo della persona scelta",label:"Capello/pelo della persona scelta",pending:"Capello da aggiungere",note:"Il frammento biologico deve essere ottenuto ONGame in un post dedicato e convalidato dal Narratore. La Pozione può essere conclusa senza il componente e registrata come «Capello da aggiungere»; aggiungerlo in seguito costa un’Azione/Azione Bonus."};
+  }
+  return null;
+ }
+ function isSpecialBiologicalIngredient(name){
+  var info=specialBiologicalComponentInfo();
+  return !!(info&&String(name||"")===info.needle);
+ }
+ function specialBiologicalComponentAdded(pg){return !!pgDataGet(pg,"riep_bio_component_added",false);}
+ function buildSpecialBiologicalComponentBlock(pg){
+  var info=specialBiologicalComponentInfo();
+  if(!info){return null;}
+  var box=el("div","guide-text");box.setAttribute("data-no-collapse","1");
+  box.appendChild(el("div",null,"<b>Componente biologico differibile — "+escapeHtml(info.potion)+"</b>"));
+  box.appendChild(elText("p","small-note",info.note));
+  var line=el("div","chk-line"),chk=el("input");chk.type="checkbox";chk.id="riep-bio-added-"+pg.id;chk.checked=specialBiologicalComponentAdded(pg);
+  chk.addEventListener("change",function(){pg.data["riep_bio_component_added"]=chk.checked;renderAll();});line.appendChild(chk);
+  var lbl=elText("label",null,"Il componente biologico è già stato ottenuto, convalidato e aggiunto alla Pozione");lbl.htmlFor=chk.id;line.appendChild(lbl);box.appendChild(line);
+  if(!chk.checked){box.appendChild(elText("p","small-note","Non viene contato tra i componenti consumati in questa creazione e la frase Inventario riporterà «"+info.pending+"»."));}
+  return box;
+ }
+
+ /* ===== v80 — LEGALITÀ POZIONI + INGREDIENTI (Glossario autoritativo) ===== */
+ var POZ_V80_ILLEGAL_POTIONS=["Decotto Dilatante","Doxycida","Erbicida","Pozione Alitosa","Pozione della Debolezza","Pozione Foruncolosa","Pozione Gonfiocchi","Pozione Starnutosa","Repellente per Lumache Carnivore","Soluzione Singhiozzante","Pozione Polisucco","Veritaserum","Amortentia","Cristalli di Cupido","Distillato Angelico","Pozione Allucinogena","Veleno Arsenicum","Veleno di Mirtillo","Veleno Erbefolli","Veleno di Semi di Luna","Veleno Tentacolare","Veleno Cappello della Morte","Veleno del Bacio Mortale","Veleno del Diavolo","Veleno Nervino","Veleno Noxius","Veleno Radice Insanguinata"];
+ var POZ_V81_CREATION_LEGALITY_UNRESOLVED=["Felix Felicis","Mix Malevolo"];
+ var POZ_V80_INGREDIENT_LAW={"acido di albero carnivoro":{"c":"pozionista","n":"Acido di Albero Carnivoro"},"acqua di testa di kappa":{"c":"legale","n":"Acqua di testa di Kappa"},"aculeo di istrice":{"c":"legale","n":"Aculeo di Istrice"},"aculeo di knarl":{"c":"legale","n":"Aculeo di Knarl"},"aculeo di tentacula velenosa":{"c":"illegale","n":"Aculeo di Tentacula Velenosa"},"algabranchia":{"c":"legale","n":"Algabranchia"},"alga di loto di mahoutokoro":{"c":"legale","n":"Alga di Loto di Mahoutokoro"},"ala di doxy":{"c":"legale","n":"Ala di Doxy"},"ala di fata":{"c":"legale","n":"Ala di Fata"},"ala di pipistrello":{"c":"legale","n":"Ala di Pipistrello"},"ala di pixie":{"c":"legale","n":"Ala di Pixie"},"ala di scriber":{"c":"legale","n":"Ala di Scriber"},"amaralanfa di amarantacea":{"c":"legale","n":"Amaralanfa di Amarantacea"},"antenna di duckbill":{"c":"legale","n":"Antenna di Duckbill"},"appendici di purvincolo":{"c":"legale","n":"Appendici di Purvincolo"},"artiglio di drago":{"c":"legale","n":"Artiglio di Drago"},"artiglio di duckbill":{"c":"legale","n":"Artiglio di Duckbill"},"artiglio di grifone":{"c":"legale","n":"Artiglio di Grifone"},"artiglio di ippogrifo":{"c":"legale","n":"Artiglio di Ippogrifo"},"artiglio di matagot":{"c":"legale","n":"Artiglio di Matagot"},"artiglio di sfinge":{"c":"legale","n":"Artiglio di Sfinge"},"bacca di agrifoglio":{"c":"pozionista","n":"Bacca di Agrifoglio"},"bacca di alloro":{"c":"legale","n":"Bacca di Alloro"},"bacca di balzar":{"c":"legale","n":"Bacca di Balzar"},"bacca di belladonna":{"c":"pozionista","n":"Bacca di Belladonna"},"bacca di vischio":{"c":"pozionista","n":"Bacca di Vischio"},"baccello di pugnacio":{"c":"pozionista","n":"Baccello di Pugnacio"},"baccello di stupefiore":{"c":"illegale","n":"Baccello di Stupefiore"},"baccello di tentacula velenosa":{"c":"illegale","n":"Baccello di Tentacula Velenosa"},"baffi di mau":{"c":"legale","n":"Baffi di Mau"},"bava di ghoul":{"c":"legale","n":"Bava di Ghoul"},"bava di lumaca carnivora":{"c":"legale","n":"Bava di Lumaca Carnivora"},"bezoar":{"c":"legale","n":"Bezoar"},"bile di armadillo":{"c":"legale","n":"Bile di Armadillo"},"bruco peloso carnivoro":{"c":"legale","n":"Bruco Peloso Carnivoro"},"bulbo di bucaneve":{"c":"pozionista","n":"Bulbo di Bucaneve"},"bulbo di bulbo balzellante":{"c":"legale","n":"Bulbo di Bulbo Balzellante"},"caccola di baku":{"c":"legale","n":"Caccola di Baku"},"capello di ninfa dei boschi":{"c":"legale","n":"Capello di Ninfa dei Boschi"},"capello di veela":{"c":"legale","n":"Capello di Veela"},"cappello di fungo scoppiettante":{"c":"legale","n":"Cappello di Fungo Scoppiettante"},"cenere dell'albero di cenere":{"c":"legale","n":"Cenere dell'Albero di Cenere"},"cenere di ashwinder":{"c":"legale","n":"Cenere di Ashwinder"},"cenere di pianta di seme di fuoco":{"c":"legale","n":"Cenere di Pianta di Seme di Fuoco"},"cervello di rana":{"c":"legale","n":"Cervello di Rana"},"chela di kàvouras":{"c":"legale","n":"Chela di Kàvouras"},"coda di erumpent":{"c":"legale","n":"Coda di Erumpent"},"coda di malacaw maculato":{"c":"legale","n":"Coda di Malacaw Maculato"},"coda di topo":{"c":"legale","n":"Coda di Topo"},"concime di menta tibetana":{"c":"legale","n":"Concime di Menta Tibetana"},"corda di cuore di drago":{"c":"legale","n":"Corda di cuore di Drago"},"corno di bicorno":{"c":"legale","n":"Corno di Bicorno"},"corno di hodag":{"c":"legale","n":"Corno di Hodag"},"corno di graphorn":{"c":"legale","n":"Corno di Graphorn"},"corno di unicorno":{"c":"legale","n":"Corno di Unicorno"},"corteccia dell'albero della vita":{"c":"legale","n":"Corteccia dell'Albero della Vita"},"corteccia di alloro":{"c":"legale","n":"Corteccia di Alloro"},"corteccia di platano picchiatore":{"c":"illegale","n":"Corteccia di Platano Picchiatore"},"crine di cavallo alato":{"c":"legale","n":"Crine di Cavallo Alato"},"crine di fiammablu":{"c":"legale","n":"Crine di Fiammablu"},"crine di hanabira":{"c":"legale","n":"Crine di Hanabira"},"crine di thestral":{"c":"legale","n":"Crine di Thestral"},"crine di unicorno":{"c":"legale","n":"Crine di Unicorno"},"cristallo di fiammablu":{"c":"legale","n":"Cristallo di Fiammablu"},"cuore di coccodrillo":{"c":"legale","n":"Cuore di Coccodrillo"},"dente di ninki nanka":{"c":"legale","n":"Dente di Ninki Nanka"},"dente di wiggity":{"c":"legale","n":"Dente di Wiggity"},"dito di erkling":{"c":"legale","n":"Dito di Erkling"},"escremento di wiggity":{"c":"legale","n":"Escremento di Wiggity"},"essenza di ruta":{"c":"illegale","n":"Essenza di Ruta"},"estratto di annientamento":{"c":"illegale","n":"Estratto di Annientamento"},"estratto di coccolacea":{"c":"legale","n":"Estratto di Coccolacea"},"estratto di mandragola":{"c":"legale","n":"Estratto di Mandragola"},"estratto di moly":{"c":"legale","n":"Estratto di Moly"},"fagiolo corridore":{"c":"legale","n":"Fagiolo Corridore"},"fagiolo sopoforoso":{"c":"pozionista","n":"Fagiolo Sopoforoso"},"fango di sblorb":{"c":"legale","n":"Fango di Sblorb"},"fertilizzante di arbusto autofertilizzante":{"c":"legale","n":"Fertilizzante di Arbusto Autofertilizzante"},"fico":{"c":"legale","n":"Fico"},"filo d'erba del prato messicano":{"c":"legale","n":"Filo d'erba del Prato Messicano"},"fiore di aloe":{"c":"legale","n":"Fiore di Aloe"},"fiore di asfodelo":{"c":"pozionista","n":"Fiore di Asfodelo"},"fiore di belladonna":{"c":"pozionista","n":"Fiore di Belladonna"},"fiore di bucaneve":{"c":"pozionista","n":"Fiore di Bucaneve"},"fiore di canterose":{"c":"illegale","n":"Fiore di Canterose"},"fiore di cespuglio farfallino":{"c":"legale","n":"Fiore di Cespuglio Farfallino"},"fiore di cespuglio spinoso":{"c":"legale","n":"Fiore di Cespuglio Spinoso"},"fiore di dittamo":{"c":"legale","n":"Fiore di Dittamo"},"fiore (bolle) di erbaschiuma":{"c":"legale","n":"Fiore (bolle) di Erbaschiuma"},"fiore di erba stregata":{"c":"illegale","n":"Fiore di Erba Stregata"},"fiore di geranio zannuto":{"c":"legale","n":"Fiore di Geranio Zannuto"},"fiore di hanabira":{"c":"legale","n":"Fiore di Hanabira"},"fiore di lavanda":{"c":"legale","n":"Fiore di Lavanda"},"fiore di platano colombiano":{"c":"illegale","n":"Fiore di Platano Colombiano"},"fiore di primula veris":{"c":"legale","n":"Fiore di Primula Veris"},"fiore di tentacula velenosa":{"c":"illegale","n":"Fiore di Tentacula Velenosa"},"fiore fabula":{"c":"legale","n":"Fiore Fabula"},"fluido di erumpent":{"c":"legale","n":"Fluido di Erumpent"},"foglia di agrifoglio":{"c":"pozionista","n":"Foglia di Agrifoglio"},"foglia di alioto":{"c":"pozionista","n":"Foglia di Alioto"},"foglia di alloro":{"c":"legale","n":"Foglia di Alloro"},"foglia di aloe":{"c":"legale","n":"Foglia di Aloe"},"foglia di amarantacea":{"c":"legale","n":"Foglia di Amarantacea"},"foglia di annientamento":{"c":"illegale","n":"Foglia di Annientamento"},"foglia di arbusto autofertilizzante":{"c":"legale","n":"Foglia di Arbusto Autofertilizzante"},"foglia di artemisia":{"c":"legale","n":"Foglia di Artemisia"},"foglia di assenzio":{"c":"pozionista","n":"Foglia di Assenzio"},"foglia di bebop caraibica":{"c":"legale","n":"Foglia di Bebop Caraibica"},"foglia di belladonna":{"c":"pozionista","n":"Foglia di Belladonna"},"foglia di brugmansia":{"c":"illegale","n":"Foglia di Brugmansia"},"foglia di cavolo carnivoro cinese":{"c":"legale","n":"Foglia di Cavolo Carnivoro Cinese"},"foglia di centinodia":{"c":"legale","n":"Foglia di Centinodia"},"foglia di cespuglio farfallino":{"c":"legale","n":"Foglia di Cespuglio Farfallino"},"foglia di cicuta":{"c":"illegale","n":"Foglia di Cicuta"},"foglia di coccolacea":{"c":"legale","n":"Foglia di Coccolacea"},"foglia di coclearia":{"c":"legale","n":"Foglia di Coclearia"},"foglia di dittamo":{"c":"legale","n":"Foglia di Dittamo"},"foglia di erba fondente":{"c":"legale","n":"Foglia di Erba Fondente"},"foglia di erba stregata":{"c":"illegale","n":"Foglia di Erba Stregata"},"foglia di felci imitanti":{"c":"pozionista","n":"Foglia di Felci Imitanti"},"foglia di giaggiolo puzzolente":{"c":"legale","n":"Foglia di Giaggiolo Puzzolente"},"foglia di levistico":{"c":"legale","n":"Foglia di Levistico"},"foglia di mandragola":{"c":"legale","n":"Foglia di Mandragola"},"foglia di menta piperita":{"c":"legale","n":"Foglia di Menta Piperita"},"foglia di menta tibetana":{"c":"legale","n":"Foglia di Menta Tibetana"},"foglia di ortica":{"c":"pozionista","n":"Foglia di Ortica"},"foglia di platano picchiatore":{"c":"illegale","n":"Foglia di Platano Picchiatore"},"foglia di pugnacio":{"c":"illegale","n":"Foglia di Pugnacio"},"foglia di salvia":{"c":"legale","n":"Foglia di Salvia"},"foglia di starnutaria":{"c":"illegale","n":"Foglia di Starnutaria"},"foglia di vischio":{"c":"pozionista","n":"Foglia di Vischio"},"formicaleone":{"c":"legale","n":"Formicaleone"},"frutto dell'albero della vita":{"c":"legale","n":"Frutto dell'Albero della Vita"},"frutto di erba stregata":{"c":"illegale","n":"Frutto di Erba Stregata"},"frutto di giaggiolo puzzolente":{"c":"legale","n":"Frutto di Giaggiolo Puzzolente"},"fumo di pianta fumogena":{"c":"legale","n":"Fumo di Pianta Fumogena"},"fungo allucinogeno":{"c":"pozionista","n":"Fungo Allucinogeno"},"fungo saltellante":{"c":"legale","n":"Fungo Saltellante"},"germoglio di bubotubero":{"c":"legale","n":"Germoglio di Bubotubero"},"germoglio lamentoso":{"c":"legale","n":"Germoglio Lamentoso"},"guscio di uovo di occamy":{"c":"legale","n":"Guscio di uovo di Occamy"},"guscio di shellusk":{"c":"legale","n":"Guscio di Shellusk"},"ingrediente base":{"c":"legale","n":"Ingrediente Base"},"lacrima di banshee":{"c":"legale","n":"Lacrima di Banshee"},"lacrima di birdengold":{"c":"legale","n":"Lacrima di Birdengold"},"lacrima di fenice":{"c":"legale","n":"Lacrima di Fenice"},"latte di marmite":{"c":"legale","n":"Latte di Marmite"},"latte maledetto di nogtail":{"c":"illegale","n":"Latte maledetto di Nogtail"},"legno di platano picchiatore":{"c":"illegale","n":"Legno di Platano Picchiatore"},"legno di alloro":{"c":"legale","n":"Legno di Alloro"},"mela dell'albero di biancaneve":{"c":"pozionista","n":"Mela dell'Albero di Biancaneve"},"melassa di glumbumble":{"c":"legale","n":"Melassa di Glumbumble"},"melma di frullobulbo":{"c":"legale","n":"Melma di Frullobulbo"},"miele di primula veris":{"c":"legale","n":"Miele di Primula Veris"},"milza di lucertola":{"c":"legale","n":"Milza di Lucertola"},"milza di pipistrello":{"c":"legale","n":"Milza di Pipistrello"},"milza di topo":{"c":"legale","n":"Milza di Topo"},"mosca crisopa":{"c":"legale","n":"Mosca Crisopa"},"muco di gnomo":{"c":"legale","n":"Muco di Gnomo"},"muco di lombrico":{"c":"legale","n":"Muco di Lombrico"},"muco di porlock":{"c":"legale","n":"Muco di Porlock"},"muco di streeler":{"c":"legale","n":"Muco di Streeler"},"muco di troll":{"c":"legale","n":"Muco di Troll"},"muco di vermicolo":{"c":"legale","n":"Muco di Vermicolo"},"muschio del sud":{"c":"legale","n":"Muschio del Sud"},"occhio di anguilla":{"c":"legale","n":"Occhio di Anguilla"},"occhio di pesce palla":{"c":"legale","n":"Occhio di Pesce palla"},"occhio di scarabeo":{"c":"legale","n":"Occhio di Scarabeo"},"olio di ricino":{"c":"pozionista","n":"Olio di Ricino"},"olio di rosa":{"c":"legale","n":"Olio di Rosa"},"olio di valeriana":{"c":"legale","n":"Olio di Valeriana"},"olio di verbena":{"c":"pozionista","n":"Olio di Verbena"},"olio essenziale di artemisia":{"c":"legale","n":"Olio essenziale di Artemisia"},"ossigeno di pianta magica":{"c":"legale","n":"Ossigeno di Pianta Magica"},"pece di platano picchiatore":{"c":"illegale","n":"Pece di Platano Picchiatore"},"pelo di baku":{"c":"legale","n":"Pelo di Baku"},"pelo di demiguise":{"c":"legale","n":"Pelo di Demiguise"},"pelo di mau":{"c":"legale","n":"Pelo di Mau"},"pelo di nascondombra":{"c":"legale","n":"Pelo di Nascondombra"},"pelo di orecchie del pogrebin":{"c":"legale","n":"Pelo di orecchie del Pogrebin"},"pelo di porlock":{"c":"legale","n":"Pelo di Porlock"},"pelo di sobolan":{"c":"legale","n":"Pelo di Sobolan"},"pelle di alastridente":{"c":"pozionista","n":"Pelle di Alastridente"},"pelle di baku":{"c":"legale","n":"Pelle di Baku"},"pelle di basertilia":{"c":"legale","n":"Pelle di Basertilia"},"pelle di drago":{"c":"pozionista","n":"Pelle di Drago"},"pelle di girilacco":{"c":"legale","n":"Pelle di Girilacco"},"pelle di moke":{"c":"legale","n":"Pelle di Moke"},"pelle di tebo":{"c":"pozionista","n":"Pelle di Tebo"},"pelo di doxy":{"c":"legale","n":"Pelo di Doxy"},"pelo di duriccio":{"c":"legale","n":"Pelo di Duriccio"},"pelo di puffskein":{"c":"legale","n":"Pelo di Puffskein"},"pelo di snaso":{"c":"legale","n":"Pelo di Snaso"},"pelo di wiggity":{"c":"legale","n":"Pelo di Wiggity"},"pelo di yeti":{"c":"legale","n":"Pelo di Yeti"},"petalo dell'albero della vita":{"c":"pozionista","n":"Petalo dell'Albero della Vita"},"petalo di aconito":{"c":"pozionista","n":"Petalo di Aconito"},"petalo di albero carnivoro":{"c":"illegale","n":"Petalo di Albero Carnivoro"},"petalo di bebop caraibica":{"c":"legale","n":"Petalo di Bebop Caraibica"},"petalo di orchidea fantasma":{"c":"legale","n":"Petalo di Orchidea Fantasma"},"petalo di fiore floo":{"c":"legale","n":"Petalo di Fiore Floo"},"petalo di giunchiglia strombazzante":{"c":"legale","n":"Petalo di Giunchiglia strombazzante"},"petalo di grinzafico":{"c":"legale","n":"Petalo di Grinzafico"},"petalo di hanabira":{"c":"legale","n":"Petalo di Hanabira"},"petalo di loto di mahoutokoro":{"c":"legale","n":"Petalo di Loto di Mahoutokoro"},"petalo di moly":{"c":"legale","n":"Petalo di Moly"},"petalo di pianta stridula":{"c":"legale","n":"Petalo di Pianta Stridula"},"petalo di ruta":{"c":"illegale","n":"Petalo di Ruta"},"petalo di sanguinaria":{"c":"legale","n":"Petalo di Sanguinaria"},"petalo di verbena":{"c":"pozionista","n":"Petalo di Verbena"},"pistillo di loto di mahoutokoro":{"c":"legale","n":"Pistillo di Loto di Mahoutokoro"},"pistillo di moly":{"c":"legale","n":"Pistillo di Moly"},"pistillo di orchidea fantasma":{"c":"legale","n":"Pistillo di Orchidea Fantasma"},"pistillo di primula veris":{"c":"legale","n":"Pistillo di Primula Veris"},"piuma di birdengold":{"c":"legale","n":"Piuma di Birdengold"},"piuma di fenice":{"c":"legale","n":"Piuma di Fenice"},"piuma di fwooper":{"c":"legale","n":"Piuma di Fwooper"},"piuma di diricawl":{"c":"legale","n":"Piuma di Diricawl"},"piuma di grifone":{"c":"legale","n":"Piuma di Grifone"},"piuma di ippogrifo":{"c":"legale","n":"Piuma di Ippogrifo"},"piuma di jobberknoll":{"c":"legale","n":"Piuma di Jobberknoll"},"piuma di occamy":{"c":"pozionista","n":"Piuma di Occamy"},"piuma di tuono alato":{"c":"pozionista","n":"Piuma di Tuono Alato"},"polvere di fata":{"c":"pozionista","n":"Polvere di Fata"},"polvere di perla":{"c":"legale","n":"Polvere di perla"},"polvere di shellusk":{"c":"legale","n":"Polvere di Shellusk"},"puffagiolo":{"c":"legale","n":"Puffagiolo"},"pungiglione di billywig":{"c":"legale","n":"Pungiglione di Billywig"},"pus di bubotubero":{"c":"pozionista","n":"Pus di Bubotubero"},"puzzalinfa di mimbulus mimbletonia":{"c":"legale","n":"Puzzalinfa di Mimbulus Mimbletonia"},"radice di amarantacea":{"c":"legale","n":"Radice di Amarantacea"},"radice di annientamento":{"c":"illegale","n":"Radice di Annientamento"},"radice di artemisia":{"c":"legale","n":"Radice di Artemisia"},"radice di asfodelo":{"c":"pozionista","n":"Radice di Asfodelo"},"radice di assenzio":{"c":"pozionista","n":"Radice di Assenzio"},"radice di bebop caraibica":{"c":"legale","n":"Radice di Bebop Caraibica"},"radice di bubotubero":{"c":"legale","n":"Radice di Bubotubero"},"radice di mandragola":{"c":"legale","n":"Radice di Mandragola"},"radice di orchidea fantasma":{"c":"legale","n":"Radice di Orchidea Fantasma"},"radice di platano picchiatore":{"c":"illegale","n":"Radice di Platano Picchiatore"},"radice di rampicante capovolto":{"c":"illegale","n":"Radice di Rampicante Capovolto"},"radice di ruta":{"c":"illegale","n":"Radice di Ruta"},"radice di valeriana":{"c":"legale","n":"Radice di Valeriana"},"radice di zenzero":{"c":"legale","n":"Radice di Zenzero"},"radigorda":{"c":"legale","n":"Radigorda"},"ragno":{"c":"legale","n":"Ragno"},"ramo dell'albero medusa":{"c":"illegale","n":"Ramo dell'Albero Medusa"},"rametto di aconito":{"c":"pozionista","n":"Rametto di Aconito"},"rametto di menta piperita":{"c":"legale","n":"Rametto di Menta Piperita"},"rametto di valeriana":{"c":"legale","n":"Rametto di Valeriana"},"saliva di jarvey":{"c":"legale","n":"Saliva di Jarvey"},"saliva di kelpie":{"c":"legale","n":"Saliva di Kelpie"},"saliva di nundu":{"c":"illegale","n":"Saliva di Nundu"},"sangue di re'em":{"c":"illegale","n":"Sangue di Re'em"},"sangue di salamandra":{"c":"pozionista","n":"Sangue di Salamandra"},"sangue di unicorno":{"c":"illegale","n":"Sangue di Unicorno"},"sangue di vampiro":{"c":"pozionista","n":"Sangue di Vampiro"},"sanguisuga":{"c":"legale","n":"Sanguisuga"},"scaglia di ninki nanka":{"c":"legale","n":"Scaglia di Ninki Nanka"},"secrezione di bundimun":{"c":"legale","n":"Secrezione di Bundimun"},"semino di papavero":{"c":"legale","n":"Semino di Papavero"},"spina di di canterose":{"c":"illegale","n":"Spina di di Canterose"},"spina di cespuglio spinoso":{"c":"legale","n":"Spina di Cespuglio Spinoso"},"spina di duriccio":{"c":"legale","n":"Spina di Duriccio"},"spina di pesce leone":{"c":"legale","n":"Spina di Pesce leone"},"spina di pugnacio":{"c":"illegale","n":"Spina di Pugnacio"},"spina di rosa":{"c":"legale","n":"Spina di Rosa"},"spina di shrake":{"c":"legale","n":"Spina di Shrake"},"squama di aoi kaeru":{"c":"legale","n":"Squama di Aoi Kaeru"},"squama di chupacabra":{"c":"legale","n":"Squama di Chupacabra"},"squama di fiammablu":{"c":"legale","n":"Squama di Fiammablu"},"squama di ippocampo":{"c":"legale","n":"Squama di Ippocampo"},"squama di plimpi":{"c":"legale","n":"Squama di Plimpi"},"squama di ramora":{"c":"legale","n":"Squama di Ramora"},"squama di serpecorno":{"c":"legale","n":"Squama di Serpecorno"},"squama di serpente marino":{"c":"legale","n":"Squama di Serpente Marino"},"stelo di giunchiglia strombazzante":{"c":"legale","n":"Stelo di Giunchiglia strombazzante"},"stelo di moly":{"c":"legale","n":"Stelo di Moly"},"stelo di ruta":{"c":"illegale","n":"Stelo di Ruta"},"sterco di mooncalf":{"c":"legale","n":"Sterco di Mooncalf"},"sterco di potoo":{"c":"legale","n":"Sterco di Potoo"},"succo del baccello di pugnacio":{"c":"pozionista","n":"Succo del baccello di Pugnacio"},"succo di aloe":{"c":"legale","n":"Succo di Aloe"},"succo di grinzafico":{"c":"legale","n":"Succo di Grinzafico"},"succo di horklump":{"c":"legale","n":"Succo di Horklump"},"tentacolo di albero carnivoro":{"c":"illegale","n":"Tentacolo di Albero Carnivoro"},"tentacolo di frullobulbo":{"c":"legale","n":"Tentacolo di Frullobulbo"},"tentacolo di stupefiore":{"c":"illegale","n":"Tentacolo di Stupefiore"},"testa di papavero":{"c":"legale","n":"Testa di Papavero"},"torace di libellula":{"c":"legale","n":"Torace di Libellula"},"unghia di clabbert":{"c":"legale","n":"Unghia di Clabbert"},"unghia di gnomo":{"c":"legale","n":"Unghia di Gnomo"},"unghia di kneazle":{"c":"legale","n":"Unghia di Kneazle"},"unghia di snaso":{"c":"legale","n":"Unghia di Snaso"},"uovo di ashwinder":{"c":"legale","n":"Uovo di Ashwinder"},"uovo di basertilia":{"c":"legale","n":"Uovo di Basertilia"},"uovo di doxy":{"c":"legale","n":"Uovo di Doxy"},"uovo di ippocampo":{"c":"legale","n":"Uovo di Ippocampo"},"uovo di ramora":{"c":"legale","n":"Uovo di Ramora"},"veleno dell'albero medusa":{"c":"illegale","n":"Veleno dell'Albero Medusa"},"veleno di acromantula":{"c":"pozionista","n":"Veleno di Acromantula"},"veleno di billywig":{"c":"pozionista","n":"Veleno di Billywig"},"veleno di doxy":{"c":"pozionista","n":"Veleno di Doxy"},"veleno di erbaschiuma":{"c":"pozionista","n":"Veleno di Erbaschiuma"},"veleno di kàvouras":{"c":"pozionista","n":"Veleno di Kàvouras"},"veleno di lobalug":{"c":"pozionista","n":"Veleno di Lobalug"},"veleno di manticora":{"c":"pozionista","n":"Veleno di Manticora"},"veleno di ninki nanka":{"c":"pozionista","n":"Veleno di Ninki Nanka"},"veleno di tentacula velenosa":{"c":"pozionista","n":"Veleno di Tentacula Velenosa"},"veleno di velenottero":{"c":"pozionista","n":"Veleno di Velenottero"},"viticcio di tranello del diavolo":{"c":"illegale","n":"Viticcio di Tranello del Diavolo"},"zanna di avvincino":{"c":"illegale","n":"Zanna di Avvincino"},"zanna di drakul":{"c":"pozionista","n":"Zanna di Drakul"},"zanna di chizpurfle":{"c":"legale","n":"Zanna di Chizpurfle"},"zanna di geranio zannuto":{"c":"legale","n":"Zanna di Geranio Zannuto"},"zanna di pianta vampiro":{"c":"legale","n":"Zanna di Pianta Vampiro"},"zanna di serpente":{"c":"legale","n":"Zanna di Serpente"}};
+ var POZ_V80_INGREDIENT_ALIASES={
+  "appendice di purvincolo":"appendici di purvincolo",
+  "fiore di erbaschiuma":"fiore (bolle) di erbaschiuma",
+  "baffo di mau":"baffi di mau",
+  "amaralinfa di amarantacea":"amaralanfa di amarantacea",
+  "foglia di felce imitante":"foglia di felci imitanti",
+  "spina di canterose":"spina di di canterose"
+ };
+ function pozV80NormPotionName(name){return String(name||"").replace(/\s*\+\s*$/,"").replace(/\s+/g," ").trim().toLowerCase();}
+ function pozV80PotionIsIllegal(name){var k=pozV80NormPotionName(name);for(var i=0;i<POZ_V80_ILLEGAL_POTIONS.length;i++){if(pozV80NormPotionName(POZ_V80_ILLEGAL_POTIONS[i])===k)return true;}return false;}
+ function pozV81PotionCreationLegalityUnresolved(name){var k=pozV80NormPotionName(name);for(var i=0;i<POZ_V81_CREATION_LEGALITY_UNRESOLVED.length;i++){if(pozV80NormPotionName(POZ_V81_CREATION_LEGALITY_UNRESOLVED[i])===k)return true;}return false;}
+ function pozV80KnownPotionLegal(){return !!currentPozionarioEntry();}
+ function pozV81PotionCreationLegalityLabel(){var e=currentPozionarioEntry();if(!e)return POZ.illegale?"Illegale (inserimento manuale)":"Legale (inserimento manuale)";if(pozV81PotionCreationLegalityUnresolved(e.n))return "Creazione non risolta dalla fonte";return pozV80PotionIsIllegal(e.n)?"Illegale":"Legale";}
+ function pozV80SyncPotionLegality(){var e=currentPozionarioEntry();if(!e)return false;var next=pozV81PotionCreationLegalityUnresolved(e.n)?false:pozV80PotionIsIllegal(e.n);if(POZ.illegale!==next){POZ.illegale=next;invalidateIllegalDiscoveryAll();return true;}return false;}
+ function pozV80NormIngredientName(name){
+  var x=String(name||"").replace(/🌴|🚫|🧪|✔/g,"").replace(/[’‘`]/g,"'");
+  x=x.replace(/\s*\((?:ottenimento|ottenuta|ottenuto)[^)]*\)\s*$/i,"").replace(/\(\s*\)/g,"").replace(/\s+/g," ").trim().toLowerCase();
+  return POZ_V80_INGREDIENT_ALIASES[x]||x;
+ }
+ function pozV80IngredientLaw(name){var k=pozV80NormIngredientName(name),v=POZ_V80_INGREDIENT_LAW[k];return v||{c:"speciale",n:String(name||"").replace(/🌴|🚫|🧪|✔/g,"").replace(/\s+/g," ").trim()};}
+ function pozV80IngredientDisplayName(name){
+  var raw=String(name||""),law=pozV80IngredientLaw(raw),suffix="",m=raw.match(/\s*(\((?:ottenimento|ottenuta|ottenuto)[^)]*\))\s*$/i);if(m)suffix=" "+m[1];
+  var marker=law.c==="illegale"?" 🚫":(law.c==="pozionista"?" 🚫 (Pozionista ✔)":"");return law.n+suffix+marker;
+ }
+ function pozV80IsProfessionalPotionMaker(pg){return !!(pg&&pg.tipo==="adulto"&&pg.pozionistaMestiere);}
+ function pozV80RecipeLawInfo(pg){
+  var e=currentPozionarioEntry(),out={legal:[],pozionista:[],illegal:[],special:[],effectiveIllegal:[]};if(!e||!e.a)return out;
+  var seen={};for(var i=0;i<e.a.length;i++){var raw=e.a[i][0],law=pozV80IngredientLaw(raw),key=law.c+"|"+law.n.toLowerCase();if(seen[key])continue;seen[key]=1;(out[law.c]||out.special).push(law.n);}
+  out.effectiveIllegal=out.illegal.slice();if(!pozV80IsProfessionalPotionMaker(pg))out.effectiveIllegal=out.effectiveIllegal.concat(out.pozionista);return out;
+ }
+ function pozV80LawList(arr){return arr&&arr.length?arr.join(", "):"nessuno";}
+ function pozV80RecipeLawSummaryText(pg){
+  if(!currentPozionarioEntry())return "Legalità Ingredienti: non determinabile automaticamente (ricetta manuale).";
+  var info=pozV80RecipeLawInfo(pg),parts=["Illegali per tutti: "+pozV80LawList(info.illegal),"🚫 (Pozionista ✔): "+pozV80LawList(info.pozionista)];
+  if(info.special.length)parts.push("Componenti speciali/non presenti nel Glossario: "+info.special.join(", "));
+  if(pg){parts.push(info.effectiveIllegal.length?("Per questo PG l'uso nella ricetta costituisce Azione Illegale generica per: "+info.effectiveIllegal.join(", ")+" (Narratore; base 1d100, 1-30 prima dei modificatori)"):"Per questo PG non risultano Ingredienti usati illegalmente nella preparazione.");}
+  return parts.join(" · ");
+ }
+ function pozV80BuildRecipeLawBox(pg){
+  if(!currentPozionarioEntry())return null;var info=pozV80RecipeLawInfo(pg),box=el("div","guide-text");box.setAttribute("data-no-collapse","1");
+  var h="<b>Legalità degli Ingredienti — Glossario aggiornato</b><br>";
+  h+="<b>Illegali per tutti:</b> "+escapeHtml(pozV80LawList(info.illegal))+".<br>";
+  h+="<b>🚫 (Pozionista ✔):</b> "+escapeHtml(pozV80LawList(info.pozionista))+".";
+  if(info.special.length)h+="<br><b>Componenti speciali/non classificati dal Glossario:</b> "+escapeHtml(info.special.join(", "))+".";
+  if(pg){
+   if(info.effectiveIllegal.length)h+="<br><b>Per questo PG:</b> usare nella Pozione "+escapeHtml(info.effectiveIllegal.join(", "))+" costituisce un'<b>Azione Illegale generica</b>. Avvisa il Narratore: la base è <b>1d100</b> e il PG viene colto in flagrante con <b>1-30</b> prima dei modificatori contestuali. Se anche la creazione della Pozione è illegale e quindi soggetta al controllo specifico 1d30/1d50, il tool segnala entrambe le infrazioni ma <u>non duplica automaticamente i tiri</u>: l'eventuale cumulo va gestito dal Narratore.";
+   else if(info.pozionista.length&&pozV80IsProfessionalPotionMaker(pg))h+="<br><b>Pozionista di mestiere:</b> gli Ingredienti contrassegnati 🚫 (Pozionista ✔) sono leciti <u>solo in questa preparazione di Pozione</u>; l'eccezione non vale per uso in purezza o vendita.";
+  } else if(info.pozionista.length)h+="<br><span>L'eccezione «Pozionista ✔» vale soltanto per un <b>Pozionista di mestiere</b> che usa l'Ingrediente per preparare una Pozione; la sola Sapienza Pozionistica non basta.</span>";
+  h+="<br><span>La legalità dell'Ingrediente è indipendente dalla legalità della Pozione e da quella di Valigetta/Laboratorio.</span>";box.innerHTML=h;return box;
+ }
+
  function ingredientTierKey(classificazione){if(classificazione==="XXXX"){return "iv";}if(classificazione==="XXXXX"){return "v";}if(classificazione==="X"||classificazione==="XX"||classificazione==="XXX"){return "base";}return "";}
  function recipeIngredientsForTier(tierKey){var entry=currentPozionarioEntry();var out=[];if(!entry||!entry.a){return out;}for(var i=0;i<entry.a.length;i++){var ing=entry.a[i];if(ingredientTierKey(ing[2])===tierKey){out.push({idx:i,n:ing[0],q:Number(ing[1]),c:ing[2]});}}return out;}
  function recipeIngredientByIndex(idx){var entry=currentPozionarioEntry();if(!entry||!entry.a||idx===""||idx===null||idx===undefined){return null;}var n=Number(idx);if(!Number.isInteger(n)||n<0||n>=entry.a.length){return null;}var ing=entry.a[n];return {idx:n,n:ing[0],q:Number(ing[1]),c:ing[2]};}
@@ -1472,8 +1551,9 @@
  nome: "Personaggio", 
  tipo: "", 
  tecnica: null, 
- mediaPozioni: "", 
- votoPozione: "", 
+ mediaPozioni: "", /* legacy v80: preservato nei vecchi salvataggi, non più usato nelle formule */
+ votoPozione: "",
+ votoDistillatore: "",
  votoManualita: "",
  votoMemoria: "",
  votoSintesi: "",
@@ -1573,7 +1653,7 @@
     - se cambia l'Ingrediente o la quantità sostituita nel rimedio di Preparazione, il vecchio d14 di rimedio
       viene invalidato perché era stato eseguito dopo una sostituzione diversa. */
  var STORAGE_KEY="creazionePozione_v11";
- var SAVE_SCHEMA_VERSION=61;
+ var SAVE_SCHEMA_VERSION=64;
  var saveTimer=null;
  function saveState(){
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
@@ -1808,7 +1888,7 @@
  function restoreSavedState(){
   try{var raw=window.localStorage.getItem(STORAGE_KEY);if(!raw){return;}applySavedStateObject(JSON.parse(raw));}catch(e){}
  }
- function resetAllState(preservePgName){var keepName=preservePgName&&pgs&&pgs.length?String(pgs[0].nome||"").trim():"";try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}POZ={nome:"",classificazione:"",tierBase:false,tierIV:false,tierV:false,conoscenzaPosseduta:false,valigettaAdduco:false,valigettaIllegale:false,illegale:false,protezioniIllegali:{cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},forzaStandard:"",pozionarioNome:""};pgs=[];pgCounter=0;pgs.push(newPG());if(keepName){pgs[0].nome=keepName;}currentStep="info";lastRuleConfigSignature=null;staleResultsResetNotice=false;renderAll();}
+ function resetAllState(preservePgName){var keepName=preservePgName&&pgs&&pgs.length?String(pgs[0].nome||"").trim():"";try{window.localStorage.removeItem(STORAGE_KEY);}catch(e){}POZ={nome:"",classificazione:"",tierBase:false,tierIV:false,tierV:false,conoscenzaPosseduta:false,valigettaAdduco:false,valigettaIllegale:false,laboratorioNonRegistrato:false,illegale:false,protezioniIllegali:{cave:false,fianto:false,iterum:false,maxima:false,babbanum:false,inimicum:false,salvio:false},forzaStandard:"",pozionarioNome:""};pgs=[];pgCounter=0;pgs.push(newPG());if(keepName){pgs[0].nome=keepName;}currentStep="info";lastRuleConfigSignature=null;staleResultsResetNotice=false;renderAll();}
 
  /* Ponte minimo verso il gestore Firebase esterno. */
  window.__pozSessionBridge={
@@ -1834,10 +1914,6 @@
  var voto_nomi = { T:"Troll", D:"Desolante", S:"Scadente", A:"Accettabile", O:"Oltre Ogni Previsione", E:"Eccezionale" };
  function votoNome(v){ return voto_nomi[v] ? (voto_nomi[v] + " (" + v + ")") : v; }
  function votoValido(v){ return voto_labels.indexOf(v) !== -1; }
- function getMediaPozioniBonus(pg){
-  if(pg.tipo === "adulto"){ return 0; }
-  return voto_bonus[pg.mediaPozioni];
- }
  function getVotoPozioneBonus(pg){
   if(pg.tipo === "adulto"){ return 0; }
   return voto_bonus[pg.votoPozione];
@@ -1874,17 +1950,8 @@
  }
 
  function studentSingleGradeCompatibilityIssue(pg, grade, label){
-  if(!pg || pg.tipo !== "studente" || !votoValido(pg.mediaPozioni) || !votoValido(grade)){ return ""; }
-  var nome = label || "voto individuale";
-  if(pg.mediaPozioni === "T" && grade !== "T"){
-   return "Con Media scolastica Troll, tutte le Conoscenze della materia sono ancora a Troll: " + nome + " non può essere " + votoNome(grade) + ".";
-  }
-  if(pg.mediaPozioni === "D" && grade !== "D"){
-   return "Con Media scolastica Desolante, tutte le Conoscenze della materia sono a Desolante: " + nome + " non può essere " + votoNome(grade) + ".";
-  }
-  if((pg.mediaPozioni === "S" || pg.mediaPozioni === "A" || pg.mediaPozioni === "O" || pg.mediaPozioni === "E") && (grade === "T" || grade === "D")){
-   return "Con Media scolastica almeno Scadente, le Conoscenze hanno già superato i miglioramenti globali Troll → Desolante → Scadente: " + nome + " non può essere " + votoNome(grade) + ".";
-  }
+  /* v81: non esiste più un vincolo globale basato sulla Media in Pozioni.
+     Il voto della singola Pozione e i voti delle Conoscenze Extra/Avanzate restano autonomi. */
   return "";
  }
  function studentSingleGradeCompatible(pg, grade){
@@ -2196,6 +2263,7 @@
   if(!pgs.length){ return "Inserisci il Personaggio nello Step 2."; }
   var pg = pgs[0];
   if(pg.tipo !== "studente" && pg.tipo !== "adulto"){ return "Seleziona se il Personaggio è Studente o Adulto nello Step 2."; }
+  if(POZ.laboratorioNonRegistrato && pg.tipo !== "adulto"){ return "Il Laboratorio Privato non registrato è previsto soltanto per PG Adulti: disattiva l'opzione nello Step 1 oppure seleziona un Adulto."; }
   if(!intInRange(pg.tecnica, 1, 20)){ return "Inserisci la Tecnica come intero da 1 a 20 nello Step 2."; }
   if(!globalTechniqueBonusInfo(pg).valid){ return "Nei bonus alla Tecnica dello Step 2 inserisci solo numeri interi da 0 in su."; }
   if(!trackedEffectInfo(pg).valid){ return "Correggi Oggetti/Conoscenze nello Step 2: indica la Fonte; bonus e usi devono essere numeri interi da 0 in su, la Fatica un numero da 0 in su e gli usi consumati non possono superare quelli disponibili."; }
@@ -2206,13 +2274,11 @@
    if(!intInRange(setupRisk,1,2)){ return "Risolvi nello Step 2 il 1d2 del Calderone pieghevole del Mercato degli Elfi: con 1 il calderone scoppia."; }
    if(Number(setupRisk)===1){ return "Il 1d2 del Calderone pieghevole del Mercato degli Elfi ha dato 1: il Prezzario indica che il calderone scoppia. Seleziona un altro Calderone/strumento prima di iniziare o riprendere la creazione."; }
   }
-  if(pg.tipo === "studente" && !votoValido(pg.mediaPozioni)){ return "Seleziona la Media scolastica in Pozioni nello Step 2."; }
   if(pg.tipo === "studente" && !votoValido(pg.votoPozione)){ return "Seleziona il voto nella singola Pozione che stai preparando nello Step 2."; }
   if(pg.tipo === "studente"){
-   /* Nuovo regolamento: il voto della singola Pozione resta la base nelle fasi che lo prevedono.
-      Speziale I, Chimico I e Calderaio I lo migliorano soltanto nella propria fase. */
-   var votoPozIssue = studentSingleGradeCompatibilityIssue(pg, pg.votoPozione, "il voto della Pozione specifica");
-   if(votoPozIssue){ return votoPozIssue; }
+   /* Il voto della singola Pozione resta la base nelle fasi che lo prevedono.
+      Speziale I, Chimico I e Calderaio I lo migliorano soltanto nella propria fase.
+      Distillatore possiede invece un proprio voto di Conoscenza Avanzata. */
    var advFields = ["speziale","chimico","toccoMagico","calderaio","distillatore"];
    for(var ai=0; ai<advFields.length; ai++){
     var lv = pg[advFields[ai]];
@@ -2245,6 +2311,8 @@
   if(step === "imbott"){
     var bs = pgDataGet(pg, "bac_status", "pending");
     if(bs !== "success" && bs !== "fail"){ return "Completa l'Uso della Bacchetta prima dell'Imbottigliamento e Pulizia del Calderone."; }
+    var expRiskImb=explosivePotionRiskInfo(pg);
+    if(expRiskImb.active&&!expRiskImb.complete){return "Per la Pozione Esplosiva completa anche il 1d10 speciale di stabilità previsto nella fase Uso della Bacchetta prima di procedere.";}
     var dosiImb = computeDosiFinali(pg);
     /* Il regolamento contempla esplicitamente anche 0 dosi finali dopo la Bacchetta.
        È un esito risolto, non un valore mancante: non c'è nulla da imbottigliare, ma la
@@ -2252,6 +2320,8 @@
     if(dosiImb.finale === null || !nonNegativeInt(dosiImb.finale)){ return "Determina anche il numero finale di dosi ottenute nello Step 5 prima di procedere all'Imbottigliamento/Pulizia."; }
   }
   if(step === "distill"){
+    var expRiskDist=explosivePotionRiskInfo(pg);
+    if(expRiskDist.active&&!expRiskDist.complete){return "Completa prima il 1d10 speciale di stabilità della Pozione Esplosiva nella fase Uso della Bacchetta.";}
     var dosiDist = computeDosiFinali(pg);
     if(dosiDist.finale === null || !positiveInt(dosiDist.finale)){ return "Determina prima il numero finale di dosi: la Distillazione si esegue sulle singole dosi di Pozione che vuoi trattare."; }
     var ie = pgDataGet(pg, "imb_esito", "");
@@ -2262,8 +2332,10 @@
   }
   if(step === "riepilogo"){
     var prodR=pgDataGet(pg,"prod_status","pending");
-    /* Anche una Pozione persa deve poter arrivare al Riepilogo per scalare gli Ingredienti già consumati. */
+    /* Anche una Pozione persa prima della Bacchetta deve poter arrivare al Riepilogo per scalare gli Ingredienti già consumati. */
     if(prodR==="discarded"){ return ""; }
+    var expRiskRiepGate=explosivePotionRiskInfo(pg);
+    if(expRiskRiepGate.active&&!expRiskRiepGate.complete){return "Completa prima il 1d10 speciale di stabilità della Pozione Esplosiva nella fase Uso della Bacchetta.";}
     var rie = pgDataGet(pg, "imb_esito", "");
     var rist = pgDataGet(pg, "imb_status", "pending");
     if(!!pgDataGet(pg, "distill_destroyed", false)){ return ""; }
@@ -2309,7 +2381,7 @@
     il vecchio d2 non può essere riutilizzato. Le dosi extra da Oggetti restano
     invece un parametro indipendente. Per i livelli con dosi fisse ricostruiamo
     subito il valore base, così il riepilogo resta coerente senza richiedere un rerender. */
- function clearDosiAfterBacChange(pg){
+ function clearDosiOutcomeAfterBac(pg){
   delete pg.data["dosi_dice"];
   var fixedDosi={"0":2,"II":3,"IV":4};
   if(Object.prototype.hasOwnProperty.call(fixedDosi,pg.toccoMagico)){
@@ -2318,6 +2390,13 @@
    delete pg.data["dosi_base_total"];
   }
   clearAfterBac(pg);
+ }
+ function clearDosiAfterBacChange(pg){
+  delete pg.data["bac_esplosiva_risk"];
+  clearDosiOutcomeAfterBac(pg);
+ }
+ function clearAfterExplosiveRiskChange(pg){
+  clearDosiOutcomeAfterBac(pg);
  }
  function clearAfterImb(pg){clearDataByPrefixes(pg,["distill_"]);}
  function clearPrepRemedyDecision(pg,tierKey){delete pg.data["prep_remedy_choice_"+tierKey];delete pg.data["prep_retry_result_"+tierKey];delete pg.data["prep_replaced_ing_"+tierKey];delete pg.data["prep_replaced_qty_"+tierKey];delete pg.data["prep_replaced_name_"+tierKey];}
@@ -2516,13 +2595,35 @@ function illegalExtraFaces(){
 }
 function illegalBaseFaces(pg){return (pg&&pg.tipo==="adulto"&&!!pg.pozionistaMestiere)?50:30;}
 function illegalPhaseLabel(phase){return phase==="prod"?"Produzione":"Uso della Bacchetta";}
-function illegalValigettaPhaseLabel(phase){return {prep:"Preparazione degli Ingredienti",prod:"Produzione",bacchetta:"Uso della Bacchetta",imbott:"Imbottigliamento/Pulizia"}[phase]||phase;}
+function illegalValigettaPhaseLabel(phase){return {prep:"Preparazione degli Ingredienti",prod:"Produzione",bacchetta:"Uso della Bacchetta",imbott:"Imbottigliamento/Pulizia",distill:"Distillazione"}[phase]||phase;}
 function usingIllegalValigetta(){return !!POZ.valigettaIllegale || !!POZ.valigettaAdduco;}
 function buildIllegalValigettaNotice(phase){
  var box=el("div","guide-text");
  box.setAttribute("data-no-collapse","1");
- box.innerHTML="<b>Valigetta del Pozionista illegale — "+escapeHtml(illegalValigettaPhaseLabel(phase))+".</b> Il regolamento stabilisce che <u>ogni volta che si lancia un dado di una fase di creazione</u> all’interno di una Valigetta illegale si compie anche un’Azione Illegale. Risolvi quindi l’Azione Illegale prevista dal regolamento generale per ciascun dado lanciato in questa fase. Il dado generale dell’Azione Illegale non è riprodotto qui perché quel regolamento non è tra gli allegati usati per questo audit.";
+ box.innerHTML="<b>Valigetta del Pozionista illegale — "+escapeHtml(illegalValigettaPhaseLabel(phase))+".</b> Il regolamento stabilisce che <u>ogni volta che si lancia un dado di una fase di creazione</u> all’interno di una Valigetta illegale si compie anche un’Azione Illegale. Questo caso segue il <b>controllo generico</b>: avvisa il Narratore; la base è <b>1d100</b> e, prima dei modificatori contestuali, il PG viene colto in flagrante con <b>1-30</b>. Popolarità, ora, luogo, Oggetti/Conoscenze e altri modificatori dipendono dalla scena e restano al Narratore. Questo controllo è distinto dal 1d30/1d50 specifico per la creazione di una Pozione illegale.";
  return box;
+}
+
+function calderoneExplosionHealthMalus(pg){
+ if(!pg){return null;}
+ var hasCald=levelNum(pg.calderaio)>0;
+ if(pg.tipo==="studente"){
+  if(hasCald){return 15;}
+  if(["T","D","S"].indexOf(pg.votoPozione)>=0){return 25;}
+  if(["A","O","E"].indexOf(pg.votoPozione)>=0){return 20;}
+  return null;
+ }
+ if(pg.tipo==="adulto"){
+  var hasSap=haSapienzaPozionistica(pg);
+  if(hasSap){return hasCald?5:8;}
+  return hasCald?10:12;
+ }
+ return null;
+}
+function calderoneExplosionText(pg,count){
+ var mal=calderoneExplosionHealthMalus(pg),n=Math.max(1,Number(count)||1);
+ if(mal===null){return "Esplosione di un Calderone: danno Salute da determinare dopo aver completato il profilo del PG.";}
+ return "Esplosione di un Calderone: -"+mal+" Salute"+(n>1?" per ciascuna delle "+n+" esplosioni (totale -"+(mal*n)+" Salute)":"")+".";
 }
 function invalidateIllegalDiscovery(pg){
  if(!pg||!pg.data)return;
@@ -2549,7 +2650,7 @@ function buildIllegalProtectionConfig(){
  var total=illegalExtraFaces();
  box.appendChild(el("div","formula-tag","Facce di protezione selezionate: +"+total+". Il dado effettivo verrà calcolato nelle due fasi in base al profilo del Personaggio."));
  box.appendChild(el("p","small-note","Questo è il controllo specifico per la creazione di Pozioni illegali: non si aggiunge anche il normale 1d100 delle Azioni Illegali Generiche. L'eventuale tentativo di scoperta da parte di un altro PG tramite Orecchie Indiscrete resta esterno al tool, perché dipende dai Parametri e dalle Conoscenze di quel PG."));
- box.appendChild(el("p","small-note","Nota sul testo del regolamento: l'elenco assegna a Repello Babbanum +1 faccia, mentre l'esempio successivo lo conteggia implicitamente come +2. Il tool segue il valore esplicito dell'elenco: +1."));
+ box.appendChild(el("p","small-note","Repello Babbanum: il regolamento aggiornato assegna <b>+1 faccia</b> al dado di scoperta, come indicato nell’elenco delle protezioni."));
  return box;
 }
 function illegalOutcomeText(raw,faces){
@@ -2776,6 +2877,7 @@ function renderNav(){
   if(pg.tipo !== "studente"){
    if(pg.mediaPozioni === undefined){ pg.mediaPozioni = ""; }
    if(pg.votoPozione === undefined){ pg.votoPozione = ""; }
+   if(pg.votoDistillatore === undefined){ pg.votoDistillatore = ""; }
    if(pg.votoManualita === undefined){ pg.votoManualita = ""; }
    if(pg.votoMemoria === undefined){ pg.votoMemoria = ""; }
    if(pg.votoSintesi === undefined){ pg.votoSintesi = ""; }
@@ -2790,6 +2892,12 @@ function renderNav(){
    /* Il vecchio campo era genericamente "Voto scolastico in Pozioni" e non consente di
       sapere quale fosse il voto della singola Pozione. Non lo inventiamo: va riconfermato. */
    pg.votoPozione = "";
+   changed = true;
+  }
+  if(pg.votoDistillatore === undefined){
+   /* v81: Distillatore è una Conoscenza Avanzata con un proprio voto. La vecchia Media
+      in Pozioni non è equivalente e non viene copiata retroattivamente. */
+   pg.votoDistillatore = "";
    changed = true;
   }
   var extraFields = ["votoManualita","votoMemoria","votoSintesi"];
@@ -2841,7 +2949,7 @@ function renderNav(){
  ];
  if(pg){
   parts = parts.concat([
-   pg.tipo, pg.tecnica, globalTechniqueBonusInfo(pg).bonus, pg.mediaPozioni, pg.votoPozione, pg.sapienzaPozionistica,
+   pg.tipo, pg.tecnica, globalTechniqueBonusInfo(pg).bonus, pg.votoPozione, pg.votoDistillatore, pg.sapienzaPozionistica,
    pg.speziale, pg.chimico, pg.toccoMagico, pg.calderaio, pg.distillatore
   ]);
  }
@@ -2958,16 +3066,7 @@ function invalidateFromTechniqueNow(pg){
 }
 function invalidateFromStudentMediaNow(pg){
  if(!pg){ return; }
- /* La Media scolastica stabilisce la coerenza dei voti individuali e, per Distillatore,
-    è direttamente il voto della Materia collegata usato dalla tabella delle Conoscenze Avanzate.
-    Se cambia, invalidiamo i risultati per non conservare dadi risolti con un profilo precedente. */
- var hadResults=hasDataWithPrefixes(pg,[
-  "prep_result_","prep_status_","prep_acc_result_","prep_help_acc_result_","prep_remedy_","prep_retry_","prep_replaced_",
-  "prod_result","prod_status","prod_decision","bac_result","bac_status","dosi_base_total","dosi_dice",
-  "imb_result","imb_status","imb_esito","imb_posts","imb_awareness","distill_"
- ]);
- clearAllPrepOutcomes(pg);
- if(hadResults){ staleResultsResetNotice=true; }
+ /* v81 legacy: la vecchia Media in Pozioni non incide più su alcuna formula. */
  lastRuleConfigSignature=ruleConfigSignature();
  saveState();
 }
@@ -3032,6 +3131,7 @@ function invalidateFromAdvancedFieldNow(pg,field){
   hadResults=hasDataWithPrefixes(pg,["bac_result","bac_status","dosi_base_total","dosi_dice","imb_","distill_"]);
   delete pg.data["bac_result"];
   delete pg.data["bac_status"];
+  delete pg.data["bac_esplosiva_risk"];
   delete pg.data["dosi_base_total"];
   delete pg.data["dosi_dice"];
   clearAfterBac(pg);
@@ -3089,6 +3189,7 @@ function invalidateStaleResultsIfNeeded(){var sig=ruleConfigSignature();if(lastR
 
 function renderAll(){
  if(pgs.length){ migrateStudentGradeModel(pgs[0]); normalizePGProfile(pgs[0]); }
+ pozV80SyncPotionLegality();
  invalidateStaleResultsIfNeeded();
  var c = document.getElementById("stepContainer");
  try{
@@ -3127,7 +3228,7 @@ function renderAll(){
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Per prima cosa: che Pozione vuoi creare?")); 
  p.appendChild(el("div","guide-text","Puoi scegliere una Pozione dal Pozionario allegato: Nome, Classificazione, Forza Standard e fasce di Ingredienti vengono compilati automaticamente. In alternativa scegli l'inserimento manuale e compila i dati direttamente."));
- var pozSelWrap=el("div");var pozSelLabel=elText("label",null,"Pozione dal Pozionario");pozSelLabel.htmlFor="pozionario-select";pozSelWrap.appendChild(pozSelLabel);var pozSel=el("select");pozSel.id="pozionario-select";var pozManual=elText("option",null,"— inserimento manuale —");pozManual.value="";pozSel.appendChild(pozManual);for(var pzix=0;pzix<POZIONARIO.length;pzix++){var pzo=elText("option",null,POZIONARIO[pzix].n);pzo.value=POZIONARIO[pzix].n;if(POZ.pozionarioNome===pzo.value){pzo.selected=true;}pozSel.appendChild(pzo);}pozSel.addEventListener("change",function(){var oldPoz=POZ.pozionarioNome;var newPoz=pozSel.value;var changed=oldPoz!==newPoz;POZ.pozionarioNome=newPoz;if(newPoz&&POZIONARIO_BY_NAME[newPoz]){var entry=POZIONARIO_BY_NAME[newPoz];POZ.nome=entry.n;POZ.classificazione=entry.c;POZ.forzaStandard=entry.f;if(entry.i){POZ.tierBase=!!entry.b;POZ.tierIV=!!entry.iv;POZ.tierV=!!entry.v;}else{POZ.tierBase=false;POZ.tierIV=false;POZ.tierV=false;}}else if(oldPoz){POZ.nome="";POZ.classificazione="";POZ.forzaStandard="";POZ.tierBase=false;POZ.tierIV=false;POZ.tierV=false;}if(changed){invalidatePotionIdentityConfirmation();}renderAll();});pozSelWrap.appendChild(pozSel);p.appendChild(pozSelWrap);if(POZ.pozionarioNome&&POZIONARIO_BY_NAME[POZ.pozionarioNome]&&!POZIONARIO_BY_NAME[POZ.pozionarioNome].i){p.appendChild(el("p","small-note","Per questa voce il Pozionario allegato non contiene una sezione Ingredienti e dosi leggibile: seleziona manualmente le fasce di Ingredienti."));}
+ var pozSelWrap=el("div");var pozSelLabel=elText("label",null,"Pozione dal Pozionario");pozSelLabel.htmlFor="pozionario-select";pozSelWrap.appendChild(pozSelLabel);var pozSel=el("select");pozSel.id="pozionario-select";var pozManual=elText("option",null,"— inserimento manuale —");pozManual.value="";pozSel.appendChild(pozManual);for(var pzix=0;pzix<POZIONARIO.length;pzix++){var pzo=elText("option",null,POZIONARIO[pzix].n);pzo.value=POZIONARIO[pzix].n;if(POZ.pozionarioNome===pzo.value){pzo.selected=true;}pozSel.appendChild(pzo);}pozSel.addEventListener("change",function(){var oldPoz=POZ.pozionarioNome;var newPoz=pozSel.value;var changed=oldPoz!==newPoz;POZ.pozionarioNome=newPoz;if(newPoz&&POZIONARIO_BY_NAME[newPoz]){var entry=POZIONARIO_BY_NAME[newPoz];POZ.nome=entry.n;POZ.classificazione=entry.c;POZ.forzaStandard=entry.f;if(entry.i){POZ.tierBase=!!entry.b;POZ.tierIV=!!entry.iv;POZ.tierV=!!entry.v;}else{POZ.tierBase=false;POZ.tierIV=false;POZ.tierV=false;}}else if(oldPoz){POZ.nome="";POZ.classificazione="";POZ.forzaStandard="";POZ.tierBase=false;POZ.tierIV=false;POZ.tierV=false;POZ.illegale=false;}if(changed){invalidatePotionIdentityConfirmation();invalidateIllegalDiscoveryAll();}renderAll();});pozSelWrap.appendChild(pozSel);p.appendChild(pozSelWrap);if(POZ.pozionarioNome&&POZIONARIO_BY_NAME[POZ.pozionarioNome]&&!POZIONARIO_BY_NAME[POZ.pozionarioNome].i){p.appendChild(el("p","small-note","Per questa voce il Pozionario allegato non contiene una sezione Ingredienti e dosi leggibile: seleziona manualmente le fasce di Ingredienti."));}
  var pozionarioLocked=!!currentPozionarioEntry();
  if(pozionarioLocked){p.appendChild(elText("p","small-note","I dati compilati dal Pozionario sono bloccati per evitare di scollegare accidentalmente la ricetta dai suoi Ingredienti. Per modificarli, scegli prima “inserimento manuale”."));}
  var row=el("div","row"); 
@@ -3180,6 +3281,7 @@ function renderAll(){
  var knowLbl=elText("label",null,"Confermo che il creatore possiede la Conoscenza della Pozione (Scheda PG / Piano di Studi)");knowLbl.htmlFor=know.id;knowLine.appendChild(knowLbl);
  p.appendChild(knowLine);
  p.appendChild(el("p", "small-note", "Il regolamento richiede che la Conoscenza sia posseduta prima della creazione ONGame."));
+ var v80LawOverview=pozV80BuildRecipeLawBox(null);if(v80LawOverview){p.appendChild(v80LawOverview);}
 
  var adducoLine = el("div", "chk-line");
  var adduco=el("input");adduco.type="checkbox";adduco.id="poz-adduco";adduco.checked=!!POZ.valigettaAdduco;
@@ -3194,21 +3296,34 @@ function renderAll(){
  valIllegal.addEventListener("change",function(){POZ.valigettaIllegale=valIllegal.checked;renderAll();});
  valIllegalLine.appendChild(valIllegal);
  var valIllegalLbl=elText("label",null,"Sto usando una Valigetta del Pozionista illegale / senza licenza (anche una Valigetta aggiuntiva prodotta illegalmente)");valIllegalLbl.htmlFor=valIllegal.id;valIllegalLine.appendChild(valIllegalLbl);p.appendChild(valIllegalLine);
- p.appendChild(elText("p","small-note",POZ.valigettaAdduco?"Adduco Maxima rende automaticamente illegale la Valigetta: l'opzione resta attiva finché usi questa Valigetta.":"Questa voce è distinta dalla Pozione illegale: riguarda il contenitore/laboratorio portatile. Se attiva, ogni dado delle quattro fasi di creazione richiede anche la relativa Azione Illegale."));
+ p.appendChild(elText("p","small-note",POZ.valigettaAdduco?"Adduco Maxima rende automaticamente illegale la Valigetta: l'opzione resta attiva finché usi questa Valigetta.":"Questa voce è distinta dalla Pozione illegale: riguarda il contenitore/laboratorio portatile. Se attiva, ogni dado di una fase di creazione, compresa l’eventuale Distillazione, richiede anche la relativa Azione Illegale."));
+
+ var labIllegalLine=el("div","chk-line");
+ var labIllegal=el("input");labIllegal.type="checkbox";labIllegal.id="poz-laboratorio-non-registrato";labIllegal.checked=!!POZ.laboratorioNonRegistrato;
+ labIllegal.addEventListener("change",function(){POZ.laboratorioNonRegistrato=labIllegal.checked;renderAll();});
+ labIllegalLine.appendChild(labIllegal);
+ var labIllegalLbl=elText("label",null,"Sto usando un Laboratorio Privato non registrato al Ministero (solo se il PG Adulto può possederne uno)");labIllegalLbl.htmlFor=labIllegal.id;labIllegalLine.appendChild(labIllegalLbl);p.appendChild(labIllegalLine);
+ p.appendChild(elText("p","small-note",POZ.laboratorioNonRegistrato?"Laboratorio non registrato: la scelta di non registrarlo costituisce una singola Azione Illegale distinta dalla creazione della Pozione e dalla Valigetta illegale. Avvisa il Narratore per il controllo generico (base 1d100, colto in flagrante con 1-30 prima dei modificatori contestuali). Non si ripete automaticamente a ogni fase.":"Il Laboratorio Privato non registrato è un caso distinto: non selezionarlo per una normale Postazione scolastica, un Laboratorio registrato o una Valigetta."));
 
  var illegalLine=el("div","chk-line");
- var illegalChk=el("input");illegalChk.type="checkbox";illegalChk.id="poz-illegale";illegalChk.checked=!!POZ.illegale;
+ var unresolvedCreation=!!(currentPozionarioEntry()&&pozV81PotionCreationLegalityUnresolved(currentPozionarioEntry().n));
+ var illegalChk=el("input");illegalChk.type="checkbox";illegalChk.id="poz-illegale";illegalChk.checked=!!POZ.illegale;illegalChk.disabled=pozV80KnownPotionLegal();
  illegalChk.addEventListener("change",function(){
-  if(POZ.illegale!==illegalChk.checked){
-   POZ.illegale=illegalChk.checked;
-   invalidateIllegalDiscoveryAll();
-   renderAll();
-  }
+  if(illegalChk.disabled){return;}
+  if(POZ.illegale!==illegalChk.checked){POZ.illegale=illegalChk.checked;invalidateIllegalDiscoveryAll();renderAll();}
  });
  illegalLine.appendChild(illegalChk);
- var illegalLbl=elText("label",null,"La Pozione è illegale e la sto creando ONGame");
+ var illegalLabelText;
+ if(unresolvedCreation){illegalLabelText="Legalità della creazione non risolta automaticamente dalla fonte";}
+ else if(pozV80KnownPotionLegal()){illegalLabelText=POZ.illegale?"Creazione della Pozione illegale — determinato automaticamente":"Creazione della Pozione non illegale — determinato automaticamente";}
+ else{illegalLabelText="La creazione della Pozione inserita manualmente è illegale";}
+ var illegalLbl=elText("label",null,illegalLabelText);
  illegalLbl.htmlFor=illegalChk.id;illegalLine.appendChild(illegalLbl);p.appendChild(illegalLine);
- p.appendChild(elText("p","small-note","Attiva questa voce soltanto se la Pozione che stai creando è illegale. L'uso di un Ingrediente o di un Calderone illegale non rende automaticamente illegale la Pozione ai fini di questo controllo."));
+ if(unresolvedCreation){
+  p.appendChild(elText("p","small-note","Il Pozionario contrassegna questa Pozione come vietata per alcuni utilizzi, ma la sua scheda non dichiara esplicitamente illegale anche la <b>creazione</b>. Per non inventare un reato, il tool non attiva automaticamente il controllo specifico 1d30/1d50 di Produzione/Uso della Bacchetta. Va uniformato il regolamento se si vuole estendere il divieto anche alla creazione."));
+ }else{
+  p.appendChild(elText("p","small-note",pozV80KnownPotionLegal()?"Per le Pozioni del catalogo il tool attiva il controllo specifico solo quando la scheda corrente dichiara esplicitamente illegale/proibita anche la creazione. Il controllo vale anche se le fasi vengono risolte OFFGame: il regolamento delle Azioni Illegali richiede il 1d30/1d50 in Produzione e Uso della Bacchetta per la creazione di una Pozione illegale.":"Per una Pozione inserita manualmente indica tu la legalità. La legalità degli Ingredienti e quella di Valigetta/Laboratorio restano controlli separati e non trasformano automaticamente una Pozione legale in una Pozione illegale."));
+ }
  if(POZ.illegale){p.appendChild(buildIllegalProtectionConfig());}
 
  p.appendChild(el("div", "divider")); 
@@ -3230,7 +3345,7 @@ function renderAll(){
  p.appendChild(el("div", "guide-text", 
  "Inserisci qui il Personaggio che prepara materialmente la Pozione. " + 
  "Gli eventuali altri PG non vengono aggiunti come co-creatori: potranno intervenire soltanto nella Preparazione degli Ingredienti, " + 
- "quando devono accorgersi di un errore e aiutare a rimediare. Per gli Studenti, <b>il voto della singola Pozione</b> è la base di Preparazione, Produzione e Imbottigliamento/Pulizia; Speziale I, Chimico I e Calderaio I lo migliorano soltanto nella propria fase. La Media scolastica serve a controllare la coerenza dei voti individuali. Le Extra+ vengono scelte direttamente nella fase in cui possono essere utilizzate.")); 
+ "quando devono accorgersi di un errore e aiutare a rimediare. Per gli Studenti, <b>il voto della singola Pozione</b> è la base di Preparazione, Produzione e Imbottigliamento/Pulizia; Speziale I, Chimico I e Calderaio I lo migliorano soltanto nella propria fase. I voti delle singole Conoscenze che ne richiedono uno restano autonomi e non dipendono da una Media scolastica. Le Extra+ vengono scelte direttamente nella fase in cui possono essere utilizzate.")); 
  p.appendChild(el("div","rule-strip","<span><b>Preparazione</b> Voto Pozione + Speziale</span><span><b>Produzione</b> Voto Pozione + Chimico</span><span><b>Bacchetta</b> Tecnica + Tocco Magico</span><span><b>Imbottigliamento</b> Voto Pozione + Calderaio</span><span><b>Distillazione</b> regole proprie</span>")); 
 
  if(pgs.length === 0){ pgs.push(newPG()); } 
@@ -3388,20 +3503,6 @@ function renderAll(){
  
  var row2 = el("div", "row"); 
  if(pg.tipo === "studente"){
- var dMedia = el("div");
- dMedia.appendChild(el("label", null, "Media scolastica in Pozioni"));
- var selMedia = el("select");
- var om0 = el("option", null, "— seleziona —"); om0.value=""; if(pg.mediaPozioni === ""){ om0.selected=true; } selMedia.appendChild(om0);
- for(var i=0;i<voto_labels.length;i++){
-  var om = el("option", null, votoNome(voto_labels[i])); om.value = voto_labels[i];
-  if(voto_labels[i] === pg.mediaPozioni){ om.selected = true; }
-  selMedia.appendChild(om);
- }
- selMedia.addEventListener("change", function(){ if(pg.mediaPozioni!==selMedia.value){pg.mediaPozioni=selMedia.value;invalidateFromStudentMediaNow(pg);}renderAll(); });
- dMedia.appendChild(selMedia);
- dMedia.appendChild(el("p","small-note","Serve solo a verificare la coerenza scolastica dei voti individuali; non entra direttamente nelle formule delle fasi."));
- row2.appendChild(dMedia);
-
  var dVotoPoz = el("div");
  dVotoPoz.appendChild(el("label", null, "Voto nella Pozione specifica"));
  var selVotoPoz = el("select");
@@ -3419,7 +3520,7 @@ function renderAll(){
    renderAll();
   });
   dVotoPoz.appendChild(selVotoPoz);
-  dVotoPoz.appendChild(el("p","small-note","È il voto usato in Preparazione, Produzione e Imbottigliamento/Pulizia. Le Conoscenze Avanzate I della relativa fase applicano il proprio bonus senza sostituire il voto. Coerenza scolastica: con Media T o D tutte le Conoscenze hanno lo stesso voto; dalla Media S in poi i voti individuali possono differenziarsi, ma non possono restare T/D."));
+  dVotoPoz.appendChild(el("p","small-note","È il voto usato in Preparazione, Produzione e Imbottigliamento/Pulizia. Le Conoscenze Avanzate I della relativa fase applicano il proprio bonus senza sostituire il voto. Uso della Bacchetta e Distillazione seguono invece le proprie regole specifiche."));
  row2.appendChild(dVotoPoz);
  } else if(pg.tipo === "adulto"){ 
  var dSap = el("div"); 
@@ -3520,9 +3621,18 @@ function renderAll(){
    chimico:"Chimico I: +2 al modificatore del voto in Produzione, fino a +4.",
    toccoMagico:"Tocco Magico I: +1 possibilità al d15; dosi base 1+1d2.",
    calderaio:"Calderaio I: +2 al valore del voto in Imbottigliamento/Pulizia, fino a 7.",
-   distillatore:"Distillatore I: abilita la Distillazione; il suo 1d10 usa la tabella delle Conoscenze Avanzate e, per lo Studente, il voto nella Materia collegata (Media in Pozioni)."
+   distillatore:"Distillatore I: abilita la Distillazione; il suo 1d10 usa la tabella generale delle Conoscenze Avanzate e, per lo Studente, il voto posseduto nella singola Conoscenza Distillatore."
   };
   if(helpMap[field]){ d.appendChild(el("p","phase-help",helpMap[field])); }
+  if(field === "distillatore" && pg[field] === "I"){
+   var vgLabel=el("label",null,"Voto in Distillatore");vgLabel.style.marginTop="10px";d.appendChild(vgLabel);
+   var vg=el("select");
+   var vg0=el("option",null,"— seleziona —");vg0.value="";if(!votoValido(pg.votoDistillatore)){vg0.selected=true;}vg.appendChild(vg0);
+   for(var vi=0;vi<voto_labels.length;vi++){var vv=voto_labels[vi],vo=el("option",null,votoNome(vv));vo.value=vv;if(pg.votoDistillatore===vv){vo.selected=true;}vg.appendChild(vo);}
+   vg.addEventListener("change",function(){if(pg.votoDistillatore!==vg.value){pg.votoDistillatore=vg.value;invalidateFromAdvancedFieldNow(pg,"distillatore");}renderAll();});
+   d.appendChild(vg);
+   d.appendChild(el("p","phase-help","Le Conoscenze Avanzate degli Studenti possiedono un proprio voto. Distillatore è utilizzabile da Accettabile in su; con Troll, Desolante o Scadente la Distillazione resta non disponibile."));
+  }
  }
  return d; 
  } 
@@ -3669,7 +3779,7 @@ function renderAll(){
   if(haSapienzaPozionistica(pg)){ return "100% automatico"; }
   return "1 = 0% · 2 = 33% · 3 = 66% · 4-10 = 100%";
  }
- if(!studentSingleGradeCompatible(pg, extraGrade(pg,field))){ return "Voto della Conoscenza Extra+ incompatibile con la Media scolastica"; }
+ if(!studentSingleGradeCompatible(pg, extraGrade(pg,field))){ return "Voto della Conoscenza Extra+ non compatibile con il profilo attuale"; }
  var map = {
   T:"1-7 = 0% · 8-9 = 33% · 10 = 66%",
   D:"1-5 = 0% · 6-7 = 33% · 8-9 = 66% · 10 = 100%",
@@ -3717,8 +3827,6 @@ function renderAll(){
   gradeDiv.appendChild(el("p","small-note","È il voto della singola Conoscenza Extra+, non la Media di Pozioni né il voto della Pozione preparata."));
   gradeWrap.appendChild(gradeDiv);
   box.appendChild(gradeWrap);
-  var gradeIssue = studentSingleGradeCompatibilityIssue(pg, extraGrade(pg,field), "il voto di " + nome);
-  if(gradeIssue){ box.appendChild(el("div","guide-text","<b>Voto non coerente con la Media.</b> " + gradeIssue)); }
  }
  var range = extraEfficaciaRangeText(pg,field);
  var profiloExtra = pg.tipo === "studente" ? (votoValido(extraGrade(pg,field)) ? ("Profilo Studente: " + votoNome(extraGrade(pg,field)) + ". ") : "Profilo Studente: voto Extra+ da selezionare. ") : "Adulto senza Sapienza Pozionistica affine. ";
@@ -4011,6 +4119,7 @@ function renderAll(){
  function buildPrepCard(pg, tiers){ 
  var card = el("div", "pg-card"); 
  card.appendChild(elText("h3", null, pg.nome)); 
+ var v80PrepLaw=pozV80BuildRecipeLawBox(pg);if(v80PrepLaw){card.appendChild(v80PrepLaw);card.appendChild(el("div","divider"));}
  card.appendChild(buildPhaseExtraControl(pg, "manualita", "Manualità Tecnica+"));
  
  var isAdultoNoSpeziale = false; 
@@ -4415,7 +4524,7 @@ function renderAll(){
  if(tierIngredients.length){
    var repId="prep-replaced-ing-"+tier.key+"-"+pg.id;var repLbl=elText("label",null,"Quale Ingrediente danneggiato viene sostituito? (per il conteggio Dispensa)");repLbl.htmlFor=repId;wrap.appendChild(repLbl);
    var repSel=el("select");repSel.id=repId;var empty=elText("option",null,"— scegli l'Ingrediente —");empty.value="";repSel.appendChild(empty);
-   for(var ri=0;ri<tierIngredients.length;ri++){var ing=tierIngredients[ri];var op=elText("option",null,ing.n+" ×"+ing.q+" ("+ing.c+")");op.value=String(ing.idx);repSel.appendChild(op);}
+   for(var ri=0;ri<tierIngredients.length;ri++){var ing=tierIngredients[ri];var op=elText("option",null,pozV80IngredientDisplayName(ing.n)+" ×"+ing.q+" ("+ing.c+")");op.value=String(ing.idx);repSel.appendChild(op);}
    var savedReplacement=String(pgDataGet(pg,"prep_replaced_ing_"+tier.key,"")||"");
    repSel.value=savedReplacement;
    /* Compatibilità con salvataggi v16/v17: se era stata associata a questo d14 una voce senza
@@ -4800,12 +4909,29 @@ function renderAll(){
  return 9; 
  } 
  
+ function buildExplosivePotionRiskBlock(pg){
+  if(!isPozioneEsplosiva()){return null;}
+  var state=explosivePotionRiskInfo(pg),box=el("div","guide-text");box.setAttribute("data-no-collapse","1");
+  box.appendChild(el("div",null,"<b>Rischio specifico — stabilità della Pozione Esplosiva</b>"));
+  box.appendChild(elText("p","small-note","Oltre al normale d15 di Uso della Bacchetta, il Pozionario richiede a fine cottura un 1d10: con 1 avviene un’esplosione parziale, il calderone viene distrutto e il PG subisce il danno Salute previsto per «Esplosione di un Calderone»; con 2-10 non si verificano incidenti. Il regolamento non dichiara espressamente perduta la Pozione con 1, quindi il tool registra l’incidente senza azzerare automaticamente le dosi."));
+  var line=el("div","result-line"),codeId="bac-esplosiva-code-"+pg.id,code=el("div","dice-code");code.id=codeId;
+  code.textContent="[dice=1d10]Stabilità Pozione Esplosiva - "+pg.nome+" (con 1 esplosione parziale)[/dice]";line.appendChild(code);
+  var copy=el("button","copy-btn","Copia");copy.id=codeId+"-copy";line.appendChild(copy);box.appendChild(line);setTimeout(function(){attachCopy(copy.id,codeId);},0);
+  var resLine=el("div","result-line");resLine.appendChild(elText("span",null,"Risultato speciale (1-10):"));
+  var inp=el("input");inp.type="number";inp.min="1";inp.max="10";inp.step="1";inp.placeholder="1-10";inp.value=state.roll;
+  var tag=el("span","out-tag out-neutral","in attesa");
+  function refresh(){var old=String(pgDataGet(pg,"bac_esplosiva_risk","")),raw=String(inp.value||"");pg.data["bac_esplosiva_risk"]=raw;if(old!==raw){clearAfterExplosiveRiskChange(pg);}if(raw===""){tag.textContent="in attesa";tag.className="out-tag out-neutral";}else if(!intInRange(raw,1,10)){tag.textContent="Risultato impossibile";tag.className="out-tag out-fail";}else if(Number(raw)===1){tag.textContent="Esplosione parziale · calderone distrutto · "+calderoneExplosionText(pg,1);tag.className="out-tag out-fail";}else{tag.textContent="Preparazione senza incidenti";tag.className="out-tag out-ok";}scheduleSave();}
+  inp.addEventListener("input",refresh);inp.addEventListener("change",function(){renderAll();});resLine.appendChild(inp);resLine.appendChild(tag);box.appendChild(resLine);
+  if(state.roll!==""){if(!state.valid){tag.textContent="Risultato impossibile";tag.className="out-tag out-fail";}else if(state.exploded){tag.textContent="Esplosione parziale · calderone distrutto · "+calderoneExplosionText(pg,1);tag.className="out-tag out-fail";}else{tag.textContent="Preparazione senza incidenti";tag.className="out-tag out-ok";}}
+  return box;
+ }
+
  function renderBacchettaStep(container){ 
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Fase 3: Uso della Bacchetta")); 
  p.appendChild(el("div", "guide-text", 
  "Si lancia un d15. Senza questo passaggio la Pozione non ha alcun effetto. Il numero base di dosi dipende da Tocco Magico; gli eventuali Calderoni/manufatti del catalogo selezionati nello Step 2 che concedono dosi aggiuntive vengono applicati automaticamente e restano separati dai bonus al d15. " + 
- "Costo: -0,5 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica.")); 
+ "Costo: -0,5 Fatica. Con Sapienza Pozionistica 25 il costo è 0 Fatica. Se la voce selezionata è la Pozione Esplosiva, il tool mostra inoltre il suo 1d10 speciale di stabilità previsto dal Pozionario.")); 
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
  if(appendDependencyGate(p, "bacchetta")){ container.appendChild(p); return; }
@@ -4871,6 +4997,7 @@ function renderAll(){
  resLine.appendChild(tag); 
  card.appendChild(resLine); 
  
+ var explosiveRiskBlock=buildExplosivePotionRiskBlock(pg);if(explosiveRiskBlock){card.appendChild(explosiveRiskBlock);}
  card.appendChild(el("div", "divider")); 
  card.appendChild(buildDosiBlock(pg)); 
  
@@ -4989,6 +5116,8 @@ function renderAll(){
  function buildDosiBlock(pg){ 
  var wrap = el("div"); 
  wrap.appendChild(el("p", null, "<b>Dosi ottenute</b>")); 
+ var expRiskDosi=explosivePotionRiskInfo(pg);
+ if(expRiskDosi.active&&!expRiskDosi.complete){wrap.appendChild(elText("p","small-note","Completa prima il 1d10 speciale di stabilità della Pozione Esplosiva: le dosi vengono determinate soltanto dopo che il rischio di fine cottura è stato risolto."));return wrap;}
  var lvl = pg.toccoMagico; 
  var fixedMap = { "0":2, "II":3, "IV":4 }; 
  if(lvl === "0" || lvl === "II" || lvl === "IV"){ 
@@ -5294,7 +5423,7 @@ function renderImbottStep(container){
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Fase 4: Imbottigliamento e Pulizia del Calderone")); 
  p.appendChild(el("div", "guide-text", 
- "Si lancia un d10. L'esito (0%, 33%, 66%, 100%) determina il numero di post finali necessari in base al profilo del PG e alla Classificazione della Pozione. Per uno Studente, Calderaio I aggiunge +1 al valore del Voto prima di sommare la Tecnica: serve soltanto a stabilire la fascia di riferimento del d10 e il profilo dei post resta Studente. " +
+ "Si lancia un d10. L'esito (0%, 33%, 66%, 100%) determina il numero di post finali necessari in base al profilo del PG e alla Classificazione della Pozione. Per uno Studente, Calderaio I aggiunge +2 al valore del Voto prima di sommare la Tecnica: serve soltanto a stabilire la fascia di riferimento del d10 e il profilo dei post resta Studente. " +
  "Con 0% la Pozione è persa e il calderone esplode. Con 33% o 66% la Pozione è pronta, ma il PG deve anche verificare se si accorge che la postazione resterà occupata più a lungo. " +
  "Costo base: -2 Fatica (0 con Sapienza Pozionistica 25). Se usi Sintesi Tecnica+, aggiungi il suo costo di -2 Fatica: il tool ne determina prima l'Efficacia con 1d10 e applica la riduzione dei post prevista. " +
  "Gli eventuali bonus da <b>Oggetti/Conoscenze</b> scelti nello Step 2 e assegnati all’Imbottigliamento modificano il risultato del d10; il Calderone/strumento scelto nello Step 2 viene invece applicato automaticamente e non va duplicato. Se Sintesi Tecnica+ si cumula con un manufatto che riduce i post <i>per difetto</i>, il materiale disponibile non stabilisce quale riduzione vada applicata per prima: poiché l’arrotondamento può cambiare il totale, il tool richiede di indicare esplicitamente l’ordine invece di inventarlo. " +
@@ -5508,6 +5637,7 @@ function renderImbottStep(container){
  var imbStatus = "pending"; 
  var imbEsito = "";
  var imbPosts = null;
+ delete pg.data["imb_explosion_health"];
 
  if(!imbAuxReady){
    if(formulaEl){ formulaEl.innerHTML = "<b>In attesa:</b> completa il 1d6 richiesto all'Adulto senza Calderaio."; }
@@ -5586,12 +5716,14 @@ function renderImbottStep(container){
 
      if(esito === "0%"){ 
        tagEl.className = "out-tag out-fail"; 
+       var explosionHealth=calderoneExplosionHealthMalus(pg);
+       pg.data["imb_explosion_health"] = explosionHealth;
        if(noteEl){
-         noteEl.textContent = "Il calderone esplode: consulta l'Enciclopedia Medimagica (Esplosione di un Calderone) per i danni in base a Calderaio/Sapienza Pozionistica. La Pozione è persa: non si procede con la Distillazione, ma apri comunque il Riepilogo Finale per registrare gli Ingredienti già consumati dalla Dispensa.";
+         noteEl.textContent = "Il calderone esplode e deve essere sostituito. "+calderoneExplosionText(pg,1)+" La Pozione è persa: non si procede con la Distillazione, ma apri comunque il Riepilogo Finale per registrare gli Ingredienti già consumati dalla Dispensa.";
        }
        if(postsEl){
          postsEl.className = "final-posts-box fail";
-         postsEl.innerHTML = "<b>Processo fallito:</b> Pozione da buttare e calderone esploso. Non si applica il conteggio dei post finali.";
+         postsEl.innerHTML = "<b>Processo fallito:</b> Pozione da buttare e calderone esploso. "+escapeHtml(calderoneExplosionText(pg,1))+" Non si applica il conteggio dei post finali.";
        }
      } else {
        if(esito === "100%"){
@@ -5666,7 +5798,7 @@ function renderImbottStep(container){
  function distillDefaultEntry(){
  return {raw_d10:"",bonus_amulet:"",bonus_magibio:"",eff:"skip",roll:"",retry_risk:"",retry_raw_d10:"",retry_bonus_amulet:"",retry_bonus_magibio:"",retry_eff:"none",retry_roll:""};
  }
- function distillStudentGrade(pg){ return votoValido(pg&&pg.mediaPozioni) ? pg.mediaPozioni : ""; }
+ function distillStudentGrade(pg){ return votoValido(pg&&pg.votoDistillatore) ? pg.votoDistillatore : ""; }
  function distillEfficaciaFromAdjusted(pg, adjusted){
   var n=Number(adjusted);
   if(!isFinite(n)||Math.floor(n)!==n){return null;}
@@ -5701,7 +5833,7 @@ function renderImbottStep(container){
    if(v==="A")return "0%: 1-4 · 33%: 5-6 · 66%: 7-8 · 100%: 9-10";
    if(v==="O")return "0%: 1-3 · 33%: 4-5 · 66%: 6-7 · 100%: 8-10";
    if(v==="E")return "0%: 1-2 · 33%: 3-4 · 66%: 5-6 · 100%: 7-10";
-   return "seleziona la Media in Pozioni";
+   return "seleziona il voto in Distillatore";
   }
   var lv=String(pg.distillatore||"0");
   if(lv==="I")return "33%: 1-2 · 66%: 3-4 · 100%: 5-10";
@@ -5712,7 +5844,7 @@ function renderImbottStep(container){
   return "Distillatore non posseduto";
  }
  function distillProfileText(pg){
-  if(pg.tipo==="studente")return "Studente · Media in Pozioni: "+(votoValido(pg.mediaPozioni)?votoNome(pg.mediaPozioni):"da selezionare");
+  if(pg.tipo==="studente")return "Studente · Voto in Distillatore: "+(votoValido(pg.votoDistillatore)?votoNome(pg.votoDistillatore):"da selezionare");
   return "Adulto · Distillatore "+String(pg.distillatore||"0");
  }
  var DISTILL_DIRECT_BONUS_KEYS=["magibio_1","magibio_2","magibio_3","amu_1","amu_2","amu_3","amu_4","amu_5","amu_6","amu_7"];
@@ -5784,10 +5916,11 @@ function renderImbottStep(container){
  "Disponibile solo a chi possiede la Conoscenza Avanzata Distillatore. In questo calcolatore viene resa disponibile solo dopo la conclusione delle quattro fasi di creazione e un Imbottigliamento/Pulizia diverso da 0%. " + 
  "Ora puoi aggiungere <b>una scheda per ogni dose che vuoi distillare</b>, fino al numero di dosi disponibili. Ogni scheda gestisce un’eventuale seconda Distillazione sulla stessa dose e calcola lo spazio finale di quella singola dose. " + 
  "Ogni esecuzione della Distillazione costa -1 Fatica per la dose (0 con Sapienza Pozionistica 25); un secondo tentativo sulla stessa dose conta come una nuova esecuzione. " + 
- "Il <b>1d10 di Distillatore è lo stesso normale tiro di riuscita delle Conoscenze Avanzate</b>: il tool ricava automaticamente 0% / 33% / 66% / 100% dal profilo del PG. Per lo Studente usa il voto nella Materia collegata (Media in Pozioni); per l’Adulto usa il livello I-V della singola Conoscenza Distillatore. I bonus diretti da <b>Magi Biografia e Amuleto della Fortuna possono sommarsi fra loro sullo stesso 1d10</b>. All’interno dello stesso gruppo, invece, resta valido un solo valore: un Amuleto non è cumulabile con un altro Amuleto e il bonus Pozionistica di Magi Biografia è un unico bonus preparato. Gli usi sono conteggiati su tutti i tentativi e tutte le dosi.")); 
+ "Il <b>1d10 di Distillatore è lo stesso normale tiro di riuscita delle Conoscenze Avanzate</b>: il tool ricava automaticamente 0% / 33% / 66% / 100% dal profilo del PG. Per lo Studente usa il <b>voto nella singola Conoscenza Distillatore</b>; per l’Adulto usa il livello I-V della stessa Conoscenza. I bonus diretti da <b>Magi Biografia e Amuleto della Fortuna possono sommarsi fra loro sullo stesso 1d10</b>. All’interno dello stesso gruppo, invece, resta valido un solo valore: un Amuleto non è cumulabile con un altro Amuleto e il bonus Pozionistica di Magi Biografia è un unico bonus preparato. Gli usi sono conteggiati su tutti i tentativi e tutte le dosi.")); 
 
  if(appendSetupGate(p)){ container.appendChild(p); return; }
  if(appendDependencyGate(p, "distill")){ container.appendChild(p); return; }
+ if(usingIllegalValigetta()){p.appendChild(buildIllegalValigettaNotice("distill"));}
 
  for(var i=0;i<pgs.length;i++){
    if(levelNum(pgs[i].distillatore) > 0){
@@ -5817,6 +5950,13 @@ function renderImbottStep(container){
  var card = el("div", "pg-card");
  card.appendChild(elText("h3", null, pg.nome));
  
+ if(pg.tipo==="studente"){
+  if(!votoValido(pg.votoDistillatore)){
+   card.appendChild(el("div","guide-text","<b>Voto in Distillatore mancante.</b> Distillatore è una Conoscenza Avanzata con un proprio voto: selezionalo nello Step 2. Questo non blocca la creazione della Pozione, ma soltanto la Distillazione facoltativa."));
+  }else if(["T","D","S"].indexOf(pg.votoDistillatore)>=0){
+   card.appendChild(el("div","guide-text","<b>Distillazione non disponibile.</b> Uno Studente sa utilizzare effettivamente una Conoscenza Avanzata soltanto da Accettabile in su. Il resto della creazione della Pozione rimane valido."));
+  }
+ }
  var imbEsitoCheck = pgDataGet(pg, "imb_esito", "");
  if(imbEsitoCheck === "0%"){
    card.appendChild(el("div", "guide-text", "Il calderone di questo Personaggio è esploso durante l'Imbottigliamento e Pulizia: la Pozione è persa, la Distillazione non è applicabile."));
@@ -5938,8 +6078,11 @@ function renderImbottStep(container){
   code.textContent="[dice=1d10]"+label+" - "+pg.nome+" (Dose "+(idx+1)+(bonusBits.length?"; "+bonusBits.join("; ")+" al risultato":"")+")[/dice]";codeLine.appendChild(code);var cp=el("button","copy-btn","Copia");cp.id=cid+"-copy";codeLine.appendChild(cp);row.appendChild(codeLine);setTimeout(function(){attachCopy(cid+"-copy",cid);},0);
   var rr=el("div","result-line");rr.appendChild(elText("span",null,"Risultato naturale del 1d10:"));var inp=el("input");inp.type="number";inp.min="1";inp.max="10";inp.step="1";inp.value=entry[rawField]||"";rr.appendChild(inp);var tag=el("span","out-tag out-neutral","in attesa");rr.appendChild(tag);row.appendChild(rr);
   var eff=null,adjusted=null;
-  if(pg.tipo==="studente"&&!votoValido(pg.mediaPozioni)){ready=false;tag.textContent="Media in Pozioni mancante";tag.className="out-tag out-fail";}
-  if(inp.value===""){ready=false;if(!(pg.tipo==="studente"&&!votoValido(pg.mediaPozioni))){tag.textContent="in attesa";tag.className="out-tag out-neutral";}}
+  var studentDistillGradeMissing=pg.tipo==="studente"&&!votoValido(pg.votoDistillatore);
+  var studentDistillGradeTooLow=pg.tipo==="studente"&&votoValido(pg.votoDistillatore)&&["T","D","S"].indexOf(pg.votoDistillatore)>=0;
+  if(studentDistillGradeMissing){ready=false;tag.textContent="Voto in Distillatore mancante";tag.className="out-tag out-fail";}
+  else if(studentDistillGradeTooLow){ready=false;tag.textContent="Distillatore non utilizzabile sotto Accettabile";tag.className="out-tag out-fail";}
+  if(inp.value===""){ready=false;if(!studentDistillGradeMissing&&!studentDistillGradeTooLow){tag.textContent="in attesa";tag.className="out-tag out-neutral";}}
   else if(!intInRange(inp.value,1,10)){ready=false;tag.textContent="Risultato impossibile";tag.className="out-tag out-fail";}
   else if(ready){adjusted=Number(inp.value)+totalBonus;eff=distillEfficaciaFromAdjusted(pg,adjusted);if(eff===null){ready=false;tag.textContent="Profilo non valido";tag.className="out-tag out-fail";}else{var tabValue=Math.max(1,Math.min(10,adjusted));tag.textContent="Risultato modificato: "+adjusted+(tabValue!==adjusted?" (letto come "+tabValue+" nella tabella 1d10)":"")+" → Efficacia "+eff+"%";tag.className=eff==="0"?"out-tag out-fail":"out-tag out-ok";}}
   else if(inp.value!==""&&intInRange(inp.value,1,10)&&tag.textContent==="in attesa"){tag.textContent="Correggi bonus/usi";tag.className="out-tag out-fail";}
@@ -6047,7 +6190,7 @@ function renderImbottStep(container){
   }
   if(Number(rinp.value) === 2){
     rtag.textContent = "Dose esplosa"; rtag.className = "out-tag out-fail";
-    out.appendChild(el("div", "guide-text", "<b>La dose distillata è persa.</b> Il d2 di rischio ha dato 2 prima del secondo tentativo."));
+    out.appendChild(el("div", "guide-text", "<b>La dose distillata è persa.</b> Il d2 di rischio ha dato 2 prima del secondo tentativo. "+escapeHtml(calderoneExplosionText(pg,1))+" Il regolamento equipara questa esplosione all'incidente «Esplosione di un Calderone»."));
     return {space:null, attempts:1, destroyed:true, processed:true};
   }
   rtag.textContent = "2° tentativo consentito"; rtag.className = "out-tag out-ok";
@@ -6104,6 +6247,8 @@ function renderImbottStep(container){
  out.innerHTML = "";
  pg.data["distill_destroyed"] = false;
  pg.data["distill_destroyed_count"] = 0;
+ pg.data["distill_explosion_health_each"] = null;
+ pg.data["distill_explosion_health_total"] = null;
  pg.data["distill_invalid"] = false;
  pg.data["distill_attempts"] = 0;
  pg.data["distill_space"] = "standard";
@@ -6137,6 +6282,9 @@ function renderImbottStep(container){
  pg.data["distill_dose_count"] = processed;
  pg.data["distill_destroyed_count"] = destroyed;
  pg.data["distill_destroyed"] = destroyed > 0;
+ pg.data["distill_explosion_health_each"] = destroyed>0 ? calderoneExplosionHealthMalus(pg) : null;
+ pg.data["distill_explosion_health_total"] = (destroyed>0 && calderoneExplosionHealthMalus(pg)!==null) ? destroyed*calderoneExplosionHealthMalus(pg) : null;
+ if(destroyed>0){out.appendChild(el("div","guide-text","<b>Danni da esplosione:</b> "+escapeHtml(calderoneExplosionText(pg,destroyed))+""));}
  pg.data["distill_invalid"] = invalid;
  pg.data["distill_spaces"] = spaces;
  pg.data["distill_space"] = spaces.length ? spaces[0] : "standard";
@@ -6207,17 +6355,18 @@ function renderImbottStep(container){
  /* ==================================================== */ 
  var TIER_LABELS_MAP = { base:"Ingredienti X/XX/XXX", iv:"Ingredienti XXXX", v:"Ingredienti XXXXX" }; 
  function computeDispensaInfo(pg,tiersPresent){
-   var entry=currentPozionarioEntry();var map={};var order=[];var base=0;var extra=0;var complete=true;var replacementNotes=[];var nonNumerici=[];var esclusi=[];var ongNonEligibleBase=0;var externalNumeric=[];var externalNumericTotal=0;
+   var entry=currentPozionarioEntry();var map={};var order=[];var base=0;var extra=0;var complete=true;var replacementNotes=[];var nonNumerici=[];var esclusi=[];var ongNonEligibleBase=0;var externalNumeric=[];var externalNumericTotal=0;var deferredExternal=[];
    function addItem(name,q){q=Number(q);if(!isFinite(q)||q<0){return;}if(!Object.prototype.hasOwnProperty.call(map,name)){map[name]=0;order.push(name);}map[name]+=q;}
    if(entry&&entry.a){
      for(var i=0;i<entry.a.length;i++){
        var ing=entry.a[i];var q=Number(ing[1]);
        if(isFinite(q)&&q>=0){
-         /* I tre componenti volutamente senza Classificazione sono non magici/personali da
-            reperire ONGame. Vengono consumati nella ricetta ma non appartengono alla Dispensa
-            degli Ingredienti magici e non possono concorrere al bonus da Allevamento/Coltivazione. */
+         /* I componenti senza Classificazione non appartengono alla Dispensa degli Ingredienti
+            magici e non concorrono al bonus da Allevamento/Coltivazione. Amortentia e Polisucco
+            fanno eccezione sul consumo immediato: il capello/pelo può restare «da aggiungere». */
          if(!ing[2]){
-           ongNonEligibleBase+=q; externalNumericTotal+=q; externalNumeric.push(ing[0]+" ×"+q);
+           if(isSpecialBiologicalIngredient(ing[0])&&!specialBiologicalComponentAdded(pg)){deferredExternal.push(ing[0]+" ×"+q);}
+           else{ongNonEligibleBase+=q; externalNumericTotal+=q; externalNumeric.push(ing[0]+" ×"+q);}
          } else {
            base+=q;addItem(ing[0],q);
          }
@@ -6232,7 +6381,7 @@ function renderImbottStep(container){
        var selected=recipeIngredientByIndex(idx);
        var sq=pgDataGet(pg,"prep_replaced_qty_"+key,"");
        if(!selected||ingredientTierKey(selected.c)!==key){complete=false;replacementNotes.push(TIER_LABELS_MAP[key]+": Ingrediente sostituito non ancora selezionato nella stessa fascia di Classificazione del d14 fallito.");}
-       else if(!intInRange(sq,1,selected.q)){complete=false;replacementNotes.push(TIER_LABELS_MAP[key]+": indica quante unità/dosi di "+selected.n+" sono state effettivamente sostituite (1-"+selected.q+").");}
+       else if(!intInRange(sq,1,selected.q)){complete=false;replacementNotes.push(TIER_LABELS_MAP[key]+": indica quante unità/dosi di "+pozV80IngredientDisplayName(selected.n)+" sono state effettivamente sostituite (1-"+selected.q+").");}
        else{extra+=Number(sq);addItem(selected.n,Number(sq));replacementNotes.push(TIER_LABELS_MAP[key]+": sostituito "+selected.n+" ×"+Number(sq)+".");}
      } else {var mq=pgDataGet(pg,"prep_replaced_qty_"+key,"");if(!positiveInt(mq)){complete=false;replacementNotes.push(TIER_LABELS_MAP[key]+": quantità sostituita non ancora indicata.");}else{extra+=Number(mq);replacementNotes.push(TIER_LABELS_MAP[key]+": +"+Number(mq)+" unità/dosi sostituite.");}}
    }
@@ -6241,8 +6390,8 @@ function renderImbottStep(container){
      for(var sti=0;sti<tiersPresent.length;sti++){var stKey=tiersPresent[sti];if(pgDataGet(pg,"prep_remedy_choice_"+stKey,"")!=="retry"){continue;}var stSrc=replacementSourceIngredient(pg,stKey);var stQty=pgDataGet(pg,"prep_replaced_qty_"+stKey,"");if(stSrc&&positiveInt(stQty)){sourceTotals[stSrc.idx]=(sourceTotals[stSrc.idx]||0)+Number(stQty);sourceRefs[stSrc.idx]=stSrc;}}
      for(var sid in sourceTotals){if(Object.prototype.hasOwnProperty.call(sourceTotals,sid)){var srcRef=sourceRefs[sid];if(srcRef&&sourceTotals[sid]>srcRef.q){complete=false;replacementNotes.push(srcRef.n+": sostituzioni complessive "+sourceTotals[sid]+", ma la ricetta ne contiene soltanto "+srcRef.q+". Riduci le quantità associate ai diversi d14.");}}}
    }
-   var parts=[];if(entry){for(var j=0;j<order.length;j++){parts.push(order[j]+" ×"+map[order[j]]);}}
-   return {complete:complete,base:base,extra:extra,total:base+extra,parts:parts,replacements:replacementNotes,nonNumerici:nonNumerici,esclusi:esclusi,automatic:!!entry,ongNonEligibleBase:ongNonEligibleBase,externalNumeric:externalNumeric,externalNumericTotal:externalNumericTotal};
+   var parts=[];if(entry){for(var j=0;j<order.length;j++){parts.push(pozV80IngredientDisplayName(order[j])+" ×"+map[order[j]]);}}
+   return {complete:complete,base:base,extra:extra,total:base+extra,parts:parts,replacements:replacementNotes,nonNumerici:nonNumerici,esclusi:esclusi,automatic:!!entry,ongNonEligibleBase:ongNonEligibleBase,externalNumeric:externalNumeric,externalNumericTotal:externalNumericTotal,deferredExternal:deferredExternal};
  }
  
  function summarizeDistillationSpaces(spaces, standardCount, destroyedCount){
@@ -6283,13 +6432,120 @@ function renderImbottStep(container){
    return Math.max(0,Number(dispensaInfo.total)||0);
  }
 
+
+ function studentPotionCountSet(pg,value){
+  var old=String(pgDataGet(pg,"riep_student_potion_count",""));
+  var next=String(value==null?"":value);
+  if(old!==next){
+    delete pg.data["riep_student_acne_roll"];
+    delete pg.data["riep_student_acne_scacciabrufoli"];
+    delete pg.data["riep_student_acne_active_disease"];
+  }
+  pg.data["riep_student_potion_count"]=next;
+ }
+
+ function studentAcneRiskInfo(pg){
+  var raw=pgDataGet(pg,"riep_student_potion_count","");
+  var active=pg&&pg.tipo==="studente"&&raw!==""&&positiveInt(raw)&&Number(raw)%3===0;
+  var immune=!!pgDataGet(pg,"riep_student_acne_immune",false);
+  var activeDisease=!!pgDataGet(pg,"riep_student_acne_active_disease",false);
+  var scacciabrufoli=!!pgDataGet(pg,"riep_student_acne_scacciabrufoli",false);
+  var roll=pgDataGet(pg,"riep_student_acne_roll","");
+  var validRoll=intInRange(roll,1,10);
+  var exempt=active&&(immune||activeDisease||scacciabrufoli);
+  return {
+   active:active,
+   count:active?Number(raw):null,
+   immune:immune,
+   activeDisease:activeDisease,
+   scacciabrufoli:scacciabrufoli,
+   exempt:exempt,
+   roll:roll,
+   validRoll:validRoll,
+   contracted:active&&!exempt&&validRoll&&Number(roll)===1,
+   complete:!active||exempt||validRoll
+  };
+ }
+
+ function studentAcneSummaryText(pg){
+  var s=studentAcneRiskInfo(pg);
+  if(!s.active){return "";}
+  var lead="Acne Purulenta — Pozione ONGame n. "+s.count+": ";
+  if(s.immune){return lead+"tiro non dovuto perché il PG è già immune naturalmente all'Acne Purulenta.";}
+  if(s.activeDisease){return lead+"tiro non dovuto perché il PG ha già una Malattia Magica attiva e, finché non viene curata, non rischia il contagio di nuove Malattie Magiche.";}
+  if(s.scacciabrufoli){return lead+"rischio prevenuto con Pozione Scacciabrufoli; considera consumata 1 dose usata per la prevenzione.";}
+  if(s.roll===""){return lead+"controllo da completare: tira 1d10; con 1 il PG contrae la malattia.";}
+  if(!s.validRoll){return lead+"risultato non valido: il tiro deve essere un intero da 1 a 10.";}
+  if(s.contracted){return lead+"1d10 = 1, Acne Purulenta CONTRATTA: -10 Salute. La malattia si manifesta nella prima role utile secondo l'Enciclopedia Medimagica.";}
+  return lead+"1d10 = "+s.roll+", Acne Purulenta non contratta in questa occasione; il dado non si ripete per la stessa occasione.";
+ }
+
+ function buildStudentAcneRiskBlock(pg,tiersPresent){
+  var s=studentAcneRiskInfo(pg);
+  if(!s.active){return null;}
+  var box=el("div","guide-text");
+  box.setAttribute("data-no-collapse","1");
+  box.appendChild(el("div",null,"<b>Rischio Acne Purulenta — Pozione ONGame n. "+s.count+"</b>"));
+  box.appendChild(elText("p","small-note","Ogni 3 Pozioni create ONGame lo Studente effettua questo controllo una sola volta per occasione. Con 1 su 1d10 contrae l'Acne Purulenta (-10 Salute); se il tiro è negativo non viene ripetuto per la stessa occasione. La malattia, se contratta, si manifesta nella prima role utile."));
+
+  function addExemption(field,label){
+   var line=el("div","chk-line");
+   var chk=el("input");chk.type="checkbox";chk.id=field+"-"+pg.id;chk.checked=!!pgDataGet(pg,field,false);
+   chk.addEventListener("change",function(){
+    pg.data[field]=chk.checked;
+    delete pg.data["riep_student_acne_roll"];
+    renderAll();
+   });
+   line.appendChild(chk);
+   var lbl=elText("label",null,label);lbl.htmlFor=chk.id;line.appendChild(lbl);
+   box.appendChild(line);
+  }
+  addExemption("riep_student_acne_scacciabrufoli","Prevenzione: è stata utilizzata 1 dose di Pozione Scacciabrufoli per questa terza Pozione");
+  addExemption("riep_student_acne_immune","Il PG possiede già Immunità naturale all'Acne Purulenta");
+  addExemption("riep_student_acne_active_disease","Il PG ha già una Malattia Magica attiva (non rischia nuove Malattie Magiche finché non viene curata)");
+
+  s=studentAcneRiskInfo(pg);
+  if(s.exempt){
+   box.appendChild(elText("div","out-tag out-ok",studentAcneSummaryText(pg)));
+   return box;
+  }
+
+  var line=el("div","result-line");
+  var codeId="riep-acne-code-"+pg.id;
+  var code=el("div","dice-code");code.id=codeId;
+  code.textContent="[dice=1d10]Rischio Acne Purulenta - "+pg.nome+" (Pozione ONGame n. "+s.count+"; con 1 contrae la malattia)[/dice]";
+  line.appendChild(code);
+  var copy=el("button","copy-btn","Copia");copy.id=codeId+"-copy";line.appendChild(copy);
+  box.appendChild(line);
+  setTimeout(function(){attachCopy(codeId+"-copy",codeId);},0);
+
+  var resLine=el("div","result-line");
+  resLine.appendChild(elText("span",null,"Risultato ottenuto (1-10):"));
+  var inp=el("input");inp.type="number";inp.min="1";inp.max="10";inp.step="1";inp.placeholder="1-10";inp.value=s.roll;
+  var tag=el("span","out-tag out-neutral","in attesa");
+  function refresh(){
+   var raw=inp.value;
+   pg.data["riep_student_acne_roll"]=raw;
+   if(raw===""){tag.textContent="in attesa";tag.className="out-tag out-neutral";}
+   else if(!intInRange(raw,1,10)){tag.textContent="Risultato impossibile";tag.className="out-tag out-fail";}
+   else if(Number(raw)===1){tag.textContent="Acne Purulenta contratta · -10 Salute";tag.className="out-tag out-fail";}
+   else{tag.textContent="Acne Purulenta non contratta";tag.className="out-tag out-ok";}
+   recomputeRiepilogo(pg,tiersPresent);
+   scheduleSave();
+  }
+  inp.addEventListener("input",refresh);
+  resLine.appendChild(inp);resLine.appendChild(tag);box.appendChild(resLine);
+  if(s.roll!==""){if(!s.validRoll){tag.textContent="Risultato impossibile";tag.className="out-tag out-fail";}else if(s.contracted){tag.textContent="Acne Purulenta contratta · -10 Salute";tag.className="out-tag out-fail";}else{tag.textContent="Acne Purulenta non contratta";tag.className="out-tag out-ok";}}
+  return box;
+ }
+
  function renderRiepilogoStep(container){ 
  var p = el("div", "panel"); 
  p.appendChild(el("h2", null, "Riepilogo Finale della Pozione")); 
  p.appendChild(el("div", "guide-text", 
  "Qui trovi sia il resoconto tecnico, il <b>totale degli Ingredienti da rimuovere dalla Dispensa</b> (ricetta una sola volta, più eventuali sostituzioni: non viene moltiplicata per le dosi di Pozione ottenute), con gli eventuali <b>componenti non magici/personali da reperire ONGame indicati separatamente</b>, sia, <b>quando esiste almeno una dose utile</b>, una frase già pronta da copiare nell’Inventario, con Nome della Pozione, Dosi, Categoria di Forza, " +
  "calcolo della Forza finale, creatore, Tecnica, eventuale link alla role e spazio occupato dalla dose. " +
- "La Forza Standard impostata nello Step 1 viene usata automaticamente per il valore assoluto e per classificare OOP/E quando si applica il +10 fisso della role. Promemoria: i PG Studenti, ogni 3 Pozioni create ONGame, effettuano anche il tiro previsto per il rischio di Acne Purulenta (1d10; con 1), che non modifica i calcoli della Pozione qui sotto. La Fatica delle fasi va tracciata durante una creazione giocata ONGame; se la creazione è solo OFFGame non genera un malus persistente in Scheda.")); 
+ "La Forza Standard impostata nello Step 1 viene usata automaticamente per il valore assoluto e per classificare OOP/E quando si applica il +10 fisso della role. Per i PG Studenti, inserendo un numero progressivo di Pozioni create ONGame multiplo di 3, il Riepilogo apre automaticamente il controllo per il rischio di Acne Purulenta e gestisce prevenzione, 1d10 ed esito. La Fatica delle fasi va tracciata durante una creazione giocata ONGame; se la creazione è solo OFFGame non genera un malus persistente in Scheda.")); 
  
  if(appendSetupGate(p)){ container.appendChild(p); return; }
  if(appendDependencyGate(p, "riepilogo")){ container.appendChild(p); return; }
@@ -6345,26 +6601,26 @@ function renderImbottStep(container){
   if(terminale==="distill" && pg.tipo==="studente"){
     var countWrap=el("div");
     var countLossId="riep-student-count-loss-"+pg.id;
-    var countLossLbl=elText("label",null,"Numero progressivo di Pozioni create ONGame dallo Studente (facoltativo)");countLossLbl.htmlFor=countLossId;countWrap.appendChild(countLossLbl);
+    var countLossLbl=elText("label",null,"Numero progressivo di Pozioni create ONGame dallo Studente (lascia vuoto se questa creazione è OFFGame)");countLossLbl.htmlFor=countLossId;countWrap.appendChild(countLossLbl);
     var countLossInp=el("input");countLossInp.type="number";countLossInp.id=countLossId;countLossInp.min="1";countLossInp.step="1";countLossInp.placeholder="es. 3, 6, 9...";countLossInp.value=pgDataGet(pg,"riep_student_potion_count","");
-    countLossInp.addEventListener("input",function(){pg.data["riep_student_potion_count"]=countLossInp.value;scheduleSave();});countLossInp.addEventListener("change",function(){renderAll();});countWrap.appendChild(countLossInp);card.appendChild(countWrap);
+    countLossInp.addEventListener("input",function(){studentPotionCountSet(pg,countLossInp.value);scheduleSave();});countLossInp.addEventListener("change",function(){renderAll();});countWrap.appendChild(countLossInp);card.appendChild(countWrap);
     card.appendChild(elText("p","small-note","La Pozione era già stata creata, ma tutte le dosi disponibili sono state successivamente perse durante la Distillazione: se la creazione è stata giocata ONGame, continua a rientrare nel conteggio periodico dello Studente."));
+    var acneLossBlock=buildStudentAcneRiskBlock(pg,tiersPresent);if(acneLossBlock){card.appendChild(acneLossBlock);}
   }
   var info=computeDispensaInfo(pg,tiersPresent);
   var lines=[];
   var faticaPersa = faticaFinoAllaPerdita(pg,terminale || "prod");
   lines.push("Fatica effettivamente sostenuta fino alla conclusione del tentativo: -"+fmtFatica(faticaPersa.totale)+" ("+faticaPersa.parti.join("; ")+"). Se la creazione è giocata ONGame va tracciata durante la role; se è solo OFFGame non genera un malus persistente in Scheda.");
   if(terminale==="distill" && pg.tipo==="studente"){
-    var lossPozCount=pgDataGet(pg,"riep_student_potion_count","");
-    if(lossPozCount!=="" && positiveInt(lossPozCount) && Number(lossPozCount)%3===0){
-      lines.push("Promemoria Studente: questa era la Pozione ONGame n. "+lossPozCount+"; effettua 1d10 per il rischio di Acne Purulenta (con 1), anche se tutte le dosi disponibili sono state successivamente distrutte in Distillazione.");
-    }
+    var acneLossSummary=studentAcneSummaryText(pg);
+    if(acneLossSummary){lines.push(acneLossSummary);}
   }
   if(info.complete){
     lines.push("Totale numerico da rimuovere: "+info.total+" unità/dosi ("+info.base+" ricetta"+(info.extra>0?" + "+info.extra+" sostituzioni":"")+").");
     if(info.parts.length){lines.push("Dettaglio: "+info.parts.join("; ")+".");}
   }else{lines.push("Totale numerico da rimuovere: da completare.");}
   if(info.externalNumeric&&info.externalNumeric.length){lines.push("Componenti da reperire/consumare ONGame, non da scalare dalla Dispensa: "+info.externalNumeric.join("; ")+".");}
+  if(info.deferredExternal&&info.deferredExternal.length){lines.push("Componenti biologici non ancora aggiunti e quindi non consumati in questa creazione: "+info.deferredExternal.join("; ")+". La scheda può riportare «Capello da aggiungere» secondo la regola specifica della Pozione.");}
   if(info.nonNumerici.length){lines.push("Componenti senza quantità numerica, da reperire/gestire separatamente secondo la ricetta e non inclusi nel totale automatico della Dispensa né nel tetto del bonus da Allevamento/Coltivazione: "+info.nonNumerici.join("; ")+".");}
   if(info.replacements.length){lines.push(info.replacements.join(" "));}
   var box=elText("div","final-posts-box",lines.join(" "));box.id="riep-dispensa-persa-"+pg.id;box.setAttribute("data-plain",lines.join(" "));card.appendChild(box);
@@ -6375,7 +6631,10 @@ function renderImbottStep(container){
  function buildRiepilogoCard(pg, tiersPresent){ 
  var card = el("div", "pg-card"); 
  card.appendChild(elText("h3", null, pg.nome));
+ if(POZ.laboratorioNonRegistrato){card.appendChild(el("div","guide-text","<b>Laboratorio Privato non registrato:</b> Azione Illegale generica distinta dalle singole fasi. Avvisa il Narratore: base 1d100, colto in flagrante con 1-30 prima dei modificatori contestuali. Non viene ripetuta automaticamente a ogni fase."));}
  if(POZ.illegale){ card.appendChild(buildIllegalSummary(pg)); } 
+ var v80RiepLaw=pozV80BuildRecipeLawBox(pg);if(v80RiepLaw){card.appendChild(v80RiepLaw);} 
+ var bioComponentBlock=buildSpecialBiologicalComponentBlock(pg);if(bioComponentBlock){card.appendChild(bioComponentBlock);}
 
  var prodStatusFinal=pgDataGet(pg,"prod_status","pending");
  if(prodStatusFinal==="discarded"){
@@ -6384,7 +6643,7 @@ function renderImbottStep(container){
  }
  var imbEsitoCheck = pgDataGet(pg, "imb_esito", ""); 
  if(imbEsitoCheck === "0%"){ 
-   appendDispensaPersa(card,pg,tiersPresent,"Il calderone è esploso durante l'Imbottigliamento e Pulizia e la Pozione è persa.","imbott");
+   appendDispensaPersa(card,pg,tiersPresent,"Il calderone è esploso durante l'Imbottigliamento e Pulizia e la Pozione è persa. "+calderoneExplosionText(pg,1),"imbott");
    return card; 
  }
  if(!!pgDataGet(pg, "distill_destroyed", false)){
@@ -6396,11 +6655,11 @@ function renderImbottStep(container){
      var motivoDistPersa=distrutteCard===1?
        "La singola dose disponibile è esplosa nel controllo di rischio prima del secondo tentativo di Distillazione.":
        ("Tutte le "+distrutteCard+" dosi disponibili sono andate distrutte nei controlli di rischio della Distillazione.");
-     appendDispensaPersa(card,pg,tiersPresent,motivoDistPersa,"distill");
+     appendDispensaPersa(card,pg,tiersPresent,motivoDistPersa+" "+calderoneExplosionText(pg,distrutteCard),"distill");
      return card;
    }
    var msgDistrutteCard=distrutteCard===1?"Una dose sottoposta a Distillazione è andata distrutta.":("Sono andate distrutte "+distrutteCard+" dosi sottoposte a Distillazione.");
-   card.appendChild(elText("div","guide-text",msgDistrutteCard+" Poiché la Distillazione si esegue dose per dose, restano disponibili "+superstitiCard+" "+(superstitiCard===1?"dose":"dosi")+" e vengono riepilogate qui sotto."));
+   card.appendChild(elText("div","guide-text",msgDistrutteCard+" "+calderoneExplosionText(pg,distrutteCard)+" Poiché la Distillazione si esegue dose per dose, restano disponibili "+superstitiCard+" "+(superstitiCard===1?"dose":"dosi")+" e vengono riepilogate qui sotto."));
  } 
  
  if(POZ.nome !== ""){ 
@@ -6427,7 +6686,7 @@ function renderImbottStep(container){
    var dBaseDisp=el("div");var baseDispId="riep-dispensa-base-"+pg.id;var baseDispLbl=elText("label",null,"Totale unità/dosi della ricetta da rimuovere dalla Dispensa");baseDispLbl.htmlFor=baseDispId;dBaseDisp.appendChild(baseDispLbl);var baseDispInp=el("input");baseDispInp.type="number";baseDispInp.id=baseDispId;baseDispInp.min="0";baseDispInp.step="1";baseDispInp.placeholder="ricetta manuale";baseDispInp.value=pgDataGet(pg,"riep_dispensa_base_manual","");baseDispInp.addEventListener("input",function(){pg.data["riep_dispensa_base_manual"]=baseDispInp.value;recomputeRiepilogo(pg,tiersPresent);});dBaseDisp.appendChild(baseDispInp);row.appendChild(dBaseDisp);
  }
  
- card.appendChild(row);if(pg.tipo==="studente"){var countRow=el("div","row");var countDiv=el("div");var countId="riep-student-count-"+pg.id;var countLbl=elText("label",null,"Numero progressivo di Pozioni create ONGame dallo Studente (facoltativo)");countLbl.htmlFor=countId;countDiv.appendChild(countLbl);var countInp=el("input");countInp.type="number";countInp.id=countId;countInp.min="1";countInp.step="1";countInp.placeholder="es. 3, 6, 9...";countInp.value=pgDataGet(pg,"riep_student_potion_count","");countInp.addEventListener("input",function(){pg.data["riep_student_potion_count"]=countInp.value;recomputeRiepilogo(pg,tiersPresent);});countDiv.appendChild(countInp);countRow.appendChild(countDiv);card.appendChild(countRow);}
+ card.appendChild(row);if(pg.tipo==="studente"){var countRow=el("div","row");var countDiv=el("div");var countId="riep-student-count-"+pg.id;var countLbl=elText("label",null,"Numero progressivo di Pozioni create ONGame dallo Studente (lascia vuoto se questa creazione è OFFGame)");countLbl.htmlFor=countId;countDiv.appendChild(countLbl);var countInp=el("input");countInp.type="number";countInp.id=countId;countInp.min="1";countInp.step="1";countInp.placeholder="es. 3, 6, 9...";countInp.value=pgDataGet(pg,"riep_student_potion_count","");countInp.addEventListener("input",function(){studentPotionCountSet(pg,countInp.value);recomputeRiepilogo(pg,tiersPresent);});countInp.addEventListener("change",function(){renderAll();});countDiv.appendChild(countInp);countRow.appendChild(countDiv);card.appendChild(countRow);var acneBlock=buildStudentAcneRiskBlock(pg,tiersPresent);if(acneBlock){card.appendChild(acneBlock);}}
 
  var roleRow=el("div","row");
  var dRole = el("div");
@@ -6532,6 +6791,14 @@ function renderImbottStep(container){
  noteRighe.push("Fatica Uso della Bacchetta: " + (faticaBac === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaBac) + " base") + (faticaTrackedBac>0 ? " + Oggetti/Conoscenze -"+fmtFatica(faticaTrackedBac) : "") + ".");
  noteRighe.push("Fatica Imbottigliamento e Pulizia: " + (faticaImb === 0 ? "0 base (Sapienza Pozionistica 25)" : "-" + fmtFatica(faticaImb) + " base") + (faticaExtraImb > 0 ? " + Sintesi Tecnica+ -" + fmtFatica(faticaExtraImb) : "") + (faticaTrackedImb>0 ? " + Oggetti/Conoscenze -"+fmtFatica(faticaTrackedImb) : "") + ".");
  noteRighe.push("Fatica Distillazione: " + faticaDistTesto + ".");
+ var expRiskRiep=explosivePotionRiskInfo(pg);
+ if(expRiskRiep.active){
+   if(!expRiskRiep.complete){incompleto=true;noteRighe.push("Pozione Esplosiva: manca il 1d10 speciale di stabilità della fase Uso della Bacchetta.");}
+   else if(expRiskRiep.exploded){noteRighe.push("Pozione Esplosiva: 1d10 speciale = 1, esplosione parziale; calderone distrutto. "+calderoneExplosionText(pg,1)+" Il Pozionario non dichiara esplicitamente perduta la Pozione, quindi le dosi non vengono azzerate automaticamente.");}
+   else{noteRighe.push("Pozione Esplosiva: 1d10 speciale = "+expRiskRiep.roll+", preparazione riuscita senza incidenti.");}
+ }
+ var bioInfoRiep=specialBiologicalComponentInfo();
+ if(bioInfoRiep){if(specialBiologicalComponentAdded(pg)){noteRighe.push(bioInfoRiep.label+": già aggiunto e conteggiato tra i componenti consumati fuori Dispensa.");}else{noteRighe.push(bioInfoRiep.label+": non ancora aggiunto; la Pozione resta registrabile come «"+bioInfoRiep.pending+"» e il componente non viene conteggiato come consumato.");}}
  var distillStandardCount = (dosiInfo.finale!==null && dosiInfo.finale>=0) ? Math.max(0, dosiInfo.finale - distillDoseCount) : 0;
  if(distillDoseCount > 0){
    noteRighe.push("Distillazione: " + summarizeDistillationSpaces(distillSpaces, distillStandardCount, distillDestroyedCount) + ".");
@@ -6545,8 +6812,10 @@ function renderImbottStep(container){
  var trackedAudit=trackedEffectAuditLines(pg);
  for(var tai=0;tai<trackedAudit.length;tai++){noteRighe.push(trackedAudit[tai]);}
  if(pg.tipo==="studente"){
-   var pozCount=pgDataGet(pg,"riep_student_potion_count","");
-   if(pozCount!==""&&positiveInt(pozCount)&&Number(pozCount)%3===0){noteRighe.push("Promemoria Studente: questa è una Pozione ONGame n. "+pozCount+"; effettua 1d10 per il rischio di Acne Purulenta (con 1).");}
+   var acneState=studentAcneRiskInfo(pg);
+   var acneSummary=studentAcneSummaryText(pg);
+   if(acneSummary){noteRighe.push(acneSummary);}
+   if(!acneState.complete){incompleto=true;}
    if(POZ.classificazione==="XXXX"||POZ.classificazione==="XXXXX"){noteRighe.push("Promemoria Studente: una Pozione "+POZ.classificazione+" prodotta ONGame nelle Postazioni scolastiche viola il regolamento di Hogwarts; se preparata altrove nei pressi di Hogwarts con Calderone/Kit personale va avvisato il Narratore.");}
  }
  if(dispensaInfo.complete){noteRighe.push("Dispensa: "+dispensaInfo.total+" unità/dosi numeriche da rimuovere ("+dispensaInfo.base+" ricetta"+(dispensaInfo.extra>0?" + "+dispensaInfo.extra+" sostituzioni":"")+").");}else{noteRighe.push("Dispensa: conteggio non ancora completo; specifica gli Ingredienti/quantità sostituiti o il totale della ricetta manuale.");}
@@ -6614,7 +6883,8 @@ function renderImbottStep(container){
  var categoriaForcePercent = forzaPercentTotal;
  var valigettaFactor = POZ.valigettaAdduco ? 0.5 : 1;
  if(POZ.valigettaAdduco){ noteRighe.push("Valigetta creata con Adduco Maxima: -50% della Forza finale (la Forza viene dimezzata dopo gli altri modificatori)."); }
- if(usingIllegalValigetta()){noteRighe.push("Valigetta del Pozionista illegale: ogni dado delle quattro fasi di creazione costituisce anche un’Azione Illegale; i relativi controlli generali vanno risolti con il regolamento dedicato.");}
+ if(usingIllegalValigetta()){noteRighe.push("Valigetta del Pozionista illegale: ogni dado di una fase di creazione, compresa l’eventuale Distillazione, costituisce anche un’Azione Illegale; i relativi controlli generali vanno risolti con il regolamento dedicato.");}
+ if(currentPozionarioEntry()){noteRighe.push(pozV80RecipeLawSummaryText(pg));}
  var durataPercent = prepAcc.durata; 
 
  var forzaBaseRawPerCategoria = POZ.forzaStandard;
@@ -6739,7 +7009,7 @@ function renderImbottStep(container){
  addSummaryStat("Spazio delle dosi", spazioFinaleVisual, false);
  addSummaryStat("Post finali", postsFinaliVisual, false);
  addSummaryStat("Fatica", faticaFinaleVisual, true);
- var dispensaVisual=dispensaInfo.complete?(dispensaInfo.total+" unità/dosi"+(dispensaInfo.extra>0?" ("+dispensaInfo.base+" + "+dispensaInfo.extra+" sost.)":"")+((dispensaInfo.externalNumeric&&dispensaInfo.externalNumeric.length)||dispensaInfo.nonNumerici.length?" + voci separate":"")):"Da completare";
+ var dispensaVisual=dispensaInfo.complete?(dispensaInfo.total+" unità/dosi"+(dispensaInfo.extra>0?" ("+dispensaInfo.base+" + "+dispensaInfo.extra+" sost.)":"")+((dispensaInfo.externalNumeric&&dispensaInfo.externalNumeric.length)||(dispensaInfo.deferredExternal&&dispensaInfo.deferredExternal.length)||dispensaInfo.nonNumerici.length?" + voci separate":"")):"Da completare";
  addSummaryStat("Ingredienti Dispensa", dispensaVisual, true);
 
  summaryBox.appendChild(summaryGrid);
@@ -6761,6 +7031,7 @@ function renderImbottStep(container){
    if(dispensaInfo.extra>0){dispensaTesto += " ("+dispensaInfo.base+" ricetta + "+dispensaInfo.extra+" sostituzioni)";}
    dispensaTesto += ".";
    if(dispensaInfo.externalNumeric&&dispensaInfo.externalNumeric.length){dispensaTesto += " Componenti da reperire/consumare ONGame, NON da scalare dalla Dispensa: "+dispensaInfo.externalNumeric.join("; ")+".";}
+   if(dispensaInfo.deferredExternal&&dispensaInfo.deferredExternal.length){dispensaTesto += " Componenti biologici NON ancora aggiunti e quindi non consumati: "+dispensaInfo.deferredExternal.join("; ")+". Registrare «Capello da aggiungere».";}
    if(dispensaInfo.nonNumerici.length){dispensaTesto += " Componenti senza quantità numerica da reperire/gestire separatamente secondo la ricetta, fuori dal totale automatico della Dispensa: "+dispensaInfo.nonNumerici.join("; ")+".";}
  }else{dispensaTesto="Da rimuovere dalla Dispensa: conteggio da completare.";}
  var dispBox=el("div","inventory-box");dispBox.appendChild(el("span","inventory-label","Ingredienti da rimuovere dalla Dispensa"));var dispCode=el("div","inventory-sentence");dispCode.id="riep-dispensa-"+pg.id;dispCode.textContent=dispensaTesto;dispCode.setAttribute("data-plain",dispensaTesto);dispBox.appendChild(dispCode);var dispCopy=el("button","copy-btn","Copia riepilogo Dispensa");dispCopy.id="riep-dispensa-copy-"+pg.id;dispCopy.style.marginTop="10px";if(!dispensaInfo.complete){dispCopy.disabled=true;}dispBox.appendChild(dispCopy);out.appendChild(dispBox);setTimeout(function(){attachCopyPlain("riep-dispensa-copy-"+pg.id,"riep-dispensa-"+pg.id);},0);
@@ -6804,6 +7075,8 @@ function renderImbottStep(container){
    " (" + forzaFormulaInventario + ") | Creata da " + pg.nome +
    " con " + effectiveTechnique(pg) + " Tecnica" + (globalTechniqueBonusInfo(pg).bonus ? " ("+pg.tecnica+" base +"+globalTechniqueBonusInfo(pg).bonus+" bonus)" : "") + roleInventario +
    " - " + spazioInventario);
+ var bioInfoInventario=specialBiologicalComponentInfo();
+ if(!zeroDosiUtili&&bioInfoInventario&&!specialBiologicalComponentAdded(pg)){inventarioTesto += " | " + bioInfoInventario.pending;}
 
  var trackedLinesFinal=trackedEffectAuditLines(pg).concat(distillBonusAuditLines(pg));
  if(trackedLinesFinal.length){
@@ -6833,6 +7106,8 @@ function renderImbottStep(container){
  if(caldElfo&&caldElfo.postPercent>0){elfoMods.push(caldElfo.label+': -'+caldElfo.postPercent+'% post');}
  if(imbAwareness==='noticed'){elfoMods.push('Il PG si accorge del maggior tempo della postazione');}
  else if(imbAwareness==='not_noticed'){elfoMods.push('Il PG non si accorge del maggior tempo della postazione');}
+ var bioInfoElfo=specialBiologicalComponentInfo();if(bioInfoElfo){elfoMods.push(specialBiologicalComponentAdded(pg)?(bioInfoElfo.label+': già aggiunto'):(bioInfoElfo.pending));}
+ var expRiskElfo=explosivePotionRiskInfo(pg);if(expRiskElfo.active&&expRiskElfo.complete){elfoMods.push(expRiskElfo.exploded?('Pozione Esplosiva: esplosione parziale · '+calderoneExplosionText(pg,1)):('Pozione Esplosiva: stabilità 1d10 = '+expRiskElfo.roll+', nessun incidente'));}
  if(!elfoMods.length){elfoMods.push('//');}
  var distillSvoltaElfo=distillDoseCount>0;
  var distillEsitoElfo='//';
@@ -6840,6 +7115,11 @@ function renderImbottStep(container){
    distillEsitoElfo='Distillate '+distillDoseCount+' '+(distillDoseCount===1?'dose':'dosi');
    if(distillDestroyedCount>0){distillEsitoElfo+=' · '+distillDestroyedCount+' '+(distillDestroyedCount===1?'dose distrutta':'dosi distrutte');}
  }
+ var illegalOnElfo=!!POZ.illegale, illegalProtNamesElfo=[];
+ var illegalProtStateElfo=ensureIllegalProtections();
+ for(var ip=0;ip<ILLEGAL_PROTECTION_DEFS.length;ip++){var ipd=ILLEGAL_PROTECTION_DEFS[ip];if(illegalProtStateElfo[ipd.key])illegalProtNamesElfo.push(ipd.label+' (+'+ipd.faces+')');}
+ var illegalBaseElfo=illegalBaseFaces(pg), illegalExtraElfo=illegalOnElfo?illegalExtraFaces():0;
+ function illegalExportOutcomeElfo(phase){if(!illegalOnElfo)return '—';var raw=pgDataGet(pg,'illegal_'+phase+'_result',''),faces=illegalBaseElfo+illegalExtraElfo;return illegalOutcomeText(raw,faces)+(String(raw)!==''?' · risultato '+raw+' su 1d'+faces:'');}
  var elfoLines=[
    'FELIX_ELFO_POZIONE_V1',
    'DESTINAZIONE: Laboratorio/Postazione',
@@ -6847,6 +7127,15 @@ function renderImbottStep(container){
    'Nome Pozione: '+elfoPotionExportValue(POZ.nome||'Pozione senza nome'),
    'Classificazione: '+elfoPotionExportValue(POZ.classificazione),
    'Tipologia: —',
+   'Legalità creazione: '+elfoPotionExportValue(pozV81PotionCreationLegalityLabel()),
+   'Laboratorio non registrato: '+(POZ.laboratorioNonRegistrato?'sì — Azione Illegale generica, controllo Narratore':'no'),
+   'Valigetta illegale: '+(usingIllegalValigetta()?'sì — Azione Illegale generica per ogni dado di fase':'no'),
+   'Professione controllo: '+(illegalOnElfo?(illegalBaseElfo===50?'Pozionista di mestiere':'PG non Pozionista di mestiere'):'—'),
+   'Protezioni controllo: '+(illegalOnElfo?(illegalProtNamesElfo.join(', ')||'Nessuna'):'—'),
+   'Facce protezione: '+(illegalOnElfo?illegalExtraElfo:'—'),
+   'Controllo illegale Produzione: '+illegalExportOutcomeElfo('prod'),
+   'Controllo illegale Bacchetta: '+illegalExportOutcomeElfo('bacchetta'),
+   'Legalità Ingredienti: '+elfoPotionExportValue(pozV80RecipeLawSummaryText(pg)),
    'Link principale: '+elfoPotionExportValue(roleLink),
    'Calderone/Oggetti: '+elfoPotionExportValue(elfoPotionToolsText(pg,caldElfo)),
    'Preparazione Esito: '+prepOutcomeElfo,
@@ -6969,10 +7258,10 @@ function ts(v){try{var d=v&&typeof v.toDate==='function'?v.toDate():(v&&typeof v
 function bridge(){return window.__pozSessionBridge}
 function showHome(){E('poz-session-home').style.display='';E('poz-session-workspace').style.display='none'}
 function showWork(){E('poz-session-home').style.display='none';E('poz-session-workspace').style.display='';E('poz-session-save-status').textContent='Sessione caricata · autosalvataggio Firebase attivo ✓';try{window.scrollTo(0,0)}catch(e){}}
-function payload(){var b=bridge(),m=b.meta(),s=b.collect();return {ownerUid:fb.user.uid,pgName:m.pgName||((currentData&&currentData.pgName)||'PG'),potionName:m.potionName||'',phase:m.currentStep,phaseLabel:b.phaseLabel(m.currentStep),status:m.currentStep==='riepilogo'?'riepilogo':'in_corso',updatedAt:firebase.firestore.FieldValue.serverTimestamp(),toolVersion:'pozioni-v63-sessioni-firebase',state:s}}
+function payload(){var b=bridge(),m=b.meta(),s=b.collect();return {ownerUid:fb.user.uid,pgName:m.pgName||((currentData&&currentData.pgName)||'PG'),potionName:m.potionName||'',phase:m.currentStep,phaseLabel:b.phaseLabel(m.currentStep),status:m.currentStep==='riepilogo'?'riepilogo':'in_corso',updatedAt:firebase.firestore.FieldValue.serverTimestamp(),toolVersion:'pozioni-v84-audit-indipendente',state:s}}
 window.pozSessionSaveNow=function(){if(loading||!currentId||!fb.db||!fb.user||!bridge())return Promise.resolve(true);var id=currentId,p=payload(),st=E('poz-session-save-status');if(st)st.textContent='Salvataggio automatico…';var task=chain.catch(function(){}).then(function(){return fb.db.collection(COLL).doc(id).set(p,{merge:true})}).then(function(){if(id===currentId){currentData=Object.assign({},currentData||{},p);if(st)st.textContent='Salvata automaticamente su Firebase ✓'}return true}).catch(function(err){console.error(err);if(id===currentId&&st)st.textContent='Errore salvataggio Firebase: '+(err.message||err);throw err});chain=task.catch(function(){});return task};
 function loadList(){var host=E('poz-session-list');if(!host||!fb.db||!fb.user)return;host.innerHTML='<div class="poz-session-status">Caricamento sessioni…</div>';fb.db.collection(COLL).where('ownerUid','==',fb.user.uid).get().then(function(snap){var rows=[];snap.forEach(function(d){rows.push({id:d.id,data:d.data()||{}})});rows.sort(function(a,b){return ((b.data.updatedAt&&b.data.updatedAt.seconds)||0)-((a.data.updatedAt&&a.data.updatedAt.seconds)||0)});host.innerHTML='';if(!rows.length){host.innerHTML='<div class="poz-session-status">Nessuna Pozione salvata. Inserisci il nome del PG e crea una nuova sessione.</div>';return}rows.forEach(function(r){var d=r.data,box=document.createElement('div');box.className='poz-session-item';var l=document.createElement('div'),t=document.createElement('div');t.className='poz-session-title';t.textContent=(d.pgName||'PG')+' — '+(d.potionName||'Pozione da definire');l.appendChild(t);var m=document.createElement('div');m.className='poz-session-meta';var dt=ts(d.updatedAt);m.textContent='Fase: '+(d.phaseLabel||d.phase||'Pozione')+(dt?' · Aggiornata '+dt:'');l.appendChild(m);var a=document.createElement('div');a.className='poz-session-actions';var rr=document.createElement('button');rr.type='button';rr.className='action small resume';rr.textContent='Riprendi';rr.addEventListener('click',function(){currentId=r.id;currentData=r.data;loading=true;try{bridge().apply(r.data.state||{})}finally{loading=false}showWork()});var x=document.createElement('button');x.type='button';x.className='action small delete';x.textContent='Elimina';x.addEventListener('click',function(){if(!confirm('Eliminare definitivamente questa sessione Pozioni?'))return;fb.db.collection(COLL).doc(r.id).delete().then(loadList).catch(function(e){status('poz-session-home-msg','Impossibile eliminare: '+(e.message||e),'bad')})});a.appendChild(rr);a.appendChild(x);box.appendChild(l);box.appendChild(a);host.appendChild(box)})}).catch(function(e){console.error(e);host.innerHTML='<div class="poz-session-status bad">Impossibile caricare le sessioni: '+String(e.message||e)+'</div>'})}
-function newSession(){if(creating)return;var name=String((E('poz-session-pg-name')||{}).value||'').trim();if(!name){status('poz-session-home-msg','Inserisci il nome del PG prima di creare la Pozione.','bad');return}if(!fb.user||!fb.db||!bridge()){status('poz-session-home-msg','Firebase non è ancora pronto.','bad');return}setCreating(true);loading=true;try{bridge().newBlank(name)}finally{loading=false}var b=bridge(),meta=b.meta(),p={ownerUid:fb.user.uid,pgName:name,potionName:'',phase:'info',phaseLabel:b.phaseLabel('info'),status:'in_corso',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),toolVersion:'pozioni-v63-sessioni-firebase',state:b.collect()};status('poz-session-home-msg','Creo la nuova sessione…','saving');fb.db.collection(COLL).add(p).then(function(ref){currentId=ref.id;currentData=p;setCreating(false);status('poz-session-home-msg','','');showWork()}).catch(function(e){setCreating(false);console.error(e);status('poz-session-home-msg','Impossibile creare la sessione: '+(e.message||e),'bad')})}
+function newSession(){if(creating)return;var name=String((E('poz-session-pg-name')||{}).value||'').trim();if(!name){status('poz-session-home-msg','Inserisci il nome del PG prima di creare la Pozione.','bad');return}if(!fb.user||!fb.db||!bridge()){status('poz-session-home-msg','Firebase non è ancora pronto.','bad');return}setCreating(true);loading=true;try{bridge().newBlank(name)}finally{loading=false}var b=bridge(),meta=b.meta(),p={ownerUid:fb.user.uid,pgName:name,potionName:'',phase:'info',phaseLabel:b.phaseLabel('info'),status:'in_corso',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),toolVersion:'pozioni-v84-audit-indipendente',state:b.collect()};status('poz-session-home-msg','Creo la nuova sessione…','saving');fb.db.collection(COLL).add(p).then(function(ref){currentId=ref.id;currentData=p;setCreating(false);status('poz-session-home-msg','','');showWork()}).catch(function(e){setCreating(false);console.error(e);status('poz-session-home-msg','Impossibile creare la sessione: '+(e.message||e),'bad')})}
 function back(){var id=currentId;(currentId?window.pozSessionSaveNow():Promise.resolve(true)).then(function(){if(id===currentId){currentId='';currentData=null}showHome();loadList()}).catch(function(){})}
 function delCurrent(){if(!currentId||!fb.db)return;if(!confirm('Eliminare definitivamente questa sessione Pozioni? Non potrà essere recuperata.'))return;var id=currentId,oldData=currentData;/* Sgancia subito la sessione: eventuali autosave debounced successivi diventano no-op. Gli autosave già in coda vengono invece lasciati terminare PRIMA del delete, così nessun set può ricreare il documento dopo l’eliminazione. */currentId='';currentData=null;var pending=chain.catch(function(){});pending.then(function(){return fb.db.collection(COLL).doc(id).delete()}).then(function(){showHome();loadList()}).catch(function(e){currentId=id;currentData=oldData;var st=E('poz-session-save-status');if(st)st.textContent='Impossibile eliminare: '+(e.message||e)})}
 function init(){showHome();E('poz-session-new').addEventListener('click',newSession);E('poz-session-back').addEventListener('click',back);E('poz-session-delete-current').addEventListener('click',delCurrent);try{if(typeof firebase==='undefined')throw new Error('SDK Firebase non caricato');if(!firebase.apps.length)firebase.initializeApp(CFG);fb.auth=firebase.auth();fb.db=firebase.firestore();fb.auth.onAuthStateChanged(function(user){if(user){signing=false;fb.user=user;status('poz-session-auth-status','Firebase connesso · sessioni personali attive ✓','ok');loadList();return}if(signing)return;signing=true;fb.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){return fb.auth.signInAnonymously()}).catch(function(e){signing=false;console.error(e);status('poz-session-auth-status','Errore autenticazione Firebase: '+(e.message||e),'bad')})})}catch(e){console.error(e);status('poz-session-auth-status','Firebase non disponibile: '+(e.message||e),'bad')}}
